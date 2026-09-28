@@ -11,7 +11,7 @@ Krypto Portfolio & DCA Tracker mit **persistenter SQLite-Datenbank** im Samba-Sh
 3. Klicke oben rechts auf das Drei-Punkte-Menü `⋮` > **Repositories**.
 4. Füge die URL deines GitHub-Repositories ein:
    ```text
-   https://github.com/rawwry/rwrfolio-homeassistant-addon
+   https://github.com/rawwry/rwrfolio-crypto-tracker
    ```
 5. Klicke auf **Hinzufügen** und schließe das Dialogfenster.
 6. Klicke erneut auf das Drei-Punkte-Menü `⋮` > **Neu laden** (oder drücke F5).
