@@ -240,7 +240,7 @@ export const AssetList: React.FC<AssetListProps> = ({
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Investiert</th>
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktueller Wert</th>
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Gewinn / Verlust</th>
-              <th className="py-3.5 px-4 text-center whitespace-nowrap">Portfolio</th>
+              <th className="py-3.5 px-4 text-right whitespace-nowrap">Portfolio</th>
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktionen</th>
             </tr>
           </thead>
@@ -274,7 +274,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                   className="hover:bg-slate-800/40 transition-colors group"
                 >
                   {/* Asset Symbol & Name (text-left) */}
-                  <td className="py-3.5 px-4 sm:px-6 align-middle">
+                  <td className="py-3.5 px-4 sm:px-6 text-left align-middle">
                     <div className="flex items-center space-x-3 min-w-0">
                       <div 
                         className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-md flex-shrink-0"
@@ -320,7 +320,6 @@ export const AssetList: React.FC<AssetListProps> = ({
                   {/* Current Price (text-right) */}
                   <td className="py-3.5 px-4 text-right font-mono text-slate-200 align-middle whitespace-nowrap">
                     <div className="flex items-center justify-end space-x-1.5 group/price">
-                      <span className="font-medium">{formatActive(activePrice, priceDecimals)}</span>
                       {onEditPrice && (
                         <button
                           onClick={() => onEditPrice(asset.symbol, activePrice)}
@@ -330,6 +329,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                           <Edit3 className="w-3 h-3" />
                         </button>
                       )}
+                      <span className="font-medium">{formatActive(activePrice, priceDecimals)}</span>
                     </div>
                     {altPrice !== undefined && altPrice > 0 && (
                       <div className="text-[10px] text-slate-500 font-sans">
@@ -373,12 +373,12 @@ export const AssetList: React.FC<AssetListProps> = ({
                     )}
                   </td>
 
-                  {/* Allocation % (text-center) */}
-                  <td className="py-3.5 px-4 text-center min-w-[100px] align-middle whitespace-nowrap">
-                    <div className="text-xs font-semibold text-slate-200 mb-1">
+                  {/* Allocation % (text-right) */}
+                  <td className="py-3.5 px-4 text-right min-w-[100px] align-middle whitespace-nowrap">
+                    <div className="text-xs font-mono font-semibold text-slate-200 mb-1">
                       {asset.allocationPercentage.toFixed(1)}%
                     </div>
-                    <div className="w-full max-w-[80px] mx-auto bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className="w-full max-w-[80px] ml-auto bg-slate-800 rounded-full h-1.5 overflow-hidden">
                       <div 
                         className="h-full rounded-full transition-all duration-500"
                         style={{ 

@@ -9,9 +9,25 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.1';
+export const APP_VERSION = '0.5.2';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.2',
+    date: '29.09.2026',
+    title: 'Konsistente Rechtsbündigkeit aller Zahlenwerte in der Asset-Übersicht',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Rechtsbündige Ausrichtung aller Zahlen- und Prozentwerte (Bestand, Ø Kaufkurs, aktueller Kurs, investierter Betrag, aktueller Wert, Gewinn/Verlust, Portfolio-Anteil).',
+      },
+      {
+        type: 'ui',
+        text: 'Asset- & Coin-Bezeichnungen in der ersten Spalte bleiben konsistent linksbündig.',
+      },
+    ],
+  },
   {
     version: '0.5.1',
     date: '28.09.2026',
