@@ -1,0 +1,19 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env*
+!.env.example
+
+# Local SQLite databases and imported CSVs/PDFs
+data/
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+share/
+imported/
+config/rwrfolio.db
+config/rwrfolio.db-journal
