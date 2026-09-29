@@ -13,20 +13,23 @@ import {
   DollarSign,
   PieChart
 } from 'lucide-react';
-import { Transaction } from '../types';
+import { Transaction, UserProfile } from '../types';
 import { calculateFIFOTaxReport, exportTaxReportToCSV, PortfolioTaxReport } from '../utils/taxCalculator';
+import { exportTaxReportToPDF } from '../utils/taxPdfExport';
 import { getCoinDetails } from '../utils/priceService';
 
 interface TaxViewProps {
   transactions: Transaction[];
   customPrices: Record<string, number>;
   theme: 'light' | 'dark' | 'system';
+  userProfile?: UserProfile;
 }
 
 export const TaxView: React.FC<TaxViewProps> = ({
   transactions,
   customPrices,
   theme,
+  userProfile,
 }) => {
   const isLight = theme === 'light';
   const currentYear = new Date().getFullYear();
@@ -47,6 +50,10 @@ export const TaxView: React.FC<TaxViewProps> = ({
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleExportTaxPDF = () => {
+    exportTaxReportToPDF(taxReport, userProfile);
   };
 
   const exemptionProgress = Math.min(
@@ -75,7 +82,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
               </span>
             </div>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Automatische Zuordnung nach First-In-First-Out: Kryptowährungen sind nach 365 Tagen Haltedauer zu 100% steuerfrei.
+              Automatische Zuordnung nach First-In-First-Out: Kryptowährungen sind nach 365 Tagen Haltedauer zu 100 % steuerfrei.
             </p>
           </div>
         </div>
@@ -100,6 +107,15 @@ export const TaxView: React.FC<TaxViewProps> = ({
               <option value={currentYear - 2}>{currentYear - 2}</option>
             </select>
           </div>
+
+          <button
+            onClick={handleExportTaxPDF}
+            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+            title="Steuerbericht als PDF für Steuerberater/Finanzamt drucken oder speichern"
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Steuerbericht (PDF)</span>
+          </button>
 
           <button
             onClick={handleExportTaxCSV}
@@ -130,7 +146,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
           </div>
           <div className="flex items-center justify-between mt-2 text-xs">
             <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Anteil am Portfolio</span>
-            <span className="font-bold text-emerald-500">{taxReport.taxFreePercentage.toFixed(1)}%</span>
+            <span className="font-bold text-emerald-500">{taxReport.taxFreePercentage.toFixed(1)} %</span>
           </div>
           {/* Progress bar */}
           <div className="w-full bg-slate-700/20 rounded-full h-1.5 mt-1.5 overflow-hidden">
@@ -259,8 +275,8 @@ export const TaxView: React.FC<TaxViewProps> = ({
                     {/* Center: Progress visual (fixed 5 columns, perfectly aligned across all rows) */}
                     <div className="md:col-span-5 w-full">
                       <div className="flex items-center justify-between text-xs mb-1.5 font-mono">
-                        <span className="text-emerald-500 font-semibold">{asset.taxFreePercentage.toFixed(1)}% Steuerfrei</span>
-                        <span className="text-amber-500 font-semibold">{(100 - asset.taxFreePercentage).toFixed(1)}% &lt; 1 Jahr</span>
+                        <span className="text-emerald-500 font-semibold">{asset.taxFreePercentage.toFixed(1)} % Steuerfrei</span>
+                        <span className="text-amber-500 font-semibold">{(100 - asset.taxFreePercentage).toFixed(1)} % &lt; 1 Jahr</span>
                       </div>
                       <div className="w-full bg-slate-700/20 rounded-full h-2 overflow-hidden flex">
                         <div 
@@ -369,7 +385,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
 
           {taxReport.upcomingTaxFreeLots.length === 0 ? (
             <div className="p-6 text-center text-xs text-emerald-500 font-semibold bg-emerald-500/5 rounded-xl border border-emerald-500/10">
-              🎉 100% deiner aktuellen Bestände haben bereits die 1-Jahres-Frist überschritten und sind steuerfrei!
+              🎉 100 % deiner aktuellen Bestände haben bereits die 1-Jahres-Frist überschritten und sind steuerfrei!
             </div>
           ) : (
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">

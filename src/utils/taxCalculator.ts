@@ -1,5 +1,6 @@
 import { Transaction } from '../types';
 import { getCoinPriceEUR, getCoinDetails } from './priceService';
+import { NON_CRYPTO_SYMBOLS } from './portfolioCalculations';
 
 export interface HoldingLot {
   id: string;
@@ -105,7 +106,7 @@ export function calculateFIFOTaxReport(
 
     if (tx.type === 'BUY' || tx.type === 'TRANSFER' || tx.type === 'REWARD' || tx.type === 'STAKE') {
       const symbol = (tx.receivedCurrency || tx.spentCurrency || '').toUpperCase();
-      if (!symbol || symbol === 'EUR' || symbol === 'USD') continue;
+      if (!symbol || NON_CRYPTO_SYMBOLS.has(symbol)) continue;
 
       const amount = tx.receivedAmount || 0;
       if (amount <= 0) continue;
@@ -140,7 +141,7 @@ export function calculateFIFOTaxReport(
       });
     } else if (tx.type === 'SELL') {
       const symbol = (tx.spentCurrency || tx.receivedCurrency || '').toUpperCase();
-      if (!symbol || symbol === 'EUR' || symbol === 'USD') continue;
+      if (!symbol || NON_CRYPTO_SYMBOLS.has(symbol)) continue;
 
       let sellAmount = tx.spentAmount > 0 ? tx.spentAmount : tx.receivedAmount;
       if (sellAmount <= 0) continue;
@@ -343,7 +344,7 @@ export function exportTaxReportToCSV(report: PortfolioTaxReport): string {
   lines.push('');
   lines.push('--- KENNZAHLEN ---');
   lines.push(`Gesamtwert Portfolio;${report.totalPortfolioValueEUR.toFixed(2)} EUR`);
-  lines.push(`Steuerfreier Bestand (> 1 Jahr);${report.totalTaxFreeValueEUR.toFixed(2)} EUR (${report.taxFreePercentage.toFixed(1)}%)`);
+  lines.push(`Steuerfreier Bestand (> 1 Jahr);${report.totalTaxFreeValueEUR.toFixed(2)} EUR (${report.taxFreePercentage.toFixed(1)} %)`);
   lines.push(`Steuerfreier unversteuerter Gewinn;${report.totalTaxFreeUnrealizedPnlEUR.toFixed(2)} EUR`);
   lines.push(`Noch steuerpflichtiger Bestand (< 1 Jahr);${report.totalTaxableValueEUR.toFixed(2)} EUR`);
   lines.push(`Realisierter steuerpflichtiger Gewinn (${report.taxYear});${report.realizedTaxableNetEUR.toFixed(2)} EUR`);
@@ -354,7 +355,7 @@ export function exportTaxReportToCSV(report: PortfolioTaxReport): string {
   
   for (const a of report.assets) {
     lines.push(
-      `${a.symbol};${a.name};${a.totalBalance.toFixed(6)};${a.taxFreeBalance.toFixed(6)};${a.taxableBalance.toFixed(6)};${a.taxFreePercentage.toFixed(1)}%;${a.taxFreeValueEUR.toFixed(2)};${a.taxFreeUnrealizedPnlEUR.toFixed(2)};${(a.totalCurrentValueEUR / (a.totalBalance || 1)).toFixed(2)}`
+      `${a.symbol};${a.name};${a.totalBalance.toFixed(6)};${a.taxFreeBalance.toFixed(6)};${a.taxableBalance.toFixed(6)};${a.taxFreePercentage.toFixed(1)} %;${a.taxFreeValueEUR.toFixed(2)};${a.taxFreeUnrealizedPnlEUR.toFixed(2)};${(a.totalCurrentValueEUR / (a.totalBalance || 1)).toFixed(2)}`
     );
   }
 

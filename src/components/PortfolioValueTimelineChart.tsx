@@ -79,7 +79,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
         <div className={`p-3.5 rounded-xl shadow-2xl border text-xs space-y-2 max-w-xs ${
           isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-700 text-white'
         }`}>
-          <div className="flex items-center justify-between border-b border-slate-700/60 pb-1.5 font-sans">
+          <div className={`flex items-center justify-between border-b pb-1.5 font-sans ${isLight ? 'border-slate-100' : 'border-slate-700/60'}`}>
             <div className="flex items-center space-x-1.5 font-bold">
               <Calendar className="w-3.5 h-3.5 text-indigo-400" />
               <span>{data.formattedDate}</span>
@@ -111,10 +111,10 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
               </span>
             </div>
 
-            <div className="flex justify-between items-baseline pt-1 border-t border-slate-800">
+            <div className={`flex justify-between items-baseline pt-1 border-t ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
               <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Gewinn / Rendite:</span>
               <span className={`font-bold ${isPointProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {isPointProfit ? '+' : ''}{formatCurrency(data.pnl, 2)} ({isPointProfit ? '+' : ''}{data.pnlPercentage.toFixed(2)}%)
+                {isPointProfit ? '+' : ''}{formatCurrency(data.pnl, 2)} ({isPointProfit ? '+' : ''}{data.pnlPercentage.toFixed(2)} %)
               </span>
             </div>
           </div>
@@ -265,7 +265,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
             isProfit ? 'text-emerald-400' : 'text-rose-400'
           }`}>
             {isProfit ? <ArrowUpRight className="w-4 h-4 inline" /> : <ArrowDownRight className="w-4 h-4 inline" />}
-            <span>{isProfit ? '+' : ''}{formatCurrency(currentPnl, 2)} ({isProfit ? '+' : ''}{currentPnlPct.toFixed(1)}%)</span>
+            <span>{isProfit ? '+' : ''}{formatCurrency(currentPnl, 2)} ({isProfit ? '+' : ''}{currentPnlPct.toFixed(1)} %)</span>
           </span>
         </div>
         <div>

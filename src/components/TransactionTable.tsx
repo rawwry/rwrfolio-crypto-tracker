@@ -22,6 +22,7 @@ interface TransactionTableProps {
   selectedAssetFilter?: string;
   onClearAssetFilter?: () => void;
   currency?: PortfolioCurrency;
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export const TransactionTable: React.FC<TransactionTableProps> = ({
@@ -32,7 +33,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   selectedAssetFilter,
   onClearAssetFilter,
   currency = 'EUR',
+  theme = 'dark',
 }) => {
+  const isLight = theme === 'light';
   const [searchQuery, setSearchQuery] = useState('');
   const [assetFilter, setAssetFilter] = useState(selectedAssetFilter || 'ALL');
   const [typeFilter, setTypeFilter] = useState<string>('ALL');
@@ -265,19 +268,23 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
   };
 
   return (
-    <div className="bg-slate-900/80 rounded-2xl border border-slate-800/90 shadow-xl overflow-hidden">
+    <div className={`rounded-2xl border shadow-xl overflow-hidden ${
+      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/80 border-slate-800/90'
+    }`}>
       
       {/* Header & Filter Controls */}
-      <div className="p-5 border-b border-slate-800 space-y-4">
+      <div className={`p-5 border-b space-y-4 ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <span>Transaktions-Historie</span>
-              <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+              <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
+              }`}>
                 {filtered.length} von {transactions.length}
               </span>
             </h3>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Alle Käufe, Rewards und Buchungen im Detail mit Einzelkursen
             </p>
           </div>
@@ -285,12 +292,12 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           {/* Bulk actions */}
           {selectedIds.size > 0 && (
             <div className="flex items-center space-x-2">
-              <span className="text-xs text-slate-300 font-medium">
+              <span className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
                 {selectedIds.size} ausgewählt
               </span>
               <button
                 onClick={handleBulkDelete}
-                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-300 bg-rose-950/60 hover:bg-rose-900 border border-rose-800 transition-colors cursor-pointer"
+                className="inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 dark:text-rose-300 dark:bg-rose-950/60 dark:hover:bg-rose-900 border border-rose-200 dark:border-rose-800 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span>Löschen</span>
@@ -303,7 +310,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 pt-1">
           {/* Search Box */}
           <div className="lg:col-span-2 relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className={`w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 ${isLight ? 'text-slate-400' : 'text-slate-500'}`} />
             <input
               type="text"
               placeholder="Suchen nach Coin, Hash, Beschreibung..."
@@ -312,7 +319,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 setSearchQuery(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+              className={`w-full rounded-xl pl-9 pr-3 py-2 text-sm border focus:outline-none transition-all ${
+                isLight 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800 placeholder-slate-400 focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500' 
+                  : 'bg-slate-950/80 border-slate-800 text-slate-200 placeholder-slate-500 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500'
+              }`}
             />
           </div>
 
@@ -324,7 +335,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 setAssetFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className={`w-full rounded-xl px-3 py-2 text-sm border focus:outline-none transition-all ${
+                isLight 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-indigo-500' 
+                  : 'bg-slate-950/80 border-slate-800 text-slate-200 focus:border-indigo-500'
+              }`}
             >
               <option value="ALL">Alle Coins ({uniqueCoins.length})</option>
               {uniqueCoins.map((coin) => (
@@ -341,7 +356,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 setTypeFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className={`w-full rounded-xl px-3 py-2 text-sm border focus:outline-none transition-all ${
+                isLight 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-indigo-500' 
+                  : 'bg-slate-950/80 border-slate-800 text-slate-200 focus:border-indigo-500'
+              }`}
             >
               <option value="ALL">Alle Typen</option>
               <option value="BUY">Nur Käufe (Buy)</option>
@@ -359,7 +378,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 setSourceFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className={`w-full rounded-xl px-3 py-2 text-sm border focus:outline-none transition-all ${
+                isLight 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-indigo-500' 
+                  : 'bg-slate-950/80 border-slate-800 text-slate-200 focus:border-indigo-500'
+              }`}
             >
               <option value="ALL">Alle Börsen</option>
               <option value="kraken">Kraken Pro</option>
@@ -374,7 +397,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value as any)}
-              className="w-full bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+              className={`w-full rounded-xl px-3 py-2 text-sm border focus:outline-none transition-all ${
+                isLight 
+                  ? 'bg-slate-50 border-slate-200 text-slate-800 focus:bg-white focus:border-indigo-500' 
+                  : 'bg-slate-950/80 border-slate-800 text-slate-200 focus:border-indigo-500'
+              }`}
             >
               <option value="newest">Datum (Neueste zuerst)</option>
               <option value="oldest">Datum (Älteste zuerst)</option>
@@ -387,29 +414,37 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         {/* Active filter pills */}
         {(assetFilter !== 'ALL' || typeFilter !== 'ALL' || sourceFilter !== 'ALL' || searchQuery) && (
           <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-            <span className="text-slate-400 font-medium">Aktive Filter:</span>
+            <span className={`${isLight ? 'text-slate-500' : 'text-slate-400'} font-medium`}>Aktive Filter:</span>
             {assetFilter !== 'ALL' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+              }`}>
                 Coin: {assetFilter}
-                <button onClick={() => { setAssetFilter('ALL'); if (onClearAssetFilter) onClearAssetFilter(); }} className="ml-1.5 hover:text-white">&times;</button>
+                <button onClick={() => { setAssetFilter('ALL'); if (onClearAssetFilter) onClearAssetFilter(); }} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}
             {typeFilter !== 'ALL' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+              }`}>
                 Typ: {typeFilter}
-                <button onClick={() => setTypeFilter('ALL')} className="ml-1.5 hover:text-white">&times;</button>
+                <button onClick={() => setTypeFilter('ALL')} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}
             {sourceFilter !== 'ALL' && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+              }`}>
                 Börse: {sourceFilter === 'kraken' ? 'Kraken Pro' : sourceFilter === 'crypto_com' ? 'Crypto.com' : sourceFilter}
-                <button onClick={() => setSourceFilter('ALL')} className="ml-1.5 hover:text-white">&times;</button>
+                <button onClick={() => setSourceFilter('ALL')} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}
             {searchQuery && (
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+              <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
+                isLight ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+              }`}>
                 Suche: "{searchQuery}"
-                <button onClick={() => setSearchQuery('')} className="ml-1.5 hover:text-white">&times;</button>
+                <button onClick={() => setSearchQuery('')} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}
             <button
@@ -420,7 +455,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 setSearchQuery('');
                 if (onClearAssetFilter) onClearAssetFilter();
               }}
-              className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 ml-1"
+              className={`underline underline-offset-2 ml-1 ${isLight ? 'text-indigo-600 hover:text-indigo-700' : 'text-indigo-400 hover:text-indigo-300'}`}
             >
               Filter zurücksetzen
             </button>
@@ -431,14 +466,20 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       {/* Table Content */}
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase font-semibold tracking-wider border-b border-slate-800">
+          <thead className={`text-xs uppercase font-semibold tracking-wider border-b ${
+            isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/60 text-slate-400 border-slate-800'
+          }`}>
             <tr>
               <th className="py-3.5 px-4 w-10 text-center">
                 <input
                   type="checkbox"
                   checked={paginatedTransactions.length > 0 && selectedIds.size === paginatedTransactions.length}
                   onChange={toggleSelectAll}
-                  className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
+                  className={`rounded ${
+                    isLight 
+                      ? 'border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500' 
+                      : 'border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500'
+                  }`}
                 />
               </th>
               <th className="py-3.5 px-4">Datum &amp; Uhrzeit</th>
@@ -450,7 +491,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <th className="py-3.5 px-4 text-right">Aktionen</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className={`divide-y ${isLight ? 'divide-slate-100' : 'divide-slate-800/60'}`}>
             {paginatedTransactions.length === 0 ? (
               <tr>
                 <td colSpan={8} className="py-12 text-center text-slate-400">
@@ -484,8 +525,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 return (
                   <tr 
                     key={tx.id}
-                    className={`hover:bg-slate-800/40 transition-colors ${
-                      selectedIds.has(tx.id) ? 'bg-indigo-950/20' : ''
+                    className={`transition-colors ${
+                      isLight 
+                        ? (selectedIds.has(tx.id) ? 'bg-indigo-50/80 hover:bg-indigo-50' : 'hover:bg-slate-50/80') 
+                        : (selectedIds.has(tx.id) ? 'bg-indigo-950/20 hover:bg-indigo-950/30' : 'hover:bg-slate-800/40')
                     }`}
                   >
                     {/* Checkbox */}
@@ -494,12 +537,16 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                         type="checkbox"
                         checked={selectedIds.has(tx.id)}
                         onChange={() => toggleSelectId(tx.id)}
-                        className="rounded border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500"
+                        className={`rounded ${
+                          isLight 
+                            ? 'border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500' 
+                            : 'border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500'
+                        }`}
                       />
                     </td>
 
                     {/* Timestamp */}
-                    <td className="py-3.5 px-4 font-mono text-xs text-slate-300 whitespace-nowrap">
+                    <td className={`py-3.5 px-4 font-mono text-xs whitespace-nowrap ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
                       {formatDate(tx.timestamp)}
                     </td>
 
@@ -521,11 +568,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                           {tx.receivedCurrency.substring(0, 3)}
                         </div>
                         <div>
-                          <div className="font-bold font-mono text-white">
+                          <div className={`font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
                           </div>
                           {tx.description && (
-                            <div className="text-[11px] text-slate-400 truncate max-w-[150px]">
+                            <div className={`text-[11px] truncate max-w-[150px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                               {tx.description}
                             </div>
                           )}
@@ -534,7 +581,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     </td>
 
                     {/* Spent / Invested */}
-                    <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-200">
+                    <td className={`py-3.5 px-4 text-right font-mono font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                       {spentActive > 0 ? (
                         <div>
                           <div>{formatActive(spentActive)}</div>
@@ -544,21 +591,21 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                             </div>
                           )}
                           {tx.spentCurrency !== 'EUR' && tx.spentCurrency !== 'USD' && (
-                            <span className="text-xs text-slate-400 block font-sans">
+                            <span className={`text-xs block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                               ({tx.spentAmount} {tx.spentCurrency})
                             </span>
                           )}
                         </div>
                       ) : (
-                        <span className="text-slate-500">-</span>
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
 
                     {/* Calculated Unit Price */}
-                    <td className="py-3.5 px-4 text-right font-mono text-slate-300">
+                    <td className={`py-3.5 px-4 text-right font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                       {unitPriceActive > 0 ? (
                         <div>
-                          <div className="text-indigo-300 font-medium">
+                          <div className={`font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
                             {formatActive(unitPriceActive, unitPriceDecimals)}
                           </div>
                           {unitPriceAlt > 0 && (
@@ -568,7 +615,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                           )}
                         </div>
                       ) : (
-                        <span className="text-slate-500">-</span>
+                        <span className="text-slate-400">-</span>
                       )}
                     </td>
 
@@ -577,7 +624,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       <button
                         onClick={() => setDetailTx(tx)}
                         title="Transaktionsdetails einsehen"
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-slate-800 transition-colors cursor-pointer"
+                        className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                          isLight 
+                            ? 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100' 
+                            : 'text-slate-400 hover:text-indigo-300 hover:bg-slate-800'
+                        }`}
                       >
                         <Info className="w-4 h-4" />
                       </button>
@@ -589,7 +640,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                         <button
                           onClick={() => onEditTransaction(tx)}
                           title="Bearbeiten"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            isLight 
+                              ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' 
+                              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                          }`}
                         >
                           <Edit className="w-3.5 h-3.5" />
                         </button>
@@ -600,7 +655,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                             }
                           }}
                           title="Löschen"
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors cursor-pointer"
+                          className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                            isLight 
+                              ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' 
+                              : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                          }`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -616,7 +675,9 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
       {/* Pagination Footer */}
       {totalPages > 1 && (
-        <div className="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+        <div className={`p-4 border-t flex items-center justify-between text-xs ${
+          isLight ? 'border-slate-100 bg-slate-50/50 text-slate-500' : 'border-slate-800 text-slate-400'
+        }`}>
           <div>
             Seite {currentPage} von {totalPages} ({filtered.length} Transaktionen)
           </div>
@@ -624,17 +685,25 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             <button
               onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className={`p-1.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer border ${
+                isLight 
+                  ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+              }`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="font-medium text-slate-200">
+            <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
               {currentPage} / {totalPages}
             </span>
             <button
               onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
-              className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
+              className={`p-1.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer border ${
+                isLight 
+                  ? 'bg-white hover:bg-slate-100 text-slate-700 border-slate-200' 
+                  : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
+              }`}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -644,63 +713,71 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
       {/* Detail Modal */}
       {detailTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h4 className="font-bold text-white text-base">Transaktionsdetails</h4>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+          <div className={`border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 ${
+            isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+          }`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${
+              isLight ? 'border-slate-100' : 'border-slate-800'
+            }`}>
+              <h4 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Transaktionsdetails</h4>
               <button 
                 onClick={() => setDetailTx(null)}
-                className="text-slate-400 hover:text-white text-lg font-bold cursor-pointer"
+                className={`text-lg font-bold cursor-pointer ${
+                  isLight ? 'text-slate-400 hover:text-slate-800' : 'text-slate-400 hover:text-white'
+                }`}
               >
                 &times;
               </button>
             </div>
 
-            <div className="space-y-2.5 text-xs text-slate-300">
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Timestamp:</span>
-                <span className="font-mono text-white">{detailTx.timestamp}</span>
+            <div className={`space-y-2.5 text-xs ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Timestamp:</span>
+                <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.timestamp}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Beschreibung:</span>
-                <span className="text-white font-medium">{detailTx.description}</span>
+              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Beschreibung:</span>
+                <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{detailTx.description}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Börsen-Quelle:</span>
+              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Börsen-Quelle:</span>
                 <span>{getSourceBadge(detailTx.source)}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Erhaltene Menge:</span>
-                <span className="font-mono text-emerald-400 font-bold">{detailTx.receivedAmount} {detailTx.receivedCurrency}</span>
+              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Erhaltene Menge:</span>
+                <span className={`font-mono font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>{detailTx.receivedAmount} {detailTx.receivedCurrency}</span>
               </div>
-              <div className="flex justify-between py-1 border-b border-slate-800/60">
-                <span className="text-slate-400">Ausgegebener Betrag:</span>
-                <span className="font-mono text-white">{detailTx.spentAmount} {detailTx.spentCurrency}</span>
+              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Ausgegebener Betrag:</span>
+                <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.spentAmount} {detailTx.spentCurrency}</span>
               </div>
               {detailTx.nativeAmountUSD && (
-                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-slate-400">Crypto.com USD Gegenwert:</span>
-                  <span className="font-mono text-slate-200">${detailTx.nativeAmountUSD.toFixed(2)} USD</span>
+                <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Crypto.com USD Gegenwert:</span>
+                  <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>${detailTx.nativeAmountUSD.toFixed(2)} USD</span>
                 </div>
               )}
               {detailTx.transactionKind && (
-                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-slate-400">Transaction Kind:</span>
-                  <span className="font-mono text-slate-300">{detailTx.transactionKind}</span>
+                <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Transaction Kind:</span>
+                  <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>{detailTx.transactionKind}</span>
                 </div>
               )}
               {detailTx.transactionHash && (
-                <div className="flex justify-between py-1 border-b border-slate-800/60">
-                  <span className="text-slate-400">Tx Hash:</span>
-                  <span className="font-mono text-indigo-400 truncate max-w-[200px]" title={detailTx.transactionHash}>
+                <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Tx Hash:</span>
+                  <span className="font-mono text-indigo-500 truncate max-w-[200px]" title={detailTx.transactionHash}>
                     {detailTx.transactionHash}
                   </span>
                 </div>
               )}
               {detailTx.notes && (
                 <div className="pt-2">
-                  <span className="text-slate-400 block mb-1">Notizen:</span>
-                  <p className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-slate-200 text-xs">
+                  <span className={`block mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Notizen:</span>
+                  <p className={`p-2.5 rounded-lg border text-xs ${
+                    isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                  }`}>
                     {detailTx.notes}
                   </p>
                 </div>
@@ -710,7 +787,11 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             <div className="pt-2 flex justify-end">
               <button
                 onClick={() => setDetailTx(null)}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-medium text-xs transition-colors cursor-pointer"
+                className={`px-4 py-2 rounded-xl font-medium text-xs transition-colors cursor-pointer border ${
+                  isLight 
+                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200' 
+                    : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
+                }`}
               >
                 Schließen
               </button>

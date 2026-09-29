@@ -20,13 +20,16 @@ interface PortfolioChartsProps {
   assets: AssetSummary[];
   transactions: Transaction[];
   currency?: PortfolioCurrency;
+  theme?: 'light' | 'dark' | 'system';
 }
 
 export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
   assets,
   transactions,
   currency = 'EUR' as PortfolioCurrency,
+  theme = 'dark',
 }) => {
+  const isLight = theme === 'light';
   const isUSD = currency === 'USD';
   const currencySymbol = isUSD ? '$' : '€';
   const timelineData = generateInvestmentTimeline(transactions, currency as PortfolioCurrency);
@@ -57,16 +60,18 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl shadow-xl text-xs space-y-1">
-          <div className="font-bold text-white flex items-center gap-1.5">
+        <div className={`p-3 rounded-xl border text-xs space-y-1 ${
+          isLight ? 'bg-white border-slate-200 text-slate-800 shadow-xl' : 'bg-slate-900 border-slate-700 text-white shadow-xl'
+        }`}>
+          <div className={`font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: data.color }} />
             <span>{data.name} ({data.fullName})</span>
           </div>
-          <div className="text-slate-300">
-            Wert: <strong className="text-white">{formatCurrency(data.value)}</strong>
+          <div className={isLight ? 'text-slate-600' : 'text-slate-300'}>
+            Wert: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{formatCurrency(data.value)}</strong>
           </div>
-          <div className="text-indigo-400 font-semibold">
-            Anteil: {data.percentage.toFixed(1)}%
+          <div className="text-indigo-500 font-semibold">
+            Anteil: {data.percentage.toFixed(1)} %
           </div>
         </div>
       );
@@ -78,16 +83,18 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-slate-900 border border-slate-700 p-3 rounded-xl shadow-xl text-xs space-y-1">
-          <div className="font-bold text-white flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+        <div className={`p-3 rounded-xl border text-xs space-y-1 ${
+          isLight ? 'bg-white border-slate-200 text-slate-800 shadow-xl' : 'bg-slate-900 border-slate-700 text-white shadow-xl'
+        }`}>
+          <div className={`font-bold flex items-center gap-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <Calendar className="w-3.5 h-3.5 text-indigo-500" />
             <span>{data.formattedDate}</span>
           </div>
-          <div className="text-slate-300">
-            Kauf: <strong className="text-emerald-400">+{formatCurrency(data.added)}</strong> ({data.asset})
+          <div className={isLight ? 'text-slate-600' : 'text-slate-300'}>
+            Kauf: <strong className="text-emerald-500">+{formatCurrency(data.added)}</strong> ({data.asset})
           </div>
-          <div className="text-indigo-300">
-            Kumuliert investiert: <strong className="text-white">{formatCurrency(data.investedCum)}</strong>
+          <div className={isLight ? 'text-indigo-600' : 'text-indigo-300'}>
+            Kumuliert investiert: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{formatCurrency(data.investedCum)}</strong>
           </div>
         </div>
       );
@@ -95,18 +102,22 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     return null;
   };
 
+  const cardClass = isLight
+    ? 'bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between'
+    : 'bg-slate-900/80 rounded-2xl p-5 border border-slate-800/90 shadow-xl flex flex-col justify-between';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       
       {/* Allocation Donut Chart */}
-      <div className="lg:col-span-5 bg-slate-900/80 rounded-2xl p-5 border border-slate-800/90 shadow-xl flex flex-col justify-between">
+      <div className={`lg:col-span-5 ${cardClass}`}>
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <PieIcon className="w-4 h-4 text-indigo-400" />
+            <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <PieIcon className="w-4 h-4 text-indigo-500" />
               <span>Asset-Allokation</span>
             </h3>
-            <span className="text-xs text-slate-400">nach aktuellem Wert in {currency}</span>
+            <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>nach aktuellem Wert in {currency}</span>
           </div>
 
           {pieData.length > 0 ? (
@@ -123,7 +134,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                     dataKey="value"
                   >
                     {pieData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="#0f172a" strokeWidth={2} />
+                      <Cell key={`cell-${index}`} fill={entry.color} stroke={isLight ? '#ffffff' : '#0f172a'} strokeWidth={2} />
                     ))}
                   </Pie>
                   <RechartsTooltip 
@@ -142,28 +153,35 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
         </div>
 
         {/* Legend List */}
-        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-800/60 max-h-36 overflow-y-auto">
+        <div className={`grid grid-cols-2 gap-2 pt-3 border-t max-h-36 overflow-y-auto ${
+          isLight ? 'border-slate-100' : 'border-slate-800/60'
+        }`}>
           {pieData.map((item) => (
-            <div key={item.name} className="flex items-center justify-between p-1.5 rounded-lg bg-slate-950/40 text-xs">
+            <div 
+              key={item.name} 
+              className={`flex items-center justify-between p-1.5 rounded-lg text-xs ${
+                isLight ? 'bg-slate-50 border border-slate-200/60' : 'bg-slate-950/40'
+              }`}
+            >
               <div className="flex items-center space-x-1.5 truncate">
                 <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: item.color }} />
-                <span className="font-semibold text-slate-200 truncate">{item.name}</span>
+                <span className={`font-semibold truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{item.name}</span>
               </div>
-              <span className="font-mono text-slate-400 ml-1">{item.percentage.toFixed(1)}%</span>
+              <span className={`font-mono ml-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{item.percentage.toFixed(1)} %</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Cumulative Investment Timeline */}
-      <div className="lg:col-span-7 bg-slate-900/80 rounded-2xl p-5 border border-slate-800/90 shadow-xl flex flex-col justify-between">
+      <div className={`lg:col-span-7 ${cardClass}`}>
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-emerald-400" />
+            <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              <TrendingUp className="w-4 h-4 text-emerald-500" />
               <span>Investitions-Entwicklung über Zeit</span>
             </h3>
-            <span className="text-xs text-slate-400">Kumulierter Kapitaleinsatz ({currency})</span>
+            <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Kumulierter Kapitaleinsatz ({currency})</span>
           </div>
 
           {timelineData.length > 0 ? (
@@ -176,15 +194,15 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                       <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isLight ? '#e2e8f0' : '#1e293b'} vertical={false} />
                   <XAxis 
                     dataKey="formattedDate" 
-                    stroke="#64748b" 
+                    stroke={isLight ? '#94a3b8' : '#64748b'} 
                     fontSize={11}
                     tickLine={false}
                   />
                   <YAxis 
-                    stroke="#64748b" 
+                    stroke={isLight ? '#94a3b8' : '#64748b'} 
                     fontSize={11} 
                     tickFormatter={(v) => `${v}${currencySymbol}`}
                     tickLine={false}
@@ -212,9 +230,11 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
           )}
         </div>
 
-        <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 text-xs text-slate-400 flex items-center justify-between mt-2">
-          <span>Gesamter Zukauf: <strong>{timelineData.length} Transaktionszeitpunkte</strong></span>
-          <span className="text-emerald-400 font-semibold font-mono">DCA Strategie ({currency})</span>
+        <div className={`p-3 rounded-xl border text-xs flex items-center justify-between mt-2 ${
+          isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-950/60 border-slate-800/80 text-slate-400'
+        }`}>
+          <span>Gesamter Zukauf: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{timelineData.length} Transaktionszeitpunkte</strong></span>
+          <span className="text-emerald-500 font-semibold font-mono">DCA Strategie ({currency})</span>
         </div>
       </div>
 

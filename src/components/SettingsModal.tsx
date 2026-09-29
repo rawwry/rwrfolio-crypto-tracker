@@ -692,7 +692,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     GitHub &amp; Datenschutz-Garantie
                   </h3>
                   <p className={`text-xs mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Warum dein öffentliches GitHub-Repository 100% sicher ist.
+                    Warum dein öffentliches GitHub-Repository 100 % sicher ist.
                   </p>
                 </div>
 

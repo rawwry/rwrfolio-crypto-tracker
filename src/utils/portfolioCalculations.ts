@@ -1,6 +1,10 @@
 import { Transaction, AssetSummary, PortfolioTotals, PortfolioCurrency } from '../types';
 import { getCoinPriceEUR, getCoinPriceUSD, getCoinPrice, getCoinDetails, getLiveEurUsdRate } from './priceService';
 
+export const NON_CRYPTO_SYMBOLS = new Set([
+  'EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD', 'UNKNOWN', '', 'N/A', 'UNDEFINED', 'NULL'
+]);
+
 export function calculateAssetSummaries(
   transactions: Transaction[],
   customPrices: Record<string, number> = {},
@@ -29,9 +33,9 @@ export function calculateAssetSummaries(
       symbol = 'POL';
     }
 
-    if (symbol === 'EUR' || symbol === 'USD' || symbol === 'UNKNOWN') {
-      // If selling to EUR/USD, handle the sold asset
-      if (tx.type === 'SELL' && tx.spentCurrency && tx.spentCurrency !== 'EUR' && tx.spentCurrency !== 'USD') {
+    if (NON_CRYPTO_SYMBOLS.has(symbol)) {
+      // If selling crypto to fiat/UNKNOWN, handle the sold crypto asset
+      if (tx.type === 'SELL' && tx.spentCurrency && !NON_CRYPTO_SYMBOLS.has(tx.spentCurrency.toUpperCase())) {
         let soldSym = tx.spentCurrency.toUpperCase();
         if (soldSym === 'MATIC' || soldSym === 'POLYGON') {
           soldSym = 'POL';
@@ -126,7 +130,9 @@ export function calculateAssetSummaries(
   let totalPortfolioInvestedEUR = 0;
   let totalPortfolioCurrentValueEUR = 0;
 
-  const rawAssets = Object.values(assetMap).map(item => {
+  const rawAssets = Object.values(assetMap)
+    .filter(item => !NON_CRYPTO_SYMBOLS.has(item.symbol.toUpperCase()))
+    .map(item => {
     const currentBalance = Math.max(0, item.totalBought - item.totalSold);
 
     // Active currency metrics
@@ -258,7 +264,7 @@ export function generateInvestmentTimeline(
   const currencySymbol = currency === 'USD' ? '$' : '€';
 
   const buys = transactions
-    .filter(t => t.type === 'BUY' && t.spentAmount > 0)
+    .filter(t => t.type === 'BUY' && t.spentAmount > 0 && !NON_CRYPTO_SYMBOLS.has((t.receivedCurrency || '').toUpperCase()))
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   let cumulativeEUR = 0;
@@ -384,6 +390,7 @@ export function generatePortfolioValueHistory(
 
       if (isBuy) {
         const coin = (tx.receivedCurrency || '').toUpperCase();
+        if (NON_CRYPTO_SYMBOLS.has(coin)) continue;
         holdings[coin] = (holdings[coin] || 0) + (tx.receivedAmount || 0);
         cumulativeInvested += spent;
 
@@ -397,6 +404,7 @@ export function generatePortfolioValueHistory(
         }
       } else if (isSell) {
         const coin = (tx.spentCurrency || '').toUpperCase();
+        if (NON_CRYPTO_SYMBOLS.has(coin)) continue;
         holdings[coin] = Math.max(0, (holdings[coin] || 0) - (tx.spentAmount || 0));
         cumulativeInvested = Math.max(0, cumulativeInvested - spent);
       }

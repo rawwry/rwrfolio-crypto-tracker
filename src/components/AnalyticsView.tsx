@@ -42,7 +42,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       />
 
       {/* 2. Visual Charts Component (Allocation Donut & Cumulative Investment) */}
-      <PortfolioCharts assets={assets} transactions={transactions} currency={currency} />
+      <PortfolioCharts assets={assets} transactions={transactions} currency={currency} theme={theme} />
 
       {/* Asset Breakdown Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -63,7 +63,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <div 
               key={asset.symbol} 
               className={`p-5 rounded-2xl border space-y-3 ${
-                isLight ? 'bg-white border-slate-200' : 'bg-slate-900/80 border-slate-800/80'
+                isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/80 border-slate-800/80 shadow-lg'
               }`}
             >
               <div className="flex items-center justify-between">
@@ -111,7 +111,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div>
                   <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Gewinn / Verlust</span>
                   <div className={`font-semibold ${isProfit ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)}%
+                    {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %
                   </div>
                   <div className={`text-[10px] font-medium ${isProfit ? 'text-emerald-500/80' : 'text-rose-500/80'}`}>
                     {isProfit ? '+' : ''}{formatCurr(activePnl)}

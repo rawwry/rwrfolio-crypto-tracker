@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.3';
+export const APP_VERSION = '0.5.4';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.4',
+    date: '29.09.2026',
+    title: 'Light Theme Diagramme & Tabellen, Steuerbericht (PDF) & Bereinigung von Fiat-Transaktionen',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Vollständiges Light-Theme für alle Charts & Tabellen: Tortendiagramm, Timeline-Chart, Transaktionstabelle, KPI-Karten und Modals passen sich nahtlos dem hellen Farbschema an.',
+      },
+      {
+        type: 'ui',
+        text: 'Typografie: Einheitliches Leerzeichen vor dem Prozentzeichen (z. B. "+22,04 %") im gesamten Dashboard.',
+      },
+      {
+        type: 'ui',
+        text: 'Navigation: Das Steuermenü lautet nun schlicht und aufgeräumt „Steuern“ (ohne Icon und ohne Fifo-Klammerzusatz).',
+      },
+      {
+        type: 'fix',
+        text: 'Automatische Filterung reiner Fiat-Transaktionen (EUR, USD, ZEUR, SEPA-Einzahlungen, Kartentransfers): Verhindert „UNKNOWN“-Platzhalter in der Asset- und DCA-Tabelle.',
+      },
+      {
+        type: 'feat',
+        text: 'Professioneller Steuerbericht-Export als PDF: Druckfertige, hochauflösende Übersicht für Steuerberater oder Finanzamt mit FIFO-Haltefristen (§ 23 EStG), Freigrenzen und Einzeltranchen.',
+      },
+    ],
+  },
   {
     version: '0.5.3',
     date: '29.09.2026',
     title: 'Kraken Live-Kurse & Exakte Rendite-Berechnung (UP&L) für Kraken Pro Assets',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

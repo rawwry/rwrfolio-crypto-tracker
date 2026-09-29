@@ -122,6 +122,17 @@ export function parseCryptoComCSV(rows: string[][]): Transaction[] {
     const descLower = desc.toLowerCase();
     const kindLower = kind.toLowerCase();
 
+    // Ignore pure fiat deposits/withdrawals (e.g. Fiat Deposit, SEPA transfer, Card Top-Up) as they are not crypto transactions
+    const FIAT_SET = new Set(['EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD']);
+    const isPureFiat =
+      FIAT_SET.has((currency || '').toUpperCase()) &&
+      (!toCurrency || FIAT_SET.has(toCurrency.toUpperCase())) &&
+      (descLower.includes('deposit') || descLower.includes('withdraw') || descLower.includes('top-up') || descLower.includes('top up') || descLower.includes('recharge') || descLower.includes('fiat') || descLower.includes('transfer') || kindLower.includes('fiat_deposit') || kindLower.includes('viban_deposit') || kindLower.includes('fiat_withdrawal'));
+
+    if (isPureFiat) {
+      continue;
+    }
+
     // Determine type
     if (descLower.startsWith('bought') || kindLower.includes('purchase') || kindLower.includes('buy')) {
       type = 'BUY';
@@ -154,6 +165,13 @@ export function parseCryptoComCSV(rows: string[][]): Transaction[] {
       } else if (amountVal > 0 && toAmountVal < 0) {
         type = 'SELL';
       }
+    }
+
+    // If both currencies are fiat or unknown, skip
+    const recUpper = (recCurr || currency || '').toUpperCase();
+    const spentUpper = (spentCurr || '').toUpperCase();
+    if ((FIAT_SET.has(recUpper) || recUpper === 'UNKNOWN' || !recUpper) && (FIAT_SET.has(spentUpper) || spentUpper === 'UNKNOWN' || !spentUpper)) {
+      continue;
     }
 
     // Format ISO Timestamp
@@ -242,6 +260,10 @@ export function parseGenericCSV(
 
     const rawTimestamp = row[mapping.timestampCol] || new Date().toISOString();
     const coin = (row[mapping.coinCol] || 'UNKNOWN').toUpperCase();
+    const FIAT_SET = new Set(['EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD']);
+    if (coin === 'UNKNOWN' || FIAT_SET.has(coin)) {
+      continue;
+    }
     const rawAmt = parseFloat((row[mapping.amountCol] || '0').replace(/[^0-9.-]/g, '')) || 0;
     const rawSpent = mapping.spentAmountCol !== undefined ? parseFloat((row[mapping.spentAmountCol] || '0').replace(/[^0-9.-]/g, '')) : 0;
     const spentCurr = mapping.spentCurrencyCol !== undefined ? row[mapping.spentCurrencyCol] || 'EUR' : 'EUR';

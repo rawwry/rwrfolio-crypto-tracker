@@ -7,7 +7,6 @@ import {
   Sun, 
   Moon, 
   User, 
-  ShieldCheck,
   LogOut
 } from 'lucide-react';
 import { PortfolioTotals, ThemeMode, UserProfile, PortfolioCurrency } from '../types';
@@ -136,14 +135,13 @@ export const Navbar: React.FC<NavbarProps> = ({
             </button>
             <button
               onClick={() => setActiveTab('taxes')}
-              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1 ${
+              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all ${
                 activeTab === 'taxes'
                   ? 'bg-indigo-600 text-white font-semibold shadow-sm'
                   : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Steuern (FIFO)</span>
+              <span>Steuern</span>
             </button>
           </nav>
 

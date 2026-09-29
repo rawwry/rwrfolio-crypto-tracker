@@ -495,7 +495,7 @@ export default function App() {
         )}
 
         {/* Top KPIs Summary Cards */}
-        <PortfolioStats totals={totals} assets={assets} />
+        <PortfolioStats totals={totals} assets={assets} currency={settings.currency || 'EUR'} theme={settings.theme} />
 
         {/* Dashboard View */}
         {activeTab === 'dashboard' && (
@@ -555,12 +555,13 @@ export default function App() {
             </div>
 
             {/* Visual Charts */}
-            <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} />
+            <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} theme={settings.theme} />
 
             {/* Asset DCA & Holdings Table with Profit/Loss calculation */}
             <AssetList
               assets={assets}
               currency={settings.currency || 'EUR'}
+              theme={settings.theme}
               onSelectAssetForFilter={handleSelectAssetForFilter}
               onEditPrice={(symbol, currentPrice) => setPriceEditTarget({ symbol, price: currentPrice })}
             />
@@ -585,6 +586,7 @@ export default function App() {
               <TransactionTable
                 transactions={transactions}
                 currency={settings.currency || 'EUR'}
+                theme={settings.theme}
                 onEditTransaction={(tx) => {
                   setEditingTransaction(tx);
                   setIsAddModalOpen(true);
@@ -636,6 +638,7 @@ export default function App() {
             <TransactionTable
               transactions={transactions}
               currency={settings.currency || 'EUR'}
+              theme={settings.theme}
               onEditTransaction={(tx) => {
                 setEditingTransaction(tx);
                 setIsAddModalOpen(true);
@@ -654,6 +657,7 @@ export default function App() {
             <AssetList
               assets={assets}
               currency={settings.currency || 'EUR'}
+              theme={settings.theme}
               onSelectAssetForFilter={handleSelectAssetForFilter}
               onEditPrice={(symbol, currentPrice) => setPriceEditTarget({ symbol, price: currentPrice })}
             />
@@ -677,6 +681,7 @@ export default function App() {
             transactions={transactions}
             customPrices={customPrices}
             theme={settings.theme}
+            userProfile={settings.user}
           />
         )}
 

@@ -195,10 +195,16 @@ export function parseKrakenCSVRows(rows: string[][]): Transaction[] {
     if (!rawPair && !rawVol && !rawCost) continue;
 
     const { base, quote } = parseKrakenPair(rawPair);
+    const FIAT_SET = new Set(['EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD']);
+    if (!base || base === 'UNKNOWN' || FIAT_SET.has(base.toUpperCase())) {
+      continue;
+    }
+
     const side = rawType.toLowerCase();
     const isBuy = side === 'buy' || side.includes('kauf');
 
     const volume = Math.abs(cleanNumber(rawVol));
+    if (volume <= 0) continue;
     let cost = Math.abs(cleanNumber(rawCost));
     const price = cleanNumber(rawPrice);
     const fee = cleanNumber(rawFee);
@@ -348,6 +354,8 @@ function parseKrakenCombinedRecord(line: string): Transaction | null {
   const pairMatch = textAfterDate.match(/\b([A-Z0-9]{2,10}(?:[\/\-][A-Z0-9]{2,10})?)\b/);
   const rawPair = pairMatch ? pairMatch[1] : '';
   const { base, quote } = parseKrakenPair(rawPair);
+  const FIAT_SET = new Set(['EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD']);
+  if (!base || base === 'UNKNOWN' || FIAT_SET.has(base.toUpperCase())) return null;
 
   // Extract TxID if present
   const txidMatch = textAfterDate.match(/\b([T][A-Z0-9]{4,}-[A-Z0-9]{4,}-[A-Z0-9]{4,}|[0-9a-fA-F-]{16,})\b/);

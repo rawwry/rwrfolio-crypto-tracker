@@ -14,6 +14,7 @@ import { getCoinDetails } from '../utils/priceService';
 interface AssetListProps {
   assets: AssetSummary[];
   currency?: PortfolioCurrency;
+  theme?: 'light' | 'dark' | 'system';
   onSelectAssetForFilter?: (symbol: string) => void;
   onEditPrice?: (symbol: string, currentPrice: number) => void;
 }
@@ -21,9 +22,11 @@ interface AssetListProps {
 export const AssetList: React.FC<AssetListProps> = ({
   assets,
   currency = 'EUR',
+  theme = 'dark',
   onSelectAssetForFilter,
   onEditPrice,
 }) => {
+  const isLight = theme === 'light';
   const isUSD = currency === 'USD';
   // Allow user to toggle between responsive card view and full table view
   const [viewMode, setViewMode] = useState<'auto' | 'cards' | 'table'>('auto');
@@ -55,12 +58,16 @@ export const AssetList: React.FC<AssetListProps> = ({
 
   if (assets.length === 0) {
     return (
-      <div className="bg-slate-900/60 rounded-2xl p-12 border border-slate-800 text-center">
-        <div className="w-14 h-14 bg-slate-800/80 rounded-2xl flex items-center justify-center mx-auto mb-4 text-slate-400">
-          <Sparkles className="w-7 h-7 text-indigo-400" />
+      <div className={`rounded-2xl p-12 border text-center ${
+        isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/60 border-slate-800'
+      }`}>
+        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+          isLight ? 'bg-slate-100 text-slate-500' : 'bg-slate-800/80 text-slate-400'
+        }`}>
+          <Sparkles className="w-7 h-7 text-indigo-500" />
         </div>
-        <h3 className="text-lg font-bold text-white mb-1">Noch keine Krypto-Assets vorhanden</h3>
-        <p className="text-sm text-slate-400 max-w-md mx-auto mb-6">
+        <h3 className={`text-lg font-bold mb-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>Noch keine Krypto-Assets vorhanden</h3>
+        <p className={`text-sm max-w-md mx-auto mb-6 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
           Importiere deine Kraken oder Crypto.com Export-Datei oder erfasse deine ersten Käufe manuell, um deine Bestände und Durchschnitte hier zu sehen.
         </p>
       </div>
@@ -68,29 +75,37 @@ export const AssetList: React.FC<AssetListProps> = ({
   }
 
   return (
-    <div className="bg-slate-900/80 rounded-2xl border border-slate-800/90 shadow-xl overflow-hidden">
+    <div className={`rounded-2xl border shadow-xl overflow-hidden ${
+      isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/80 border-slate-800/90'
+    }`}>
       {/* Header with Title and Mobile View Mode Switcher */}
-      <div className="p-4 sm:p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className={`p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+        isLight ? 'border-slate-100 bg-white' : 'border-slate-800 bg-transparent'
+      }`}>
         <div>
-          <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+          <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <span>Asset-Übersicht &amp; Durchschnittskurse (DCA)</span>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+            <span className={`text-xs px-2 py-0.5 rounded-full border ${
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
+            }`}>
               {assets.length} Coins
             </span>
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             Automatisch berechneter Einkaufswert, aktueller Marktwert und Gewinn/Verlust
           </p>
         </div>
 
         {/* View Switcher: Auto (cards on mobile, table on desktop), Force Cards, Force Table */}
-        <div className="flex items-center self-start sm:self-auto space-x-1 p-1 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+        <div className={`flex items-center self-start sm:self-auto space-x-1 p-1 rounded-xl border text-xs ${
+          isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+        }`}>
           <button
             onClick={() => setViewMode('auto')}
             className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
               viewMode === 'auto'
                 ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
             }`}
             title="Auf dem Smartphone als kompakte Karten ohne horizontales Wischen, auf Desktop als Tabelle"
           >
@@ -101,7 +116,7 @@ export const AssetList: React.FC<AssetListProps> = ({
             className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
               viewMode === 'cards'
                 ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
             }`}
             title="Kompakte Kartenansicht für schnellen Gewinn/Verlust-Blick"
           >
@@ -113,7 +128,7 @@ export const AssetList: React.FC<AssetListProps> = ({
             className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
               viewMode === 'table'
                 ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : 'text-slate-400 hover:text-slate-200'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
             }`}
             title="Vollständige Tabelle mit allen Spalten"
           >
@@ -124,7 +139,9 @@ export const AssetList: React.FC<AssetListProps> = ({
       </div>
 
       {/* 1. MOBILE QUICK-CHECK VIEW (Zero horizontal scrolling on phone) */}
-      <div className={`${viewMode === 'table' ? 'hidden' : viewMode === 'cards' ? 'block' : 'block sm:hidden'} divide-y divide-slate-800/60`}>
+      <div className={`${viewMode === 'table' ? 'hidden' : viewMode === 'cards' ? 'block' : 'block sm:hidden'} divide-y ${
+        isLight ? 'divide-slate-100' : 'divide-slate-800/60'
+      }`}>
         {assets.map((asset) => {
           const details = getCoinDetails(asset.symbol);
 
@@ -139,7 +156,9 @@ export const AssetList: React.FC<AssetListProps> = ({
           const avgBuyDecimals = activeAvgBuy < 1 ? 4 : (activeAvgBuy < 10 ? 3 : 2);
 
           return (
-            <div key={asset.symbol} className="p-4 space-y-3 hover:bg-slate-800/20 transition-colors">
+            <div key={asset.symbol} className={`p-4 space-y-3 transition-colors ${
+              isLight ? 'hover:bg-slate-50/80' : 'hover:bg-slate-800/20'
+            }`}>
               {/* Card Headline: Asset info on left, PROMINENT CURRENT VALUE & GAIN/LOSS ON RIGHT */}
               <div className="flex items-center justify-between gap-2">
                 <div className="flex items-center space-x-2.5 min-w-0">
@@ -150,11 +169,11 @@ export const AssetList: React.FC<AssetListProps> = ({
                     {asset.symbol.substring(0, 4)}
                   </div>
                   <div className="min-w-0">
-                    <div className="font-bold text-white text-sm flex items-center space-x-1.5">
+                    <div className={`font-bold text-sm flex items-center space-x-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       <span>{asset.symbol}</span>
-                      <span className="text-xs font-normal text-slate-400 truncate max-w-[120px]">{asset.name}</span>
+                      <span className={`text-xs font-normal truncate max-w-[120px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
                     </div>
-                    <div className="text-xs text-slate-400 font-mono mt-0.5">
+                    <div className={`text-xs font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                       {formatCoinAmount(asset.currentBalance)} {asset.symbol}
                     </div>
                   </div>
@@ -162,33 +181,35 @@ export const AssetList: React.FC<AssetListProps> = ({
 
                 {/* Right Headline: Current Value & Profit/Loss (Immediately visible without swiping!) */}
                 <div className="text-right flex-shrink-0">
-                  <div className="text-base font-extrabold font-mono text-white">
+                  <div className={`text-base font-extrabold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     {formatActive(activeValue)}
                   </div>
                   <div className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-xs font-mono font-bold mt-0.5 ${
                     isProfit 
-                      ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25' 
-                      : 'bg-rose-500/15 text-rose-400 border border-rose-500/25'
+                      ? (isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25') 
+                      : (isLight ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-rose-500/15 text-rose-400 border border-rose-500/25')
                   }`}>
                     {isProfit ? <ArrowUpRight className="w-3.5 h-3.5 inline" /> : <ArrowDownRight className="w-3.5 h-3.5 inline" />}
-                    <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)}%</span>
+                    <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %</span>
                   </div>
                 </div>
               </div>
 
               {/* Quick metrics grid: Ø Kaufkurs, Akt. Kurs, Investiert, Gewinn € */}
-              <div className="grid grid-cols-3 gap-2 p-2.5 rounded-xl bg-slate-950/50 border border-slate-800/70 text-xs font-mono">
+              <div className={`grid grid-cols-3 gap-2 p-2.5 rounded-xl border text-xs font-mono ${
+                isLight ? 'bg-slate-50 border-slate-200/80' : 'bg-slate-950/50 border-slate-800/70'
+              }`}>
                 <div>
-                  <div className="text-[10px] font-sans text-slate-400">Ø Kaufkurs</div>
-                  <div className="font-medium text-indigo-300 truncate">{formatActive(activeAvgBuy, avgBuyDecimals)}</div>
+                  <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Ø Kaufkurs</div>
+                  <div className={`font-medium truncate ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>{formatActive(activeAvgBuy, avgBuyDecimals)}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-sans text-slate-400">Aktueller Kurs</div>
-                  <div className="font-medium text-slate-200 truncate">{formatActive(activePrice, priceDecimals)}</div>
+                  <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Aktueller Kurs</div>
+                  <div className={`font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</div>
                 </div>
                 <div className="text-right">
-                  <div className="text-[10px] font-sans text-slate-400">Gewinn (€)</div>
-                  <div className={`font-bold truncate ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Gewinn (€)</div>
+                  <div className={`font-bold truncate ${isProfit ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
                     {isProfit ? '+' : ''}{formatActive(activePnl)}
                   </div>
                 </div>
@@ -197,16 +218,18 @@ export const AssetList: React.FC<AssetListProps> = ({
               {/* Bottom footer: Investiert, Portfolio % bar & Action Buttons */}
               <div className="flex items-center justify-between text-xs pt-0.5">
                 <div className="flex items-center space-x-2 flex-1 max-w-[200px]">
-                  <span className="text-[11px] text-slate-400">Investiert:</span>
-                  <span className="font-mono text-slate-300 font-semibold">{formatActive(activeInvested)}</span>
-                  <span className="text-[11px] text-slate-500 font-mono">({asset.allocationPercentage.toFixed(1)}%)</span>
+                  <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Investiert:</span>
+                  <span className={`font-mono font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>{formatActive(activeInvested)}</span>
+                  <span className={`text-[11px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>({asset.allocationPercentage.toFixed(1)} %)</span>
                 </div>
 
                 <div className="flex items-center space-x-1.5">
                   {onEditPrice && (
                     <button
                       onClick={() => onEditPrice(asset.symbol, activePrice)}
-                      className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-indigo-400 text-xs transition-colors cursor-pointer"
+                      className={`p-1.5 rounded-lg text-xs transition-colors cursor-pointer ${
+                        isLight ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-indigo-600' : 'bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-indigo-400'
+                      }`}
                       title="Kurs manuell anpassen"
                     >
                       <Edit3 className="w-3.5 h-3.5" />
@@ -215,7 +238,11 @@ export const AssetList: React.FC<AssetListProps> = ({
                   {onSelectAssetForFilter && (
                     <button
                       onClick={() => onSelectAssetForFilter(asset.symbol)}
-                      className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border border-slate-700/60 transition-colors cursor-pointer"
+                      className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
+                        isLight 
+                          ? 'text-slate-700 bg-slate-100 hover:bg-indigo-600 hover:text-white border-slate-200' 
+                          : 'text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border-slate-700/60'
+                      }`}
                     >
                       <Filter className="w-3 h-3" />
                       <span>Details</span>
@@ -231,7 +258,9 @@ export const AssetList: React.FC<AssetListProps> = ({
       {/* 2. REFINED DESKTOP TABLE (Single-line headers, perfectly aligned columns) */}
       <div className={`${viewMode === 'cards' ? 'hidden' : viewMode === 'table' ? 'block' : 'hidden sm:block'} overflow-x-auto`}>
         <table className="w-full text-left text-sm border-collapse">
-          <thead className="bg-slate-950/70 text-slate-400 text-xs uppercase font-semibold tracking-wider border-b border-slate-800">
+          <thead className={`text-xs uppercase font-semibold tracking-wider border-b ${
+            isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/70 text-slate-400 border-slate-800'
+          }`}>
             <tr>
               <th className="py-3.5 px-4 sm:px-6 text-left whitespace-nowrap">Asset / Coin</th>
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Bestand</th>
@@ -244,7 +273,7 @@ export const AssetList: React.FC<AssetListProps> = ({
               <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktionen</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60">
+          <tbody className={`divide-y ${isLight ? 'divide-slate-100' : 'divide-slate-800/60'}`}>
             {assets.map((asset) => {
               const details = getCoinDetails(asset.symbol);
 
@@ -271,7 +300,9 @@ export const AssetList: React.FC<AssetListProps> = ({
               return (
                 <tr 
                   key={asset.symbol} 
-                  className="hover:bg-slate-800/40 transition-colors group"
+                  className={`transition-colors group ${
+                    isLight ? 'hover:bg-slate-50/80' : 'hover:bg-slate-800/40'
+                  }`}
                 >
                   {/* Asset Symbol & Name (text-left) */}
                   <td className="py-3.5 px-4 sm:px-6 text-left align-middle">
@@ -284,15 +315,15 @@ export const AssetList: React.FC<AssetListProps> = ({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <span className="font-bold text-white shrink-0">{asset.symbol}</span>
+                          <span className={`font-bold shrink-0 ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
                           <span 
-                            className="text-xs font-normal text-slate-400 truncate max-w-[140px] sm:max-w-[200px]" 
+                            className={`text-xs font-normal truncate max-w-[140px] sm:max-w-[200px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`} 
                             title={asset.name}
                           >
                             {asset.name}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-400 whitespace-nowrap">
+                        <div className={`text-xs whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                           {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
                         </div>
                       </div>
@@ -300,36 +331,40 @@ export const AssetList: React.FC<AssetListProps> = ({
                   </td>
 
                   {/* Balance (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono font-medium text-slate-100 align-middle whitespace-nowrap">
+                  <td className={`py-3.5 px-4 text-right font-mono font-medium align-middle whitespace-nowrap ${
+                    isLight ? 'text-slate-900' : 'text-slate-100'
+                  }`}>
                     <div>{formatCoinAmount(asset.currentBalance)}</div>
-                    <div className="text-xs text-slate-400 font-sans">{asset.symbol}</div>
+                    <div className={`text-xs font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.symbol}</div>
                   </td>
 
                   {/* Avg Buy Price / DCA (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono text-slate-200 align-middle whitespace-nowrap">
-                    <div className="font-medium text-indigo-300">
+                  <td className="py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap">
+                    <div className={`font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
                       {formatActive(activeAvgBuy, avgBuyDecimals)}
                     </div>
                     {altAvgBuy !== undefined && altAvgBuy > 0 && (
-                      <div className="text-[10px] text-slate-500 font-sans">
+                      <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                         ≈ {formatAlt(altAvgBuy, altDecimals)}
                       </div>
                     )}
                   </td>
 
                   {/* Current Price (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono text-slate-200 align-middle whitespace-nowrap">
+                  <td className="py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap">
                     <div className="flex items-center justify-end space-x-1.5 group/price">
                       {onEditPrice && (
                         <button
                           onClick={() => onEditPrice(asset.symbol, activePrice)}
                           title="Kurs manuell anpassen"
-                          className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-indigo-400 transition-all cursor-pointer"
+                          className={`opacity-0 group-hover:opacity-100 p-1 rounded transition-all cursor-pointer ${
+                            isLight ? 'hover:bg-slate-200 text-slate-500 hover:text-indigo-600' : 'hover:bg-slate-700 text-slate-400 hover:text-indigo-400'
+                          }`}
                         >
                           <Edit3 className="w-3 h-3" />
                         </button>
                       )}
-                      <span className="font-medium">{formatActive(activePrice, priceDecimals)}</span>
+                      <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</span>
                     </div>
                     {altPrice !== undefined && altPrice > 0 && (
                       <div className="text-[10px] text-slate-500 font-sans">
@@ -339,7 +374,9 @@ export const AssetList: React.FC<AssetListProps> = ({
                   </td>
 
                   {/* Total Invested (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono text-slate-300 align-middle whitespace-nowrap">
+                  <td className={`py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap ${
+                    isLight ? 'text-slate-700' : 'text-slate-300'
+                  }`}>
                     <div>{formatActive(activeInvested)}</div>
                     {altInvested !== undefined && (
                       <div className="text-[10px] text-slate-500 font-sans">
@@ -349,7 +386,9 @@ export const AssetList: React.FC<AssetListProps> = ({
                   </td>
 
                   {/* Current Value (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono font-bold text-white align-middle whitespace-nowrap">
+                  <td className={`py-3.5 px-4 text-right font-mono font-bold align-middle whitespace-nowrap ${
+                    isLight ? 'text-slate-900' : 'text-white'
+                  }`}>
                     <div>{formatActive(activeValue)}</div>
                     {altValue !== undefined && (
                       <div className="text-[10px] text-slate-500 font-sans font-normal">
@@ -360,10 +399,14 @@ export const AssetList: React.FC<AssetListProps> = ({
 
                   {/* Profit / Loss (text-right) */}
                   <td className="py-3.5 px-4 text-right align-middle whitespace-nowrap">
-                    <div className={`font-mono font-semibold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)}%
+                    <div className={`font-mono font-semibold ${
+                      isProfit ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
+                    }`}>
+                      {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %
                     </div>
-                    <div className={`text-xs font-mono font-medium ${isProfit ? 'text-emerald-400/90' : 'text-rose-400/90'}`}>
+                    <div className={`text-xs font-mono font-medium ${
+                      isProfit ? (isLight ? 'text-emerald-700/80' : 'text-emerald-400/90') : (isLight ? 'text-rose-700/80' : 'text-rose-400/90')
+                    }`}>
                       {isProfit ? '+' : ''}{formatActive(activePnl)}
                     </div>
                     {altPnl !== undefined && (
@@ -375,10 +418,14 @@ export const AssetList: React.FC<AssetListProps> = ({
 
                   {/* Allocation % (text-right) */}
                   <td className="py-3.5 px-4 text-right min-w-[100px] align-middle whitespace-nowrap">
-                    <div className="text-xs font-mono font-semibold text-slate-200 mb-1">
-                      {asset.allocationPercentage.toFixed(1)}%
+                    <div className={`text-xs font-mono font-semibold mb-1 ${
+                      isLight ? 'text-slate-700' : 'text-slate-200'
+                    }`}>
+                      {asset.allocationPercentage.toFixed(1)} %
                     </div>
-                    <div className="w-full max-w-[80px] ml-auto bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div className={`w-full max-w-[80px] ml-auto rounded-full h-1.5 overflow-hidden ${
+                      isLight ? 'bg-slate-100' : 'bg-slate-800'
+                    }`}>
                       <div 
                         className="h-full rounded-full transition-all duration-500"
                         style={{ 
@@ -394,7 +441,11 @@ export const AssetList: React.FC<AssetListProps> = ({
                     {onSelectAssetForFilter && (
                       <button
                         onClick={() => onSelectAssetForFilter(asset.symbol)}
-                        className="inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border border-slate-700/60 transition-all shadow-sm cursor-pointer"
+                        className={`inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm cursor-pointer border ${
+                          isLight 
+                            ? 'text-slate-700 bg-slate-100 hover:bg-indigo-600 hover:text-white border-slate-200' 
+                            : 'text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border-slate-700/60'
+                        }`}
                         title={`Transaktionen für ${asset.symbol} filtern`}
                       >
                         <Filter className="w-3 h-3" />
