@@ -9,9 +9,29 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.2';
+export const APP_VERSION = '0.5.3';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.3',
+    date: '29.09.2026',
+    title: 'Kraken Live-Kurse & Exakte Rendite-Berechnung (UP&L) für Kraken Pro Assets',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Direkte Anbindung an die offizielle Kraken Public Ticker API: Live-Spot-Preise für alle Kraken-Handelspaare (u.a. MLN, LINK, DOGE und Meme-Coins wie LAPTOP/USD) werden in Echtzeit sekundengenau synchronisiert.',
+      },
+      {
+        type: 'fix',
+        text: 'Behebung drastisch abweichender Prozentwerte (UP&L): Krypto-Assets wie LAPTOP (zuvor 0 € / -100%) und MLN (zuvor abweichender Fremdbörsenkurs) erhalten nun die identischen Marktkurse wie auf der Kraken Pro Plattform.',
+      },
+      {
+        type: 'feat',
+        text: 'Erweiterte Standard-Asset-Definitionen für Enzyme Finance (MLN) und Hunter Biden’s Laptop (LAPTOP) inklusive automatischer EUR/USD-Wechselkursberechnung.',
+      },
+    ],
+  },
   {
     version: '0.5.2',
     date: '29.09.2026',

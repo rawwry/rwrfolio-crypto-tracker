@@ -23,7 +23,9 @@ export const KNOWN_COINS: Record<string, CoinInfo> = {
   ADA: { id: 'cardano', name: 'Cardano', symbol: 'ADA', defaultPriceEUR: 0.35, defaultPriceUSD: 0.41, color: '#0033ad' },
   XRP: { id: 'ripple', name: 'XRP', symbol: 'XRP', defaultPriceEUR: 0.52, defaultPriceUSD: 0.60, color: '#23292f' },
   AVAX: { id: 'avalanche-2', name: 'Avalanche', symbol: 'AVAX', defaultPriceEUR: 24.50, defaultPriceUSD: 28.40, color: '#e84142' },
-  LINK: { id: 'chainlink', name: 'Chainlink', symbol: 'LINK', defaultPriceEUR: 11.20, defaultPriceUSD: 13.00, color: '#375bd2' },
+  LINK: { id: 'chainlink', name: 'Chainlink', symbol: 'LINK', defaultPriceEUR: 13.45, defaultPriceUSD: 15.60, color: '#375bd2' },
+  MLN: { id: 'melon', name: 'Enzyme Finance', symbol: 'MLN', defaultPriceEUR: 1.29, defaultPriceUSD: 1.50, color: '#00bfa5' },
+  LAPTOP: { id: 'hunter-bidens-laptop', name: "Hunter Biden's Laptop", symbol: 'LAPTOP', defaultPriceEUR: 0.067, defaultPriceUSD: 0.078, color: '#eab308' },
   NEAR: { id: 'near', name: 'NEAR Protocol', symbol: 'NEAR', defaultPriceEUR: 4.10, defaultPriceUSD: 4.75, color: '#000000' },
   MATIC: { id: 'polygon-ecosystem-token', name: 'Polygon', symbol: 'POL', defaultPriceEUR: 0.0809, defaultPriceUSD: 0.09379, color: '#8247e5' },
   POL: { id: 'polygon-ecosystem-token', name: 'Polygon Ecosystem Token', symbol: 'POL', defaultPriceEUR: 0.0809, defaultPriceUSD: 0.09379, color: '#8247e5' },
@@ -35,7 +37,7 @@ export const KNOWN_COINS: Record<string, CoinInfo> = {
   TAO: { id: 'bittensor', name: 'Bittensor', symbol: 'TAO', defaultPriceEUR: 310, defaultPriceUSD: 360, color: '#2b2b2b' },
   RNDR: { id: 'render-token', name: 'Render', symbol: 'RNDR', defaultPriceEUR: 5.20, defaultPriceUSD: 6.00, color: '#e51d24' },
   RENDER: { id: 'render-token', name: 'Render', symbol: 'RENDER', defaultPriceEUR: 5.20, defaultPriceUSD: 6.00, color: '#e51d24' },
-  DOGE: { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', defaultPriceEUR: 0.11, defaultPriceUSD: 0.127, color: '#c2a633' },
+  DOGE: { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', defaultPriceEUR: 0.084, defaultPriceUSD: 0.097, color: '#c2a633' },
   SHIB: { id: 'shiba-inu', name: 'Shiba Inu', symbol: 'SHIB', defaultPriceEUR: 0.000015, defaultPriceUSD: 0.000017, color: '#ffa409' },
   ATOM: { id: 'cosmos', name: 'Cosmos', symbol: 'ATOM', defaultPriceEUR: 4.50, defaultPriceUSD: 5.20, color: '#2e3148' },
   USDT: { id: 'tether', name: 'Tether USD', symbol: 'USDT', defaultPriceEUR: 0.863, defaultPriceUSD: 1.00, color: '#26a17b' },
@@ -76,6 +78,7 @@ export function setLiveEurUsdRate(rate: number): void {
 }
 
 export function getStoredCustomPrices(): Record<string, number> {
+  if (typeof window === 'undefined' || !window.localStorage) return {};
   try {
     const data = localStorage.getItem(STORAGE_PRICE_KEY);
     if (!data) return {};
@@ -89,12 +92,12 @@ export function getStoredCustomPrices(): Record<string, number> {
     }
     return parsed;
   } catch (e) {
-    console.error('Failed to read stored prices', e);
     return {};
   }
 }
 
 export function saveStoredCustomPrice(symbol: string, priceEUR: number): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
   try {
     const existing = getStoredCustomPrices();
     const sym = symbol.toUpperCase();
@@ -108,11 +111,12 @@ export function saveStoredCustomPrice(symbol: string, priceEUR: number): void {
     }
     localStorage.setItem(STORAGE_PRICE_KEY, JSON.stringify(existing));
   } catch (e) {
-    console.error('Failed to save price', e);
+    // Ignore storage write error
   }
 }
 
 export function getLastPriceUpdateTime(): string | null {
+  if (typeof window === 'undefined' || !window.localStorage) return null;
   try {
     return localStorage.getItem(STORAGE_LAST_UPDATE_KEY);
   } catch {
@@ -121,6 +125,7 @@ export function getLastPriceUpdateTime(): string | null {
 }
 
 export function setLastPriceUpdateTime(): void {
+  if (typeof window === 'undefined' || !window.localStorage) return;
   try {
     localStorage.setItem(STORAGE_LAST_UPDATE_KEY, new Date().toISOString());
   } catch {
@@ -184,11 +189,114 @@ export function getCoinDetails(symbol: string): { name: string; color: string } 
   return { name: sym, color };
 }
 
+let cachedKrakenAssetPairs: Record<string, { base: string; quote: string; altname: string }> | null = null;
+let lastKrakenAssetPairsFetch = 0;
+
+/**
+ * Fetch real-time market prices directly from Kraken Public Ticker API.
+ * Ensures 100% pricing accuracy with Kraken Pro for all Kraken assets (MLN, LINK, LAPTOP, DOGE, BTC, etc.).
+ */
+export async function fetchKrakenLivePrices(
+  symbols: string[],
+  eurUsdRate: number
+): Promise<Record<string, number>> {
+  const results: Record<string, number> = {};
+  try {
+    const now = Date.now();
+    if (!cachedKrakenAssetPairs || now - lastKrakenAssetPairsFetch > 3600000) {
+      const res = await fetch('https://api.kraken.com/0/public/AssetPairs');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.result) {
+          cachedKrakenAssetPairs = data.result;
+          lastKrakenAssetPairsFetch = now;
+        }
+      }
+    }
+
+    if (!cachedKrakenAssetPairs) return results;
+
+    const KRAKEN_BASE_ALIASES: Record<string, string[]> = {
+      BTC: ['XXBT', 'XBT'],
+      ETH: ['XETH'],
+      DOGE: ['XXDG', 'XDG'],
+      MLN: ['XMLN'],
+      XRP: ['XXRP'],
+      XLM: ['XXLM'],
+      LTC: ['XLTC'],
+      ETC: ['XETC'],
+      REP: ['XREP'],
+    };
+
+    const pairKeys: string[] = [];
+    const pairMeta: Record<string, { symbol: string; quote: string }> = {};
+
+    for (const rawSym of symbols) {
+      const s = rawSym.toUpperCase();
+      const candidateBases = KRAKEN_BASE_ALIASES[s] || [s];
+
+      let matchedPair: string | null = null;
+      let matchedQuote: string | null = null;
+
+      for (const [key, info] of Object.entries(cachedKrakenAssetPairs)) {
+        if (
+          candidateBases.includes(info.base) ||
+          info.altname === `${s}EUR` ||
+          info.altname === `${s}USD` ||
+          info.altname === `${s}USDT`
+        ) {
+          if (info.quote === 'ZEUR' || info.quote === 'EUR') {
+            matchedPair = key;
+            matchedQuote = 'EUR';
+            break; // Prefer direct EUR pair
+          } else if ((info.quote === 'ZUSD' || info.quote === 'USD' || info.quote === 'USDT') && !matchedPair) {
+            matchedPair = key;
+            matchedQuote = 'USD';
+          }
+        }
+      }
+
+      if (matchedPair) {
+        pairKeys.push(matchedPair);
+        pairMeta[matchedPair] = { symbol: s, quote: matchedQuote || 'EUR' };
+      }
+    }
+
+    if (pairKeys.length === 0) return results;
+
+    const chunkSize = 30;
+    for (let i = 0; i < pairKeys.length; i += chunkSize) {
+      const chunk = pairKeys.slice(i, i + chunkSize);
+      const tickerRes = await fetch(`https://api.kraken.com/0/public/Ticker?pair=${chunk.join(',')}`);
+      if (tickerRes.ok) {
+        const tickerData = await tickerRes.json();
+        if (tickerData.result) {
+          for (const [pairKey, t] of Object.entries(tickerData.result as Record<string, any>)) {
+            const meta = pairMeta[pairKey];
+            if (meta && t.c && t.c[0]) {
+              const rawPrice = parseFloat(t.c[0]);
+              if (rawPrice > 0) {
+                const priceEUR = meta.quote === 'EUR' ? rawPrice : rawPrice / eurUsdRate;
+                results[meta.symbol] = priceEUR;
+                saveStoredCustomPrice(meta.symbol, priceEUR);
+              }
+            }
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Kraken price fetch notice:', err);
+  }
+  return results;
+}
+
 /**
  * Fetch real-time market prices with multi-source fallback:
- * 1. Binance Direct (Liquid spot markets + live EUR/USDT exchange rate)
- * 2. Crypto.com Public Tickers (Exact Crypto.com reference prices for POL, AKT, HBAR, etc.)
- * 3. CoinGecko API (fallback for any remaining altcoins)
+ * 1. Kraken Public Ticker (Exact Kraken spot prices for MLN, LINK, LAPTOP, DOGE, BTC, etc.)
+ * 2. Binance Direct (Liquid spot markets + live EUR/USDT exchange rate)
+ * 3. Crypto.com Public Tickers (Exact Crypto.com reference prices for POL, AKT, HBAR, etc.)
+ * 4. CoinGecko API (fallback for any remaining altcoins)
  */
 export async function fetchLivePrices(symbols: string[]): Promise<Record<string, number>> {
   const uniqueSymbols = Array.from(new Set(symbols.map(s => s.toUpperCase()))).filter(s => s !== 'EUR');
@@ -197,7 +305,17 @@ export async function fetchLivePrices(symbols: string[]): Promise<Record<string,
   const results: Record<string, number> = {};
   let eurUsdt = getLiveEurUsdRate();
 
-  // 1. Fetch live EUR/USD rate & prices from Binance Public API
+  // 1. Fetch live prices directly from Kraken Public Ticker
+  try {
+    const krakenPrices = await fetchKrakenLivePrices(uniqueSymbols, eurUsdt);
+    for (const [sym, price] of Object.entries(krakenPrices)) {
+      results[sym] = price;
+    }
+  } catch (err) {
+    console.warn('Kraken live price fetch error, continuing with fallback', err);
+  }
+
+  // 2. Fetch live EUR/USD rate & prices from Binance Public API
   try {
     const res = await fetch('https://api.binance.com/api/v3/ticker/price');
     if (res.ok) {
@@ -213,7 +331,6 @@ export async function fetchLivePrices(symbols: string[]): Promise<Record<string,
       }
 
       // Live Polygon (POL) liquid market price calculation:
-      // High-volume POLUSDT pair gives accurate world market price
       let livePolPriceEUR: number | null = null;
       if (tickerMap.has('POLUSDT')) {
         livePolPriceEUR = tickerMap.get('POLUSDT')! / eurUsdt;
@@ -222,6 +339,9 @@ export async function fetchLivePrices(symbols: string[]): Promise<Record<string,
       }
 
       for (const sym of uniqueSymbols) {
+        // If already accurately provided by Kraken, don't overwrite with Binance
+        if (results[sym] && results[sym] > 0) continue;
+
         if (sym === 'USDT') {
           const price = 1 / eurUsdt;
           results[sym] = price;
@@ -236,7 +356,6 @@ export async function fetchLivePrices(symbols: string[]): Promise<Record<string,
             saveStoredCustomPrice(sym, livePolPriceEUR);
           }
         } else if (tickerMap.has(`${sym}USDT`)) {
-          // USDT pairs have deep liquidity, convert to EUR using live EUR/USD rate
           const price = tickerMap.get(`${sym}USDT`)! / eurUsdt;
           results[sym] = price;
           saveStoredCustomPrice(sym, price);
