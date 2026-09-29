@@ -9,14 +9,49 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.5';
+export const APP_VERSION = '0.5.6';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.6',
+    date: '29.09.2026',
+    title: 'Smart Import Auto-Detect, Börsen-Vergleich, Coin-Timeline-Overlays & Dashboard Widgets',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Smart Auto-Detect Import: CSV & PDF können nun ohne vorherige Börsenauswahl per Drag & Drop importiert werden. Automatische Erkennung von Kraken Pro vs. Crypto.com mit Rückfrage bei Unklarheiten (Binance komplett entfernt).',
+      },
+      {
+        type: 'feat',
+        text: 'Börsen-Vergleich (Kraken Pro vs. Crypto.com): Neuer Analyse-Bereich mit Gegenüberstellung von Portfoliowert, DCA-Erfolg, Kapitalallokation und Rendite.',
+      },
+      {
+        type: 'feat',
+        text: 'Dashboard-Widgets: Top Gainer & Top Loser Quick-Cards, Crypto Fear & Greed Index Widget (Alternative.me Live-Sentiment & DCA-Tipps) und Quick-Action Bar auf der Startseite.',
+      },
+      {
+        type: 'feat',
+        text: 'Coin-Timeline-Overlays: Im Portfolio-Verlaufschart können nun einzelne Coin-Verlaufskurven flexibel ein- und ausgeblendet werden.',
+      },
+      {
+        type: 'ui',
+        text: 'Optimierte Coin-Tabelle: Schlankes Layout ohne horizontales Scrollen auf Desktop.',
+      },
+      {
+        type: 'ui',
+        text: 'Steuerbericht Export: Schlanker Einzelbutton mit Dropdown zur Auswahl von PDF und CSV.',
+      },
+      {
+        type: 'ui',
+        text: 'Ausbalancierte Asset-Allokation: Entfernung von Scrollbalken und exakte Höhenanpassung im Dashboard.',
+      },
+    ],
+  },
   {
     version: '0.5.5',
     date: '29.09.2026',
     title: 'Fokus-Dashboard, Sortierfunktion in der Coin-Tabelle & Überarbeitete Analyse-Kacheln',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

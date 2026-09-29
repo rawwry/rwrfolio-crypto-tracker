@@ -331,6 +331,7 @@ export interface PortfolioValuePoint {
   txCount: number;
   holdingsSummary: string;
   isToday?: boolean;
+  coinValues?: Record<string, number>;
 }
 
 /**
@@ -412,12 +413,15 @@ export function generatePortfolioValueHistory(
 
     // Evaluate portfolio value on this date using known purchase prices or cost basis
     let dayValuation = 0;
+    const dayCoinValues: Record<string, number> = {};
     const holdingParts: string[] = [];
 
     for (const [coin, amount] of Object.entries(holdings)) {
       if (amount <= 0.00000001) continue;
       const coinPrice = latestHistoricalPrices[coin] || (isUSD ? getCoinPriceUSD(coin, customPrices) : getCoinPriceEUR(coin, customPrices));
-      dayValuation += amount * coinPrice;
+      const val = amount * coinPrice;
+      dayValuation += val;
+      dayCoinValues[coin] = Math.round(val * 100) / 100;
       holdingParts.push(`${amount >= 1 ? amount.toFixed(2) : amount.toFixed(4)} ${coin}`);
     }
 
@@ -438,18 +442,22 @@ export function generatePortfolioValueHistory(
       pnlPercentage: Math.round(pnlPercentage * 100) / 100,
       txCount: dayAddedCount,
       holdingsSummary: holdingParts.join(', '),
+      coinValues: dayCoinValues,
       isToday: false,
     });
   }
 
   // Append Today / Live Market Valuation point at the end
   let currentLiveValuation = 0;
+  const todayCoinValues: Record<string, number> = {};
   const currentHoldingsSummary: string[] = [];
 
   for (const [coin, amount] of Object.entries(holdings)) {
     if (amount <= 0.00000001) continue;
     const livePrice = isUSD ? getCoinPriceUSD(coin, customPrices) : getCoinPriceEUR(coin, customPrices);
-    currentLiveValuation += amount * livePrice;
+    const val = amount * livePrice;
+    currentLiveValuation += val;
+    todayCoinValues[coin] = Math.round(val * 100) / 100;
     currentHoldingsSummary.push(`${amount >= 1 ? amount.toFixed(2) : amount.toFixed(4)} ${coin}`);
   }
 
@@ -466,6 +474,7 @@ export function generatePortfolioValueHistory(
     pnlPercentage: Math.round(livePnlPercentage * 100) / 100,
     txCount: 0,
     holdingsSummary: currentHoldingsSummary.join(', '),
+    coinValues: todayCoinValues,
     isToday: true,
   });
 

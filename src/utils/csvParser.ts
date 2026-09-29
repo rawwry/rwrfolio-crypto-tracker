@@ -46,27 +46,25 @@ export function parseCSVLines(text: string): string[][] {
   return lines;
 }
 
-export function detectCSVFormat(headers: string[]): ExchangeSource | 'generic' {
+export function isCryptoComCSV(headers: string[]): boolean {
   const lowerHeaders = headers.map(h => h.toLowerCase().trim());
   const headerStr = lowerHeaders.join(',');
 
   if (headerStr.includes('timestamp (utc)') && headerStr.includes('transaction description') && headerStr.includes('to currency')) {
-    return 'crypto_com';
+    return true;
   }
   if (lowerHeaders.includes('timestamp (utc)') || (lowerHeaders.includes('to amount') && lowerHeaders.includes('transaction description'))) {
+    return true;
+  }
+  return false;
+}
+
+export function detectCSVFormat(headers: string[]): ExchangeSource | 'generic' {
+  if (isCryptoComCSV(headers)) {
     return 'crypto_com';
   }
   if (isKrakenCSV(headers)) {
     return 'kraken';
-  }
-  if (lowerHeaders.includes('market') && lowerHeaders.includes('filled') && lowerHeaders.includes('fee')) {
-    return 'binance';
-  }
-  if (lowerHeaders.includes('asset') && lowerHeaders.includes('spot price at transaction')) {
-    return 'coinbase';
-  }
-  if (lowerHeaders.includes('transaction type') && lowerHeaders.includes('asset class')) {
-    return 'bitpanda';
   }
   return 'generic';
 }

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { Transaction, PortfolioCurrency } from '../types';
 import { generatePortfolioValueHistory, PortfolioValuePoint } from '../utils/portfolioCalculations';
+import { getCoinDetails } from '../utils/priceService';
 
 interface PortfolioValueTimelineChartProps {
   transactions: Transaction[];
@@ -41,13 +42,44 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
 
   const [timeframe, setTimeframe] = useState<number | 'all'>('all');
   const [viewMode, setViewMode] = useState<'value' | 'pnl'>('value');
+  const [selectedCoins, setSelectedCoins] = useState<string[]>([]);
 
   const historyData = useMemo(() => {
     return generatePortfolioValueHistory(transactions, customPrices, currency as PortfolioCurrency, timeframe);
   }, [transactions, customPrices, currency, timeframe]);
 
+  // Available coins that have a recorded balance/value
+  const availableCoins = useMemo(() => {
+    const set = new Set<string>();
+    for (const pt of historyData) {
+      if (pt.coinValues) {
+        for (const [coin, val] of Object.entries(pt.coinValues)) {
+          if (val > 0) set.add(coin);
+        }
+      }
+    }
+    return Array.from(set).sort();
+  }, [historyData]);
+
+  const toggleCoin = (coin: string) => {
+    setSelectedCoins(prev => 
+      prev.includes(coin) ? prev.filter(c => c !== coin) : [...prev, coin]
+    );
+  };
+
+  const chartData = useMemo(() => {
+    return historyData.map(pt => {
+      const obj: any = { ...pt };
+      if (pt.coinValues) {
+        for (const [sym, val] of Object.entries(pt.coinValues)) {
+          obj[`coin_${sym}`] = val;
+        }
+      }
+      return obj;
+    });
+  }, [historyData]);
+
   const latestPoint = historyData.length > 0 ? historyData[historyData.length - 1] : null;
-  const initialPoint = historyData.length > 0 ? historyData[0] : null;
 
   const currentVal = latestPoint ? latestPoint.portfolioValue : 0;
   const currentInvested = latestPoint ? latestPoint.investedCapital : 0;
@@ -117,6 +149,25 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
                 {isPointProfit ? '+' : ''}{formatCurrency(data.pnl, 2)} ({isPointProfit ? '+' : ''}{data.pnlPercentage.toFixed(2)} %)
               </span>
             </div>
+
+            {selectedCoins.length > 0 && (
+              <div className={`pt-1.5 border-t space-y-1 font-mono text-xs ${isLight ? 'border-slate-100' : 'border-slate-800'}`}>
+                <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Ausgewählte Coins:</div>
+                {selectedCoins.map(coin => {
+                  const coinVal = data.coinValues?.[coin] || 0;
+                  const details = getCoinDetails(coin);
+                  return (
+                    <div key={coin} className="flex justify-between items-center text-xs">
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-2 h-2 rounded-full" style={{ backgroundColor: details.color || '#6366f1' }}></span>
+                        <span className="font-sans font-medium">{coin}:</span>
+                      </span>
+                      <span className="font-bold">{formatCurrency(coinVal, 2)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           {data.holdingsSummary && (
@@ -243,6 +294,54 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
         </div>
       </div>
 
+      {/* Coin Overlay Filter Bar */}
+      {availableCoins.length > 0 && (
+        <div className={`px-5 py-2.5 border-b flex flex-wrap items-center gap-2 text-xs ${
+          isLight ? 'bg-slate-50/70 border-slate-100' : 'bg-slate-950/30 border-slate-800/50'
+        }`}>
+          <span className={`text-[11px] font-medium flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <Layers className="w-3.5 h-3.5 text-indigo-400" />
+            <span>Coin-Kurven vergleichen:</span>
+          </span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {availableCoins.map(coin => {
+              const isSelected = selectedCoins.includes(coin);
+              const details = getCoinDetails(coin);
+              return (
+                <button
+                  key={coin}
+                  onClick={() => toggleCoin(coin)}
+                  className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer border ${
+                    isSelected
+                      ? 'border-transparent text-white shadow-sm'
+                      : (isLight 
+                          ? 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200' 
+                          : 'bg-slate-900 hover:bg-slate-800 text-slate-400 border-slate-800')
+                  }`}
+                  style={isSelected ? { backgroundColor: details.color || '#6366f1' } : undefined}
+                >
+                  <span 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: isSelected ? '#ffffff' : (details.color || '#6366f1') }}
+                  />
+                  <span>{coin}</span>
+                </button>
+              );
+            })}
+            {selectedCoins.length > 0 && (
+              <button
+                onClick={() => setSelectedCoins([])}
+                className={`text-[11px] px-2 py-0.5 rounded underline cursor-pointer transition-colors ${
+                  isLight ? 'text-slate-400 hover:text-slate-600' : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                Zurücksetzen
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* KPI Stats Summary Bar */}
       <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 border-b text-xs font-mono ${
         isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/40 border-slate-800/60'
@@ -280,7 +379,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
       <div className="p-5">
         <div className="h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={historyData} margin={{ top: 15, right: 15, left: -10, bottom: 5 }}>
+            <AreaChart data={chartData} margin={{ top: 15, right: 15, left: -10, bottom: 5 }}>
               <defs>
                 <linearGradient id="colorPortfolioValue" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#10b981" stopOpacity={0.35}/>
@@ -301,7 +400,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
               <XAxis 
                 dataKey="formattedDate" 
                 stroke="#64748b" 
-                fontSize={11}
+                fontSize={11} 
                 tickLine={false}
               />
               
@@ -355,13 +454,29 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
                   name="Gewinn/Verlust"
                 />
               )}
+
+              {/* Individual Coin Lines */}
+              {selectedCoins.map((coin) => {
+                const details = getCoinDetails(coin);
+                return (
+                  <Line 
+                    key={coin}
+                    type="monotone" 
+                    dataKey={`coin_${coin}`} 
+                    stroke={details.color || '#f59e0b'} 
+                    strokeWidth={2.2}
+                    dot={false}
+                    name={coin}
+                  />
+                );
+              })}
             </AreaChart>
           </ResponsiveContainer>
         </div>
 
         {/* Footer legend */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-800/60 text-xs">
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-1.5">
               <span className="w-3 h-0.5 bg-emerald-500 rounded-full"></span>
               <span className="text-slate-300 font-medium">Portfolio-Gesamtwert</span>
@@ -372,6 +487,15 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
                 <span className="text-slate-400">Investiertes Kapital (DCA)</span>
               </div>
             )}
+            {selectedCoins.map(coin => {
+              const details = getCoinDetails(coin);
+              return (
+                <div key={coin} className="flex items-center space-x-1.5">
+                  <span className="w-3 h-0.5 rounded-full" style={{ backgroundColor: details.color || '#f59e0b' }}></span>
+                  <span className="text-slate-300 font-medium">{coin}</span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="text-[11px] text-slate-400">

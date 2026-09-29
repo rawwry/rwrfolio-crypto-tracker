@@ -28,6 +28,9 @@ import { SettingsModal } from './components/SettingsModal';
 import { AnalyticsView } from './components/AnalyticsView';
 import { TaxView } from './components/TaxView';
 import { LoginScreen } from './components/LoginScreen';
+import { QuickActionsBar } from './components/QuickActionsBar';
+import { TopPerformerCards } from './components/TopPerformerCards';
+import { FearAndGreedWidget } from './components/FearAndGreedWidget';
 import { APP_VERSION } from './changelog';
 import { PixelGoatIcon } from './components/PixelGoatIcon';
 import { isSessionAuthenticated, clearSessionAuth, DEFAULT_ADMIN_HASH } from './utils/auth';
@@ -501,60 +504,37 @@ export default function App() {
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
             
-            {/* Primary Action Toolbar on Dashboard */}
-            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border shadow-lg transition-colors ${
-              isLight ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
-            }`}>
-              <div className="flex items-center space-x-3">
-                <div className={`w-9 h-9 rounded-xl border flex items-center justify-center ${
-                  isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-800 border-slate-700/80 text-slate-300'
-                }`}>
-                  <PixelGoatIcon size={20} />
-                </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      {settings.user?.username ? `Willkommen, ${settings.user.username}` : 'Portfolio Aktionen'}
-                    </span>
-                    <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                      <span>Live-Kurse aktiv</span>
-                    </span>
-                  </div>
-                  <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Kurs-Update: {formattedLastUpdated || 'gerade eben'}
-                  </p>
-                </div>
+            {/* 1. Quick-Action Bar on Dashboard */}
+            <QuickActionsBar
+              onOpenAddTransaction={() => {
+                setEditingTransaction(null);
+                setIsAddModalOpen(true);
+              }}
+              onOpenImport={() => setIsImportModalOpen(true)}
+              onRefreshPrices={() => handleRefreshPrices(false)}
+              isRefreshingPrices={isRefreshingPrices}
+              onOpenTaxReport={() => setActiveTab('taxes')}
+              onToggleCurrency={handleToggleCurrency}
+              currency={settings.currency || 'EUR'}
+              theme={settings.theme}
+              lastUpdatedText={formattedLastUpdated}
+              username={settings.user?.username}
+            />
+
+            {/* 2. Quick-Cards: Top Gainer, Top Loser / Dip & Fear/Greed Index */}
+            {assets.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <TopPerformerCards 
+                  assets={assets} 
+                  currency={settings.currency || 'EUR'} 
+                  theme={settings.theme} 
+                  onSelectAsset={handleSelectAssetForFilter} 
+                />
+                <FearAndGreedWidget theme={settings.theme} />
               </div>
+            )}
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-2.5">
-                <button
-                  onClick={() => setIsImportModalOpen(true)}
-                  className={`inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all shadow-sm cursor-pointer ${
-                    isLight 
-                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' 
-                      : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700/80'
-                  }`}
-                >
-                  <Upload className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Import (CSV &amp; PDF)</span>
-                </button>
-
-                <button
-                  onClick={() => {
-                    setEditingTransaction(null);
-                    setIsAddModalOpen(true);
-                  }}
-                  className="inline-flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 shadow-md shadow-indigo-600/25 transition-all cursor-pointer"
-                >
-                  <Plus className="w-4 h-4" />
-                  <span>Kauf erfassen</span>
-                </button>
-              </div>
-            </div>
-
-            {/* Visual Charts */}
+            {/* 3. Visual Charts (Asset Allokation & Timeline without scrollbars) */}
             <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} theme={settings.theme} />
           </div>
         )}

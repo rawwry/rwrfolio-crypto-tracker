@@ -130,15 +130,15 @@ export const AssetList: React.FC<AssetListProps> = ({
     return (
       <th
         onClick={() => handleSort(key)}
-        className={`py-3.5 px-4 ${align === 'left' ? 'sm:px-6 text-left' : 'text-right'} whitespace-nowrap cursor-pointer select-none transition-colors group ${
+        className={`py-3 px-2 lg:px-3 ${align === 'left' ? 'sm:px-4 text-left' : 'text-right'} whitespace-nowrap cursor-pointer select-none transition-colors group ${
           isActive 
             ? (isLight ? 'text-indigo-600 font-bold bg-indigo-50/60' : 'text-indigo-400 font-bold bg-indigo-950/30') 
             : (isLight ? 'hover:text-slate-900 text-slate-600 hover:bg-slate-100/60' : 'hover:text-slate-200 text-slate-400 hover:bg-slate-800/40')
         }`}
         title={`Nach ${label} sortieren (${isActive ? (sortDirection === 'asc' ? 'aufsteigend' : 'absteigend') : 'klicken'})`}
       >
-        <div className={`inline-flex items-center space-x-1.5 ${align === 'right' ? 'flex-row-reverse space-x-reverse' : ''}`}>
-          <span>{label}</span>
+        <div className={`inline-flex items-center space-x-1 ${align === 'right' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          <span className="text-xs font-semibold">{label}</span>
           <span className={`inline-flex items-center transition-opacity ${
             isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
           }`}>
@@ -359,7 +359,7 @@ export const AssetList: React.FC<AssetListProps> = ({
       </div>
 
       {/* 2. REFINED DESKTOP TABLE (Single-line headers, perfectly aligned columns) */}
-      <div className={`${viewMode === 'cards' ? 'hidden' : viewMode === 'table' ? 'block' : 'hidden sm:block'} overflow-x-auto`}>
+      <div className={`${viewMode === 'cards' ? 'hidden' : viewMode === 'table' ? 'block' : 'hidden sm:block'} overflow-x-auto lg:overflow-x-visible`}>
         <table className="w-full text-left text-sm border-collapse">
           <thead className={`text-xs uppercase font-semibold tracking-wider border-b ${
             isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/70 text-slate-400 border-slate-800'
@@ -380,24 +380,14 @@ export const AssetList: React.FC<AssetListProps> = ({
               const details = getCoinDetails(asset.symbol);
 
               const activeAvgBuy = isUSD ? (asset.averageBuyPriceUSD || asset.averageBuyPrice) : (asset.averageBuyPriceEUR || asset.averageBuyPrice);
-              const altAvgBuy = isUSD ? asset.averageBuyPriceEUR : asset.averageBuyPriceUSD;
-
               const activePrice = isUSD ? (asset.currentPriceUSD || asset.currentPrice) : (asset.currentPriceEUR || asset.currentPrice);
-              const altPrice = isUSD ? asset.currentPriceEUR : asset.currentPriceUSD;
-
               const activeInvested = isUSD ? (asset.totalInvestedUSD ?? asset.totalInvested) : (asset.totalInvestedEUR ?? asset.totalInvested);
-              const altInvested = isUSD ? asset.totalInvestedEUR : asset.totalInvestedUSD;
-
               const activeValue = isUSD ? (asset.currentValueUSD ?? asset.currentValue) : (asset.currentValueEUR ?? asset.currentValue);
-              const altValue = isUSD ? asset.currentValueEUR : asset.currentValueUSD;
-
               const activePnl = isUSD ? (asset.pnlUSD ?? asset.pnl) : (asset.pnlEUR ?? asset.pnl);
-              const altPnl = isUSD ? asset.pnlEUR : asset.pnlUSD;
 
               const isProfit = activePnl >= 0;
               const priceDecimals = activePrice < 1 ? 4 : (activePrice < 10 ? 3 : 2);
               const avgBuyDecimals = activeAvgBuy < 1 ? 4 : (activeAvgBuy < 10 ? 3 : 2);
-              const altDecimals = (altPrice && altPrice < 1) ? 4 : 2;
 
               return (
                 <tr 
@@ -407,19 +397,19 @@ export const AssetList: React.FC<AssetListProps> = ({
                   }`}
                 >
                   {/* Asset Symbol & Name (text-left) */}
-                  <td className="py-3.5 px-4 sm:px-6 text-left align-middle">
-                    <div className="flex items-center space-x-3 min-w-0">
+                  <td className="py-2.5 px-3 sm:px-4 text-left align-middle">
+                    <div className="flex items-center space-x-2.5 min-w-0">
                       <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-md flex-shrink-0"
+                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-sm flex-shrink-0"
                         style={{ backgroundColor: details.color || '#6366f1' }}
                       >
                         {asset.symbol.substring(0, 4)}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <span className={`font-bold shrink-0 ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
+                          <span className={`font-bold shrink-0 text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
                           <span 
-                            className={`text-xs font-normal truncate max-w-[140px] sm:max-w-[200px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`} 
+                            className={`text-xs font-normal truncate max-w-[100px] lg:max-w-[150px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`} 
                             title={asset.name}
                           >
                             {asset.name}
@@ -429,19 +419,19 @@ export const AssetList: React.FC<AssetListProps> = ({
                           {onSelectAssetForFilter ? (
                             <button
                               onClick={() => onSelectAssetForFilter(asset.symbol)}
-                              className={`text-xs whitespace-nowrap inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 transition-colors cursor-pointer group/tx ${
+                              className={`text-[11px] whitespace-nowrap inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 transition-colors cursor-pointer group/tx ${
                                 isLight 
                                   ? 'text-indigo-600 hover:text-indigo-800' 
                                   : 'text-indigo-400 hover:text-indigo-300'
                               }`}
                               title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
                             >
-                              <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
+                              <span>{asset.transactionCount} Tx</span>
                               <Filter className="w-2.5 h-2.5 opacity-60 group-hover/tx:opacity-100" />
                             </button>
                           ) : (
-                            <div className={`text-xs whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                            <div className={`text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {asset.transactionCount} Tx
                             </div>
                           )}
                         </div>
@@ -450,28 +440,23 @@ export const AssetList: React.FC<AssetListProps> = ({
                   </td>
 
                   {/* Balance (text-right) */}
-                  <td className={`py-3.5 px-4 text-right font-mono font-medium align-middle whitespace-nowrap ${
+                  <td className={`py-2.5 px-2 lg:px-3 text-right font-mono font-medium text-xs sm:text-sm align-middle whitespace-nowrap ${
                     isLight ? 'text-slate-900' : 'text-slate-100'
                   }`}>
                     <div>{formatCoinAmount(asset.currentBalance)}</div>
-                    <div className={`text-xs font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.symbol}</div>
+                    <div className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.symbol}</div>
                   </td>
 
                   {/* Avg Buy Price / DCA (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap">
+                  <td className="py-2.5 px-2 lg:px-3 text-right font-mono text-xs sm:text-sm align-middle whitespace-nowrap">
                     <div className={`font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
                       {formatActive(activeAvgBuy, avgBuyDecimals)}
                     </div>
-                    {altAvgBuy !== undefined && altAvgBuy > 0 && (
-                      <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
-                        ≈ {formatAlt(altAvgBuy, altDecimals)}
-                      </div>
-                    )}
                   </td>
 
                   {/* Current Price (text-right) */}
-                  <td className="py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap">
-                    <div className="flex items-center justify-end space-x-1.5 group/price">
+                  <td className="py-2.5 px-2 lg:px-3 text-right font-mono text-xs sm:text-sm align-middle whitespace-nowrap">
+                    <div className="flex items-center justify-end space-x-1 group/price">
                       {onEditPrice && (
                         <button
                           onClick={() => onEditPrice(asset.symbol, activePrice)}
@@ -485,64 +470,44 @@ export const AssetList: React.FC<AssetListProps> = ({
                       )}
                       <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</span>
                     </div>
-                    {altPrice !== undefined && altPrice > 0 && (
-                      <div className="text-[10px] text-slate-500 font-sans">
-                        ≈ {formatAlt(altPrice, altDecimals)}
-                      </div>
-                    )}
                   </td>
 
                   {/* Total Invested (text-right) */}
-                  <td className={`py-3.5 px-4 text-right font-mono align-middle whitespace-nowrap ${
+                  <td className={`py-2.5 px-2 lg:px-3 text-right font-mono text-xs sm:text-sm align-middle whitespace-nowrap ${
                     isLight ? 'text-slate-700' : 'text-slate-300'
                   }`}>
                     <div>{formatActive(activeInvested)}</div>
-                    {altInvested !== undefined && (
-                      <div className="text-[10px] text-slate-500 font-sans">
-                        ≈ {formatAlt(altInvested)}
-                      </div>
-                    )}
                   </td>
 
                   {/* Current Value (text-right) */}
-                  <td className={`py-3.5 px-4 text-right font-mono font-bold align-middle whitespace-nowrap ${
+                  <td className={`py-2.5 px-2 lg:px-3 text-right font-mono text-xs sm:text-sm font-bold align-middle whitespace-nowrap ${
                     isLight ? 'text-slate-900' : 'text-white'
                   }`}>
                     <div>{formatActive(activeValue)}</div>
-                    {altValue !== undefined && (
-                      <div className="text-[10px] text-slate-500 font-sans font-normal">
-                        ≈ {formatAlt(altValue)}
-                      </div>
-                    )}
                   </td>
 
                   {/* Profit / Loss (text-right) */}
-                  <td className="py-3.5 px-4 text-right align-middle whitespace-nowrap">
-                    <div className={`font-mono font-semibold ${
+                  <td className="py-2.5 px-2 lg:px-3 text-right align-middle whitespace-nowrap">
+                    <div className={`font-mono font-semibold text-xs sm:text-sm ${
                       isProfit ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
                     }`}>
                       {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %
                     </div>
-                    <div className={`text-xs font-mono font-medium ${
+                    <div className={`text-[11px] font-mono font-medium ${
                       isProfit ? (isLight ? 'text-emerald-700/80' : 'text-emerald-400/90') : (isLight ? 'text-rose-700/80' : 'text-rose-400/90')
                     }`}>
                       {isProfit ? '+' : ''}{formatActive(activePnl)}
                     </div>
-                    {altPnl !== undefined && (
-                      <div className="text-[10px] text-slate-500 font-sans">
-                        ≈ {altPnl >= 0 ? '+' : ''}{formatAlt(altPnl)}
-                      </div>
-                    )}
                   </td>
 
                   {/* Allocation % (text-right) */}
-                  <td className="py-3.5 px-4 text-right min-w-[100px] align-middle whitespace-nowrap">
+                  <td className="py-2.5 px-2 lg:px-3 text-right min-w-[70px] align-middle whitespace-nowrap">
                     <div className={`text-xs font-mono font-semibold mb-1 ${
                       isLight ? 'text-slate-700' : 'text-slate-200'
                     }`}>
                       {asset.allocationPercentage.toFixed(1)} %
                     </div>
-                    <div className={`w-full max-w-[80px] ml-auto rounded-full h-1.5 overflow-hidden ${
+                    <div className={`w-full max-w-[60px] ml-auto rounded-full h-1.5 overflow-hidden ${
                       isLight ? 'bg-slate-100' : 'bg-slate-800'
                     }`}>
                       <div 

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { 
   ShieldCheck, 
   Calendar, 
@@ -9,6 +9,8 @@ import {
   CheckCircle2, 
   FileText,
   ChevronRight,
+  ChevronDown,
+  FileSpreadsheet,
   Info,
   DollarSign,
   PieChart
@@ -35,6 +37,18 @@ export const TaxView: React.FC<TaxViewProps> = ({
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
+  const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const exportDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (exportDropdownRef.current && !exportDropdownRef.current.contains(event.target as Node)) {
+        setIsExportDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const taxReport = useMemo<PortfolioTaxReport>(() => {
     return calculateFIFOTaxReport(transactions, customPrices, selectedYear);
@@ -108,23 +122,63 @@ export const TaxView: React.FC<TaxViewProps> = ({
             </select>
           </div>
 
-          <button
-            onClick={handleExportTaxPDF}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
-            title="Steuerbericht als PDF für Steuerberater/Finanzamt drucken oder speichern"
-          >
-            <FileText className="w-3.5 h-3.5" />
-            <span>Steuerbericht (PDF)</span>
-          </button>
+          {/* Single Unified Export Dropdown */}
+          <div className="relative" ref={exportDropdownRef}>
+            <button
+              type="button"
+              onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+              title="Steuerbericht für Steuerberater oder Finanzamt exportieren"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Steuerbericht exportieren</span>
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExportDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-          <button
-            onClick={handleExportTaxCSV}
-            className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm transition-all cursor-pointer"
-            title="Steuerbericht als CSV für Steuerberater/Finanzamt exportieren"
-          >
-            <Download className="w-3.5 h-3.5" />
-            <span>Steuer-Export (CSV)</span>
-          </button>
+            {isExportDropdownOpen && (
+              <div className={`absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl z-30 p-1.5 ${
+                isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-700 text-white'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExportTaxPDF();
+                    setIsExportDropdownOpen(false);
+                  }}
+                  className={`w-full p-2.5 rounded-xl text-left text-xs font-medium flex items-center space-x-2.5 transition-colors cursor-pointer ${
+                    isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
+                    <FileText className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-bold">PDF-Bericht (Drucken / PDF)</div>
+                    <div className="text-[10px] text-slate-400">Übersicht § 23 EStG &amp; FIFO</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleExportTaxCSV();
+                    setIsExportDropdownOpen(false);
+                  }}
+                  className={`w-full p-2.5 rounded-xl text-left text-xs font-medium flex items-center space-x-2.5 transition-colors cursor-pointer ${
+                    isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
+                    <FileSpreadsheet className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <div className="font-bold">CSV-Tabelle (Rohdaten)</div>
+                    <div className="text-[10px] text-slate-400">Excel-kompatible Transaktionen</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
