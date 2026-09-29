@@ -1,6 +1,6 @@
 name: "rwrfolio"
 description: "Krypto Portfolio & DCA Tracker mit SQLite Datenbank und Live-Kursen"
-version: "0.5.4"
+version: "0.5.5"
 slug: "rwrfolio"
 init: false
 arch:

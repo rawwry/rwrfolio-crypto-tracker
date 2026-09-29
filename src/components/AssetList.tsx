@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AssetSummary, PortfolioCurrency } from '../types';
 import { 
   Edit3, 
@@ -7,9 +7,15 @@ import {
   LayoutGrid,
   Table as TableIcon,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown
 } from 'lucide-react';
 import { getCoinDetails } from '../utils/priceService';
+
+type SortKey = 'coin' | 'balance' | 'avgBuy' | 'price' | 'invested' | 'value' | 'pnl' | 'allocation';
+type SortDirection = 'asc' | 'desc';
 
 interface AssetListProps {
   assets: AssetSummary[];
@@ -30,6 +36,69 @@ export const AssetList: React.FC<AssetListProps> = ({
   const isUSD = currency === 'USD';
   // Allow user to toggle between responsive card view and full table view
   const [viewMode, setViewMode] = useState<'auto' | 'cards' | 'table'>('auto');
+
+  // Sorting state: default to sorted by portfolio value descending
+  const [sortKey, setSortKey] = useState<SortKey>('value');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
+
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortKey(key);
+      setSortDirection(key === 'coin' ? 'asc' : 'desc');
+    }
+  };
+
+  const sortedAssets = useMemo(() => {
+    return [...assets].sort((a, b) => {
+      let aVal: number | string = 0;
+      let bVal: number | string = 0;
+
+      switch (sortKey) {
+        case 'coin':
+          aVal = a.symbol.toLowerCase();
+          bVal = b.symbol.toLowerCase();
+          break;
+        case 'balance':
+          aVal = a.currentBalance;
+          bVal = b.currentBalance;
+          break;
+        case 'avgBuy':
+          aVal = isUSD ? (a.averageBuyPriceUSD || a.averageBuyPrice) : (a.averageBuyPriceEUR || a.averageBuyPrice);
+          bVal = isUSD ? (b.averageBuyPriceUSD || b.averageBuyPrice) : (b.averageBuyPriceEUR || b.averageBuyPrice);
+          break;
+        case 'price':
+          aVal = isUSD ? (a.currentPriceUSD || a.currentPrice) : (a.currentPriceEUR || a.currentPrice);
+          bVal = isUSD ? (b.currentPriceUSD || b.currentPrice) : (b.currentPriceEUR || b.currentPrice);
+          break;
+        case 'invested':
+          aVal = isUSD ? (a.totalInvestedUSD ?? a.totalInvested) : (a.totalInvestedEUR ?? a.totalInvested);
+          bVal = isUSD ? (b.totalInvestedUSD ?? b.totalInvested) : (b.totalInvestedEUR ?? b.totalInvested);
+          break;
+        case 'value':
+          aVal = isUSD ? (a.currentValueUSD ?? a.currentValue) : (a.currentValueEUR ?? a.currentValue);
+          bVal = isUSD ? (b.currentValueUSD ?? b.currentValue) : (b.currentValueEUR ?? b.currentValue);
+          break;
+        case 'pnl':
+          aVal = a.pnlPercentage;
+          bVal = b.pnlPercentage;
+          break;
+        case 'allocation':
+          aVal = a.allocationPercentage;
+          bVal = b.allocationPercentage;
+          break;
+        default:
+          aVal = 0;
+          bVal = 0;
+      }
+
+      if (typeof aVal === 'string' && typeof bVal === 'string') {
+        return sortDirection === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+      }
+      return sortDirection === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
+    });
+  }, [assets, sortKey, sortDirection, isUSD]);
 
   const formatActive = (val: number, decimals: number = 2) => {
     return new Intl.NumberFormat(isUSD ? 'en-US' : 'de-DE', {
@@ -54,6 +123,34 @@ export const AssetList: React.FC<AssetListProps> = ({
     if (val >= 1000) return val.toLocaleString('de-DE', { maximumFractionDigits: 2 });
     if (val >= 1) return val.toLocaleString('de-DE', { maximumFractionDigits: 4 });
     return val.toLocaleString('de-DE', { maximumFractionDigits: 8 });
+  };
+
+  const renderSortHeader = (label: string, key: SortKey, align: 'left' | 'right' = 'right') => {
+    const isActive = sortKey === key;
+    return (
+      <th
+        onClick={() => handleSort(key)}
+        className={`py-3.5 px-4 ${align === 'left' ? 'sm:px-6 text-left' : 'text-right'} whitespace-nowrap cursor-pointer select-none transition-colors group ${
+          isActive 
+            ? (isLight ? 'text-indigo-600 font-bold bg-indigo-50/60' : 'text-indigo-400 font-bold bg-indigo-950/30') 
+            : (isLight ? 'hover:text-slate-900 text-slate-600 hover:bg-slate-100/60' : 'hover:text-slate-200 text-slate-400 hover:bg-slate-800/40')
+        }`}
+        title={`Nach ${label} sortieren (${isActive ? (sortDirection === 'asc' ? 'aufsteigend' : 'absteigend') : 'klicken'})`}
+      >
+        <div className={`inline-flex items-center space-x-1.5 ${align === 'right' ? 'flex-row-reverse space-x-reverse' : ''}`}>
+          <span>{label}</span>
+          <span className={`inline-flex items-center transition-opacity ${
+            isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-60'
+          }`}>
+            {isActive ? (
+              sortDirection === 'asc' ? <ArrowUp className="w-3.5 h-3.5" /> : <ArrowDown className="w-3.5 h-3.5" />
+            ) : (
+              <ArrowUpDown className="w-3 h-3 text-slate-400" />
+            )}
+          </span>
+        </div>
+      </th>
+    );
   };
 
   if (assets.length === 0) {
@@ -84,7 +181,7 @@ export const AssetList: React.FC<AssetListProps> = ({
       }`}>
         <div>
           <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            <span>Asset-Übersicht &amp; Durchschnittskurse (DCA)</span>
+            <span>Coinübersicht &amp; Durchschnittskurse (DCA)</span>
             <span className={`text-xs px-2 py-0.5 rounded-full border ${
               isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
             }`}>
@@ -142,7 +239,7 @@ export const AssetList: React.FC<AssetListProps> = ({
       <div className={`${viewMode === 'table' ? 'hidden' : viewMode === 'cards' ? 'block' : 'block sm:hidden'} divide-y ${
         isLight ? 'divide-slate-100' : 'divide-slate-800/60'
       }`}>
-        {assets.map((asset) => {
+        {sortedAssets.map((asset) => {
           const details = getCoinDetails(asset.symbol);
 
           const activeAvgBuy = isUSD ? (asset.averageBuyPriceUSD || asset.averageBuyPrice) : (asset.averageBuyPriceEUR || asset.averageBuyPrice);
@@ -173,8 +270,27 @@ export const AssetList: React.FC<AssetListProps> = ({
                       <span>{asset.symbol}</span>
                       <span className={`text-xs font-normal truncate max-w-[120px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
                     </div>
-                    <div className={`text-xs font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      {formatCoinAmount(asset.currentBalance)} {asset.symbol}
+                    <div className="flex items-center space-x-2 mt-0.5">
+                      <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {formatCoinAmount(asset.currentBalance)} {asset.symbol}
+                      </span>
+                      <span className="text-slate-400 text-[10px]">&bull;</span>
+                      {onSelectAssetForFilter ? (
+                        <button
+                          onClick={() => onSelectAssetForFilter(asset.symbol)}
+                          className={`text-xs inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 cursor-pointer ${
+                            isLight ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-indigo-300'
+                          }`}
+                          title={`${asset.transactionCount} Transaktion(en) anzeigen`}
+                        >
+                          <span>{asset.transactionCount} Tx</span>
+                          <Filter className="w-2.5 h-2.5" />
+                        </button>
+                      ) : (
+                        <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                          {asset.transactionCount} Tx
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -235,19 +351,6 @@ export const AssetList: React.FC<AssetListProps> = ({
                       <Edit3 className="w-3.5 h-3.5" />
                     </button>
                   )}
-                  {onSelectAssetForFilter && (
-                    <button
-                      onClick={() => onSelectAssetForFilter(asset.symbol)}
-                      className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer border ${
-                        isLight 
-                          ? 'text-slate-700 bg-slate-100 hover:bg-indigo-600 hover:text-white border-slate-200' 
-                          : 'text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border-slate-700/60'
-                      }`}
-                    >
-                      <Filter className="w-3 h-3" />
-                      <span>Details</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -262,19 +365,18 @@ export const AssetList: React.FC<AssetListProps> = ({
             isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/70 text-slate-400 border-slate-800'
           }`}>
             <tr>
-              <th className="py-3.5 px-4 sm:px-6 text-left whitespace-nowrap">Asset / Coin</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Bestand</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Ø Kaufkurs</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktueller Kurs</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Investiert</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktueller Wert</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Gewinn / Verlust</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Portfolio</th>
-              <th className="py-3.5 px-4 text-right whitespace-nowrap">Aktionen</th>
+              {renderSortHeader('Coin', 'coin', 'left')}
+              {renderSortHeader('Bestand', 'balance', 'right')}
+              {renderSortHeader('Ø Kaufkurs', 'avgBuy', 'right')}
+              {renderSortHeader('Aktueller Kurs', 'price', 'right')}
+              {renderSortHeader('Investiert', 'invested', 'right')}
+              {renderSortHeader('Aktueller Wert', 'value', 'right')}
+              {renderSortHeader('Gewinn / Verlust', 'pnl', 'right')}
+              {renderSortHeader('Portfolio', 'allocation', 'right')}
             </tr>
           </thead>
           <tbody className={`divide-y ${isLight ? 'divide-slate-100' : 'divide-slate-800/60'}`}>
-            {assets.map((asset) => {
+            {sortedAssets.map((asset) => {
               const details = getCoinDetails(asset.symbol);
 
               const activeAvgBuy = isUSD ? (asset.averageBuyPriceUSD || asset.averageBuyPrice) : (asset.averageBuyPriceEUR || asset.averageBuyPrice);
@@ -323,8 +425,25 @@ export const AssetList: React.FC<AssetListProps> = ({
                             {asset.name}
                           </span>
                         </div>
-                        <div className={`text-xs whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                        <div className="mt-0.5">
+                          {onSelectAssetForFilter ? (
+                            <button
+                              onClick={() => onSelectAssetForFilter(asset.symbol)}
+                              className={`text-xs whitespace-nowrap inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 transition-colors cursor-pointer group/tx ${
+                                isLight 
+                                  ? 'text-indigo-600 hover:text-indigo-800' 
+                                  : 'text-indigo-400 hover:text-indigo-300'
+                              }`}
+                              title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
+                            >
+                              <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
+                              <Filter className="w-2.5 h-2.5 opacity-60 group-hover/tx:opacity-100" />
+                            </button>
+                          ) : (
+                            <div className={`text-xs whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                              {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -434,24 +553,6 @@ export const AssetList: React.FC<AssetListProps> = ({
                         }}
                       />
                     </div>
-                  </td>
-
-                  {/* Actions (text-right) */}
-                  <td className="py-3.5 px-4 text-right align-middle whitespace-nowrap">
-                    {onSelectAssetForFilter && (
-                      <button
-                        onClick={() => onSelectAssetForFilter(asset.symbol)}
-                        className={`inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all shadow-sm cursor-pointer border ${
-                          isLight 
-                            ? 'text-slate-700 bg-slate-100 hover:bg-indigo-600 hover:text-white border-slate-200' 
-                            : 'text-slate-300 bg-slate-800 hover:bg-indigo-600 hover:text-white border-slate-700/60'
-                        }`}
-                        title={`Transaktionen für ${asset.symbol} filtern`}
-                      >
-                        <Filter className="w-3 h-3" />
-                        <span className="hidden sm:inline">Details</span>
-                      </button>
-                    )}
                   </td>
                 </tr>
               );

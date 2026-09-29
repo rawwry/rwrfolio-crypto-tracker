@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.4';
+export const APP_VERSION = '0.5.5';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.5',
+    date: '29.09.2026',
+    title: 'Fokus-Dashboard, Sortierfunktion in der Coin-Tabelle & Überarbeitete Analyse-Kacheln',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Aufgeräumte Übersicht (Dashboard): Redundante Duplikate der DCA-Asset-Tabelle und der Transaktionshistorie entfernt – der Fokus liegt nun klar auf Portfolio-KPIs und Wertverlauf-Charts.',
+      },
+      {
+        type: 'ui',
+        text: 'Menü & Bezeichnungen: Reiter „Assets“ in „Coins“ umbenannt, Tabelle in „Coinübersicht & Durchschnittskurse (DCA)“ umbenannt.',
+      },
+      {
+        type: 'feat',
+        text: 'Interaktive Sortierung: Spalten der Coin-Tabelle lassen sich per Klick vorwärts und rückwärts sortieren (Name, Bestand, Ø Kaufkurs, Marktkurs, Investition, Wert, Gewinn/Verlust, Portfolio-Anteil).',
+      },
+      {
+        type: 'ui',
+        text: 'Schlankere Tabelle: Die Spalte „Details“ wurde entfernt – die Transaktionsfilterung ist nun direkt durch Klick auf die Transaktionsanzahl unter dem Coinnamen erreichbar.',
+      },
+      {
+        type: 'ui',
+        text: 'Neugestaltung der Analyse-Kacheln: Eigener Bereichskopf mit Filter- und Sortieroptionen sowie verbesserte Wertanordnung mit direktem DCA-zu-Marktpreis-Vergleich.',
+      },
+    ],
+  },
   {
     version: '0.5.4',
     date: '29.09.2026',
     title: 'Light Theme Diagramme & Tabellen, Steuerbericht (PDF) & Bereinigung von Fiat-Transaktionen',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

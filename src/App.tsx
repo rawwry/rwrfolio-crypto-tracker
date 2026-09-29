@@ -556,47 +556,6 @@ export default function App() {
 
             {/* Visual Charts */}
             <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} theme={settings.theme} />
-
-            {/* Asset DCA & Holdings Table with Profit/Loss calculation */}
-            <AssetList
-              assets={assets}
-              currency={settings.currency || 'EUR'}
-              theme={settings.theme}
-              onSelectAssetForFilter={handleSelectAssetForFilter}
-              onEditPrice={(symbol, currentPrice) => setPriceEditTarget({ symbol, price: currentPrice })}
-            />
-
-            {/* Recent Transactions Snippet */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  <span>Letzte Transaktionen</span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-mono ${isLight ? 'bg-slate-200 text-slate-700' : 'bg-slate-800 text-slate-400'}`}>
-                    {transactions.length}
-                  </span>
-                </h3>
-                <button
-                  onClick={() => setActiveTab('transactions')}
-                  className="text-xs font-semibold text-indigo-500 hover:text-indigo-400 transition-colors"
-                >
-                  Alle {transactions.length} Transaktionen ansehen &rarr;
-                </button>
-              </div>
-
-              <TransactionTable
-                transactions={transactions}
-                currency={settings.currency || 'EUR'}
-                theme={settings.theme}
-                onEditTransaction={(tx) => {
-                  setEditingTransaction(tx);
-                  setIsAddModalOpen(true);
-                }}
-                onDeleteTransaction={handleDeleteTransaction}
-                onBulkDelete={handleBulkDelete}
-                selectedAssetFilter={selectedAssetFilter}
-                onClearAssetFilter={() => setSelectedAssetFilter('ALL')}
-              />
-            </div>
           </div>
         )}
 

@@ -114,7 +114,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <span>Assets</span>
+              <span>Coins</span>
               <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                 activeTab === 'assets' 
                   ? 'bg-indigo-800 text-indigo-200' 
@@ -238,7 +238,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               activeTab === 'assets' ? 'text-indigo-500 font-bold bg-indigo-50 dark:bg-indigo-950/40' : 'text-slate-500'
             }`}
           >
-            Assets
+            Coins
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
