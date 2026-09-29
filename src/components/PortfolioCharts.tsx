@@ -256,7 +256,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
           isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-950/60 border-slate-800/80 text-slate-400'
         }`}>
           <span>Gesamter Zukauf: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{timelineData.length} Transaktionszeitpunkte</strong></span>
-          <span className="text-emerald-500 font-semibold font-mono">DCA Strategie ({currency})</span>
+          <span className="text-emerald-500 font-semibold font-mono">Investitionsverlauf ({currency})</span>
         </div>
       </div>
 

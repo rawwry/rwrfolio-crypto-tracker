@@ -128,7 +128,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 )}
               </div>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                Gegenüberstellung von Portfoliowert, DCA-Erfolg, Rendite und Trade-Aktivität nach Börse.
+                Gegenüberstellung von Portfoliowert, Investitionserfolg, Rendite und Trade-Aktivität nach Börse.
               </p>
             </div>
           </div>
@@ -308,7 +308,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </span>
               </div>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                DCA-Durchschnittskurs im direkten Vergleich zum Live-Marktkurs, Kapitaleinsatz und Gewinnverteilung.
+                Ø Kaufkurs im direkten Vergleich zum Live-Marktkurs, Kapitaleinsatz und Gewinnverteilung.
               </p>
             </div>
           </div>

@@ -78,65 +78,63 @@ export const TaxView: React.FC<TaxViewProps> = ({
   return (
     <div className="space-y-6">
       
-      {/* Top Banner & Year Selector */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-2xl border shadow-sm transition-colors ${
-        isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
-      }`}>
-        <div className="flex items-start space-x-3.5">
-          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+      {/* Page Header with Year and Export Dropdown */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-1">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center flex-shrink-0">
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
               <h2 className={`text-base sm:text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                FIFO Haltedauer &amp; Steuer-Report (§ 23 EStG)
+                Steuern &amp; Haltefristen (§ 23 EStG)
               </h2>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
-                1-Jahres-Frist (FIFO)
+                FIFO-Prinzip
               </span>
             </div>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Automatische Zuordnung nach First-In-First-Out: Kryptowährungen sind nach 365 Tagen Haltedauer zu 100 % steuerfrei.
+              Automatische 1-Jahres-Frist: Krypto-Bestände sind nach 365 Tagen Haltedauer zu 100 % steuerfrei.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center space-x-3">
+        {/* Compact Right Controls */}
+        <div className="flex items-center space-x-2 self-end sm:self-auto">
+          {/* Year selector */}
           <div className="flex items-center space-x-1.5">
-            <label className={`text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              Steuerjahr:
-            </label>
+            <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Jahr:</span>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
               aria-label="Steuerjahr auswählen"
               className={`text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-colors cursor-pointer ${
                 isLight 
-                  ? 'bg-slate-50 border-slate-300 text-slate-900' 
-                  : 'bg-slate-800 border-slate-700 text-white'
+                  ? 'bg-white border-slate-300 text-slate-900 shadow-sm' 
+                  : 'bg-slate-900 border-slate-700 text-white'
               }`}
             >
-              <option value={currentYear}>{currentYear} (Aktuell)</option>
+              <option value={currentYear}>{currentYear}</option>
               <option value={currentYear - 1}>{currentYear - 1}</option>
               <option value={currentYear - 2}>{currentYear - 2}</option>
             </select>
           </div>
 
-          {/* Single Unified Export Dropdown */}
+          {/* Export dropdown */}
           <div className="relative" ref={exportDropdownRef}>
             <button
               type="button"
               onClick={() => setIsExportDropdownOpen(!isExportDropdownOpen)}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
-              title="Steuerbericht für Steuerberater oder Finanzamt exportieren"
+              className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm transition-all cursor-pointer"
+              title="Steuerbericht exportieren"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Steuerbericht exportieren</span>
+              <span>Exportieren</span>
               <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isExportDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isExportDropdownOpen && (
-              <div className={`absolute right-0 mt-2 w-64 rounded-2xl border shadow-2xl z-30 p-1.5 ${
+              <div className={`absolute right-0 mt-2 w-56 rounded-2xl border shadow-2xl z-30 p-1.5 ${
                 isLight ? 'bg-white border-slate-200 text-slate-800' : 'bg-slate-900 border-slate-700 text-white'
               }`}>
                 <button
@@ -149,12 +147,10 @@ export const TaxView: React.FC<TaxViewProps> = ({
                     isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-500 flex items-center justify-center flex-shrink-0">
-                    <FileText className="w-4 h-4" />
-                  </div>
+                  <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                   <div>
-                    <div className="font-bold">PDF-Bericht (Drucken / PDF)</div>
-                    <div className="text-[10px] text-slate-400">Übersicht § 23 EStG &amp; FIFO</div>
+                    <div className="font-bold">PDF-Steuerbericht</div>
+                    <div className="text-[10px] text-slate-400">Druckansicht mit FIFO-Listen</div>
                   </div>
                 </button>
 
@@ -168,12 +164,10 @@ export const TaxView: React.FC<TaxViewProps> = ({
                     isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
                   }`}
                 >
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center flex-shrink-0">
-                    <FileSpreadsheet className="w-4 h-4" />
-                  </div>
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <div>
-                    <div className="font-bold">CSV-Tabelle (Rohdaten)</div>
-                    <div className="text-[10px] text-slate-400">Excel-kompatible Transaktionen</div>
+                    <div className="font-bold">CSV-Tabelle</div>
+                    <div className="text-[10px] text-slate-400">Excel-kompatible Rohdaten</div>
                   </div>
                 </button>
               </div>
@@ -182,96 +176,86 @@ export const TaxView: React.FC<TaxViewProps> = ({
         </div>
       </div>
 
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Thematic Tax Summary Cards (Exactly 3 cards) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         
-        {/* Card 1: Tax-Free Assets */}
-        <div className={`p-4 rounded-2xl border transition-colors ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+        {/* Card 1: Tax-Free Holdings (> 1 Year) */}
+        <div className={`p-5 rounded-2xl border transition-colors flex flex-col justify-between space-y-2 ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
         }`}>
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className={`font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Steuerfreier Bestand</span>
+          <div className="flex items-center justify-between text-xs">
+            <span className={`font-semibold uppercase tracking-wider text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              Steuerfreier Bestand (&gt; 1 Jahr)
+            </span>
             <span className="p-1.5 rounded-lg bg-emerald-500/10 text-emerald-500">
               <CheckCircle2 className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-xl font-extrabold text-emerald-500 font-mono">
+          <div className="text-2xl font-extrabold text-emerald-500 font-mono">
             {taxReport.totalTaxFreeValueEUR.toFixed(2)} €
           </div>
-          <div className="flex items-center justify-between mt-2 text-xs">
-            <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Anteil am Portfolio</span>
-            <span className="font-bold text-emerald-500">{taxReport.taxFreePercentage.toFixed(1)} %</span>
-          </div>
-          {/* Progress bar */}
-          <div className="w-full bg-slate-700/20 rounded-full h-1.5 mt-1.5 overflow-hidden">
-            <div 
-              className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
-              style={{ width: `${taxReport.taxFreePercentage}%` }}
-            />
+          <div className="space-y-1 pt-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Anteil am Gesamtbestand</span>
+              <span className="font-bold text-emerald-500">{taxReport.taxFreePercentage.toFixed(1)} %</span>
+            </div>
+            <div className="w-full bg-slate-700/20 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className="bg-emerald-500 h-1.5 rounded-full transition-all duration-500" 
+                style={{ width: `${taxReport.taxFreePercentage}%` }}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Card 2: Tax-Free Unrealized Gains */}
-        <div className={`p-4 rounded-2xl border transition-colors ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+        {/* Card 2: Still Taxable (< 1 Year) */}
+        <div className={`p-5 rounded-2xl border transition-colors flex flex-col justify-between space-y-2 ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
         }`}>
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className={`font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Steuerfreier Gewinn</span>
-            <span className="p-1.5 rounded-lg bg-indigo-500/10 text-indigo-500">
-              <TrendingUp className="w-4 h-4" />
+          <div className="flex items-center justify-between text-xs">
+            <span className={`font-semibold uppercase tracking-wider text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              In Haltefrist (&lt; 1 Jahr)
             </span>
-          </div>
-          <div className="text-xl font-extrabold text-indigo-500 font-mono">
-            {taxReport.totalTaxFreeUnrealizedPnlEUR >= 0 ? '+' : ''}{taxReport.totalTaxFreeUnrealizedPnlEUR.toFixed(2)} €
-          </div>
-          <p className={`text-[11px] mt-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            Bereits abgeltungs- und einkommensteuerfrei realisierbar.
-          </p>
-        </div>
-
-        {/* Card 3: Taxable Holding with Countdown */}
-        <div className={`p-4 rounded-2xl border transition-colors ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
-        }`}>
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className={`font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Noch steuerpflichtig</span>
             <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
               <Clock className="w-4 h-4" />
             </span>
           </div>
-          <div className="text-xl font-extrabold text-amber-500 font-mono">
+          <div className="text-2xl font-extrabold text-amber-500 font-mono">
             {taxReport.totalTaxableValueEUR.toFixed(2)} €
           </div>
-          <p className={`text-[11px] mt-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            {taxReport.upcomingTaxFreeLots.length} Tranche(n) in der 1-Jahres-Haltefrist.
+          <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            {taxReport.upcomingTaxFreeLots.length} Kauf-Tranche(n) werden sukzessive nach 365 Tagen steuerfrei.
           </p>
         </div>
 
-        {/* Card 4: German Exemption Limit */}
-        <div className={`p-4 rounded-2xl border transition-colors ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+        {/* Card 3: Realized Profits & Exemption Limit */}
+        <div className={`p-5 rounded-2xl border transition-colors flex flex-col justify-between space-y-2 ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
         }`}>
-          <div className="flex items-center justify-between text-xs mb-2">
-            <span className={`font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Realisierte Gewinne {selectedYear}</span>
+          <div className="flex items-center justify-between text-xs">
+            <span className={`font-semibold uppercase tracking-wider text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              Realisierter Gewinn {selectedYear}
+            </span>
             <span className={`p-1.5 rounded-lg ${taxReport.exemptionExceeded ? 'bg-rose-500/10 text-rose-500' : 'bg-emerald-500/10 text-emerald-500'}`}>
               <DollarSign className="w-4 h-4" />
             </span>
           </div>
-          <div className={`text-xl font-extrabold font-mono ${taxReport.realizedTaxableNetEUR > 0 ? (taxReport.exemptionExceeded ? 'text-rose-500' : 'text-emerald-500') : (isLight ? 'text-slate-800' : 'text-slate-200')}`}>
+          <div className={`text-2xl font-extrabold font-mono ${taxReport.realizedTaxableNetEUR > 0 ? (taxReport.exemptionExceeded ? 'text-rose-500' : 'text-emerald-500') : (isLight ? 'text-slate-800' : 'text-slate-200')}`}>
             {taxReport.realizedTaxableNetEUR.toFixed(2)} €
           </div>
-          <div className="flex items-center justify-between mt-2 text-[11px]">
-            <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Freigrenze: {taxReport.germanExemptionLimitEUR} €</span>
-            <span className={taxReport.exemptionExceeded ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold'}>
-              {taxReport.exemptionExceeded ? 'Überschritten' : 'Steuerfrei'}
-            </span>
-          </div>
-          {/* Bar */}
-          <div className="w-full bg-slate-700/20 rounded-full h-1.5 mt-1.5 overflow-hidden">
-            <div 
-              className={`h-1.5 rounded-full transition-all duration-500 ${taxReport.exemptionExceeded ? 'bg-rose-500' : 'bg-emerald-500'}`} 
-              style={{ width: `${Math.min(100, exemptionProgress)}%` }}
-            />
+          <div className="space-y-1 pt-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Freigrenze: {taxReport.germanExemptionLimitEUR} €</span>
+              <span className={`font-bold text-xs ${taxReport.exemptionExceeded ? 'text-rose-500' : 'text-emerald-500'}`}>
+                {taxReport.exemptionExceeded ? 'Steuerpflichtig' : 'Steuerfrei'}
+              </span>
+            </div>
+            <div className="w-full bg-slate-700/20 rounded-full h-1.5 overflow-hidden">
+              <div 
+                className={`h-1.5 rounded-full transition-all duration-500 ${taxReport.exemptionExceeded ? 'bg-rose-500' : 'bg-emerald-500'}`} 
+                style={{ width: `${Math.min(100, exemptionProgress)}%` }}
+              />
+            </div>
           </div>
         </div>
 

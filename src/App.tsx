@@ -497,9 +497,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Top KPIs Summary Cards */}
-        <PortfolioStats totals={totals} assets={assets} currency={settings.currency || 'EUR'} theme={settings.theme} />
-
         {/* Dashboard View */}
         {activeTab === 'dashboard' && (
           <div className="space-y-6">
@@ -511,17 +508,16 @@ export default function App() {
                 setIsAddModalOpen(true);
               }}
               onOpenImport={() => setIsImportModalOpen(true)}
-              onRefreshPrices={() => handleRefreshPrices(false)}
-              isRefreshingPrices={isRefreshingPrices}
-              onOpenTaxReport={() => setActiveTab('taxes')}
-              onToggleCurrency={handleToggleCurrency}
               currency={settings.currency || 'EUR'}
               theme={settings.theme}
               lastUpdatedText={formattedLastUpdated}
               username={settings.user?.username}
             />
 
-            {/* 2. Quick-Cards: Top Gainer, Top Loser / Dip & Fear/Greed Index */}
+            {/* 2. Top KPIs Summary Cards (3 Cards) */}
+            <PortfolioStats totals={totals} assets={assets} currency={settings.currency || 'EUR'} theme={settings.theme} />
+
+            {/* 3. Quick-Cards: Top Gainer, Top Loser / Dip & Fear/Greed Index */}
             {assets.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <TopPerformerCards 
@@ -534,7 +530,7 @@ export default function App() {
               </div>
             )}
 
-            {/* 3. Visual Charts (Asset Allokation & Timeline without scrollbars) */}
+            {/* 4. Visual Charts (Asset Allokation & Timeline without scrollbars) */}
             <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} theme={settings.theme} />
           </div>
         )}
@@ -559,7 +555,7 @@ export default function App() {
                   }`}
                 >
                   <Upload className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Import (CSV &amp; PDF)</span>
+                  <span>Import</span>
                 </button>
                 <button
                   onClick={() => {
@@ -569,7 +565,7 @@ export default function App() {
                   className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-600/20 transition-all cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>Transaktion erfassen</span>
+                  <span>Erfassung</span>
                 </button>
               </div>
             </div>

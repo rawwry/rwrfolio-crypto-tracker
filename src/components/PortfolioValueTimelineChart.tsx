@@ -484,7 +484,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
             {viewMode === 'value' && (
               <div className="flex items-center space-x-1.5">
                 <span className="w-3 h-0.5 bg-indigo-400 border-dashed rounded-full"></span>
-                <span className="text-slate-400">Investiertes Kapital (DCA)</span>
+                <span className="text-slate-400">Investiertes Kapital</span>
               </div>
             )}
             {selectedCoins.map(coin => {

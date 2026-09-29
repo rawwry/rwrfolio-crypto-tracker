@@ -55,37 +55,37 @@ export const FearAndGreedWidget: React.FC<FearAndGreedWidgetProps> = ({ theme = 
 
   const value = fng?.value ?? 50;
 
-  // Sentiment classification and DCA advice in German
+  // Sentiment classification and market advice in German
   let label = 'Neutral';
   let badgeColor = 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
   let gaugeColor = '#eab308';
-  let dcaTip = 'Gleichmäßigen DCA-Sparplan beibehalten.';
+  let sentimentTip = 'Regelmäßige Zukäufe beibehalten.';
 
   if (value <= 24) {
     label = 'Extreme Angst';
     badgeColor = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
     gaugeColor = '#f43f5e';
-    dcaTip = 'Historisch ideale Kauf- und DCA-Gelegenheit.';
+    sentimentTip = 'Historisch oft günstige Kaufgelegenheit.';
   } else if (value <= 44) {
     label = 'Angst';
     badgeColor = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
     gaugeColor = '#f59e0b';
-    dcaTip = 'Markt ist vorsichtig, gute Nachkaufkurse.';
+    sentimentTip = 'Markt ist vorsichtig, gute Nachkaufkurse.';
   } else if (value <= 55) {
     label = 'Neutral';
     badgeColor = 'bg-slate-500/15 text-slate-300 border-slate-500/30';
     gaugeColor = '#94a3b8';
-    dcaTip = 'Markt konsolidiert, DCA-Strategie fortführen.';
+    sentimentTip = 'Markt ruhig, bewährte Strategie fortführen.';
   } else if (value <= 75) {
     label = 'Gier';
     badgeColor = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
     gaugeColor = '#10b981';
-    dcaTip = 'Bullisches Momentum, diszipliniert investieren.';
+    sentimentTip = 'Bullisches Momentum, diszipliniert investieren.';
   } else {
     label = 'Extreme Gier';
     badgeColor = 'bg-green-500/15 text-green-400 border-green-500/30';
     gaugeColor = '#22c55e';
-    dcaTip = 'Große Euphorie, Vorsicht bei FOMO-Käufen.';
+    sentimentTip = 'Große Euphorie, Vorsicht bei FOMO-Käufen.';
   }
 
   return (
@@ -149,13 +149,13 @@ export const FearAndGreedWidget: React.FC<FearAndGreedWidgetProps> = ({ theme = 
         </div>
       </div>
 
-      {/* DCA Insight Tip */}
+      {/* Sentiment Insight Tip */}
       <div className={`p-2.5 rounded-xl border text-xs flex items-center gap-2 ${
         isLight ? 'bg-slate-50 border-slate-200/80 text-slate-700' : 'bg-slate-950/40 border-slate-800/60 text-slate-300'
       }`}>
         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-        <span className="text-[11px] truncate" title={dcaTip}>
-          {dcaTip}
+        <span className="text-[11px] truncate" title={sentimentTip}>
+          {sentimentTip}
         </span>
       </div>
     </div>

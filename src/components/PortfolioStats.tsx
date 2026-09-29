@@ -3,10 +3,7 @@ import {
   TrendingUp, 
   TrendingDown, 
   Wallet, 
-  Coins, 
-  ArrowUpRight, 
-  CircleDollarSign,
-  PieChart as PieIcon
+  CircleDollarSign
 } from 'lucide-react';
 import { PortfolioTotals, AssetSummary, PortfolioCurrency } from '../types';
 
@@ -57,12 +54,12 @@ export const PortfolioStats: React.FC<PortfolioStatsProps> = ({ totals, assets, 
 
   const titleClass = `text-xs font-semibold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`;
   const bigNumClass = `text-2xl sm:text-3xl font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`;
-  const subTextClass = `mt-2 flex items-center text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} space-x-1.5`;
+  const subTextClass = `mt-2 flex flex-wrap items-center text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} gap-1.5`;
   const subValClass = isLight ? 'text-slate-700 font-medium' : 'text-slate-300 font-medium';
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      {/* Portfolio Value Card */}
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* 1. Portfolio Value Card */}
       <div className={cardBaseClass}>
         <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all" />
         <div className="flex items-center justify-between mb-3">
@@ -78,38 +75,17 @@ export const PortfolioStats: React.FC<PortfolioStatsProps> = ({ totals, assets, 
         </div>
         <div className={subTextClass}>
           <span className={subValClass}>≈ {formatAlt(altValue)}</span>
-          <span className={isLight ? 'text-slate-300' : 'text-slate-500'}>•</span>
+          <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>&bull;</span>
           <span>Live-Kurse</span>
         </div>
       </div>
 
-      {/* Total Invested */}
-      <div className={cardBaseClass}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all" />
-        <div className="flex items-center justify-between mb-3">
-          <span className={titleClass}>
-            Gesamt Eingezahlt / Investiert
-          </span>
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
-            <CircleDollarSign className="w-4 h-4" />
-          </div>
-        </div>
-        <div className={bigNumClass}>
-          {formatActive(activeInvested)}
-        </div>
-        <div className={subTextClass}>
-          <span className={subValClass}>≈ {formatAlt(altInvested)}</span>
-          <span className={isLight ? 'text-slate-300' : 'text-slate-500'}>•</span>
-          <span>{totals.transactionCount} Transaktionen</span>
-        </div>
-      </div>
-
-      {/* Profit & Loss */}
+      {/* 2. Total Profit & Loss Card */}
       <div className={cardBaseClass}>
         <div className={`absolute top-0 right-0 w-32 h-32 ${isPositive ? 'bg-emerald-500/5 group-hover:bg-emerald-500/10' : 'bg-rose-500/5 group-hover:bg-rose-500/10'} rounded-full blur-2xl transition-all`} />
         <div className="flex items-center justify-between mb-3">
           <span className={titleClass}>
-            Nicht realisierter Gewinn (P&L)
+            Gesamtertrag (P&amp;L)
           </span>
           <div className={`w-8 h-8 rounded-lg ${isPositive ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'} border flex items-center justify-center`}>
             {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
@@ -120,7 +96,7 @@ export const PortfolioStats: React.FC<PortfolioStatsProps> = ({ totals, assets, 
             {isPositive ? '+' : ''}{formatActive(totalPnl)}
           </div>
         </div>
-        <div className="mt-2 flex items-center space-x-2">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className={`inline-flex items-center text-xs font-semibold px-2 py-0.5 rounded-full ${
             isPositive 
               ? (isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20') 
@@ -134,28 +110,24 @@ export const PortfolioStats: React.FC<PortfolioStatsProps> = ({ totals, assets, 
         </div>
       </div>
 
-      {/* Asset Diversity / Top Asset */}
+      {/* 3. Invested Capital Card */}
       <div className={cardBaseClass}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-all" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all" />
         <div className="flex items-center justify-between mb-3">
           <span className={titleClass}>
-            Assets &amp; Diversifikation
+            Investiertes Kapital
           </span>
-          <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
-            <Coins className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+            <CircleDollarSign className="w-4 h-4" />
           </div>
         </div>
         <div className={bigNumClass}>
-          {totals.assetCount} <span className={`text-sm font-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Coins</span>
+          {formatActive(activeInvested)}
         </div>
-        <div className={`mt-2 flex items-center text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'} space-x-1`}>
-          {totals.topAssetSymbol !== '-' ? (
-            <span>
-              Top: <strong className={isLight ? 'text-slate-800' : 'text-slate-200'}>{totals.topAssetSymbol}</strong> ({totals.topAssetPercentage.toFixed(1)} % des Portfolios)
-            </span>
-          ) : (
-            <span>Noch keine Bestände</span>
-          )}
+        <div className={subTextClass}>
+          <span className={subValClass}>≈ {formatAlt(altInvested)}</span>
+          <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>&bull;</span>
+          <span>{totals.transactionCount} Tx in {totals.assetCount} Coins</span>
         </div>
       </div>
     </div>

@@ -181,7 +181,7 @@ export const AssetList: React.FC<AssetListProps> = ({
       }`}>
         <div>
           <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            <span>Coinübersicht &amp; Durchschnittskurse (DCA)</span>
+            <span>Coinübersicht &amp; Durchschnittskurse</span>
             <span className={`text-xs px-2 py-0.5 rounded-full border ${
               isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
             }`}>
@@ -278,17 +278,16 @@ export const AssetList: React.FC<AssetListProps> = ({
                       {onSelectAssetForFilter ? (
                         <button
                           onClick={() => onSelectAssetForFilter(asset.symbol)}
-                          className={`text-xs inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 cursor-pointer ${
-                            isLight ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-indigo-300'
+                          className={`text-xs cursor-pointer transition-colors ${
+                            isLight ? 'text-slate-500 hover:text-slate-800' : 'text-slate-400 hover:text-slate-200'
                           }`}
                           title={`${asset.transactionCount} Transaktion(en) anzeigen`}
                         >
-                          <span>{asset.transactionCount} Tx</span>
-                          <Filter className="w-2.5 h-2.5" />
+                          <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
                         </button>
                       ) : (
                         <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {asset.transactionCount} Tx
+                          {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
                         </span>
                       )}
                     </div>
@@ -419,19 +418,18 @@ export const AssetList: React.FC<AssetListProps> = ({
                           {onSelectAssetForFilter ? (
                             <button
                               onClick={() => onSelectAssetForFilter(asset.symbol)}
-                              className={`text-[11px] whitespace-nowrap inline-flex items-center space-x-1 underline decoration-dotted underline-offset-2 transition-colors cursor-pointer group/tx ${
+                              className={`text-[11px] whitespace-nowrap cursor-pointer transition-colors ${
                                 isLight 
-                                  ? 'text-indigo-600 hover:text-indigo-800' 
-                                  : 'text-indigo-400 hover:text-indigo-300'
+                                  ? 'text-slate-500 hover:text-slate-800' 
+                                  : 'text-slate-400 hover:text-slate-200'
                               }`}
                               title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
                             >
-                              <span>{asset.transactionCount} Tx</span>
-                              <Filter className="w-2.5 h-2.5 opacity-60 group-hover/tx:opacity-100" />
+                              <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
                             </button>
                           ) : (
                             <div className={`text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {asset.transactionCount} Tx
+                              {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
                             </div>
                           )}
                         </div>

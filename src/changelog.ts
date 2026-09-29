@@ -9,14 +9,45 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.6';
+export const APP_VERSION = '0.5.7';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.7',
+    date: '29.09.2026',
+    title: 'Klares Dashboard-Layout, Thematische Unterseiten & Vollständige Entrümpelung',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Dashboard-Reorganisation: Vereinheitlichte Übersicht mit schlankem Hero-Header, 3 zentralen Portfolio-Kennzahlen (Gesamtwert, Ertrag, Investiert) und klar strukturierter 3-Säulen-Hierarchie.',
+      },
+      {
+        type: 'ui',
+        text: 'Entrümpelung redundanter KPI-Boxen: Die 4 generischen Top-Boxen wurden von den Unterseiten (Coins, Transaktionen, Analyse, Steuern) entfernt. Die überflüssige Box „Assets & Diversifizierung“ wurde komplett eliminiert.',
+      },
+      {
+        type: 'ui',
+        text: 'Thematisch gestalteter Steuerbereich: Schlanker Steuer-Kopf mit direkt integriertem Steuerjahr-Wechsler, Export-Dropdown (PDF/CSV) und 3 fokussierten Haltefrist- & Gewinn-Karten (§ 23 EStG).',
+      },
+      {
+        type: 'ui',
+        text: 'Verständliche Begriffe & DCA-Entfernung: Technische Fachbegriffe wie „DCA“ wurden überall durch selbsterklärende Bezeichnungen wie „Ø Kaufkurs“ und „Investiertes Kapital“ ersetzt.',
+      },
+      {
+        type: 'ui',
+        text: 'Kompakte Tabellenspalten: „Eingezahlt / Ausgegeben“ in „Kauf / Verkauf“ umbenannt, zweizeiliges Datums- & Uhrzeitformat und Bereinigung von überflüssigen Texten in Transaktionslisten.',
+      },
+      {
+        type: 'ui',
+        text: 'Aktionsbuttons & Menü-Verschlankung: Buttons unter Transaktionen in „Import“ und „Erfassung“ umbenannt, manueller Live-Kurse-Button und Währungsumschalter aus dem Hauptmenü entfernt (Währung jetzt aufgeräumt in den Einstellungen).',
+      },
+    ],
+  },
   {
     version: '0.5.6',
     date: '29.09.2026',
     title: 'Smart Import Auto-Detect, Börsen-Vergleich, Coin-Timeline-Overlays & Dashboard Widgets',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

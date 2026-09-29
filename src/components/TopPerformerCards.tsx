@@ -191,7 +191,7 @@ export const TopPerformerCards: React.FC<TopPerformerCardsProps> = ({
           }`}>
             <div className="flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-              <span className="text-[11px]">{!loserIsProfit ? 'Günstigere DCA-Basis' : 'Portfolio-Anteil:'}</span>
+              <span className="text-[11px]">{!loserIsProfit ? 'Günstiger Nachkaufkurs' : 'Portfolio-Anteil:'}</span>
             </div>
             <span className="font-mono font-bold">{topLoser.allocationPercentage.toFixed(1)} %</span>
           </div>

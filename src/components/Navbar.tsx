@@ -148,37 +148,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Right Controls */}
           <div className="flex items-center space-x-2">
 
-            {/* Currency Quick Switcher (EUR / USD) */}
-            {onToggleCurrency && (
-              <button
-                onClick={onToggleCurrency}
-                title={`Währung umschalten: Aktuell ${currency === 'USD' ? 'US-Dollar ($)' : 'Euro (€)'}`}
-                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                  currency === 'USD'
-                    ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 hover:bg-emerald-500/25'
-                    : 'bg-indigo-500/15 border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/25'
-                }`}
-              >
-                <span>{currency === 'USD' ? '$ USD' : '€ EUR'}</span>
-              </button>
-            )}
 
-            {/* Quick Live Price Refresh */}
-            <button
-              onClick={onRefreshPrices}
-              disabled={isRefreshingPrices}
-              title="Live-Marktpreise jetzt aktualisieren"
-              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-all disabled:opacity-50 cursor-pointer ${
-                isLight 
-                  ? 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200' 
-                  : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700/60 hover:text-white'
-              }`}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 text-indigo-500 ${isRefreshingPrices ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline font-medium">
-                {isRefreshingPrices ? 'Lade Kurse...' : 'Live-Kurse'}
-              </span>
-            </button>
 
             {/* Settings & Profile Trigger */}
             <button

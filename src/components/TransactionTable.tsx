@@ -149,19 +149,30 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     }).format(val);
   };
 
-  const formatDate = (isoStr: string) => {
+  const formatDatePart = (isoStr: string) => {
     try {
       const d = new Date(isoStr);
-      if (isNaN(d.getTime())) return isoStr;
-      return d.toLocaleString('de-DE', {
+      if (isNaN(d.getTime())) return isoStr.substring(0, 10);
+      return d.toLocaleDateString('de-DE', {
         day: '2-digit',
         month: '2-digit',
-        year: 'numeric',
+        year: '2-digit',
+      });
+    } catch {
+      return isoStr;
+    }
+  };
+
+  const formatTimePart = (isoStr: string) => {
+    try {
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toLocaleTimeString('de-DE', {
         hour: '2-digit',
         minute: '2-digit',
       });
     } catch {
-      return isoStr;
+      return '';
     }
   };
 
@@ -387,7 +398,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <option value="ALL">Alle Börsen</option>
               <option value="kraken">Kraken Pro</option>
               <option value="crypto_com">Crypto.com</option>
-              <option value="binance">Binance</option>
               <option value="manual">Manuell</option>
             </select>
           </div>
@@ -482,13 +492,13 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   }`}
                 />
               </th>
-              <th className="py-3.5 px-4">Datum &amp; Uhrzeit</th>
-              <th className="py-3.5 px-4">Typ &amp; Börse</th>
-              <th className="py-3.5 px-4">Erhalten / Asset</th>
-              <th className="py-3.5 px-4 text-right">Eingezahlt / Ausgegeben</th>
-              <th className="py-3.5 px-4 text-right">Einzelkurs</th>
-              <th className="py-3.5 px-4 text-center">Details</th>
-              <th className="py-3.5 px-4 text-right">Aktionen</th>
+              <th className="py-3 px-3">Datum / Zeit</th>
+              <th className="py-3 px-3">Typ &amp; Börse</th>
+              <th className="py-3 px-3">Erhalten / Asset</th>
+              <th className="py-3 px-3 text-right">Kauf / Verkauf</th>
+              <th className="py-3 px-3 text-right">Einzelkurs</th>
+              <th className="py-3 px-3 text-center">Details</th>
+              <th className="py-3 px-3 text-right">Aktionen</th>
             </tr>
           </thead>
           <tbody className={`divide-y ${isLight ? 'divide-slate-100' : 'divide-slate-800/60'}`}>
@@ -532,7 +542,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     }`}
                   >
                     {/* Checkbox */}
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-2.5 px-3 text-center">
                       <input
                         type="checkbox"
                         checked={selectedIds.has(tx.id)}
@@ -545,13 +555,14 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       />
                     </td>
 
-                    {/* Timestamp */}
-                    <td className={`py-3.5 px-4 font-mono text-xs whitespace-nowrap ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
-                      {formatDate(tx.timestamp)}
+                    {/* Timestamp: 2-line compact */}
+                    <td className={`py-2.5 px-3 font-mono text-xs whitespace-nowrap ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                      <div className="font-semibold">{formatDatePart(tx.timestamp)}</div>
+                      <div className={`text-[11px] font-sans ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{formatTimePart(tx.timestamp)} Uhr</div>
                     </td>
 
                     {/* Type and Exchange Source */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 px-3">
                       <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
                         {getTypeBadge(tx.type)}
                         {getSourceBadge(tx.source)}
@@ -559,7 +570,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                     </td>
 
                     {/* Received Asset & Amount */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-2.5 px-3">
                       <div className="flex items-center space-x-2.5">
                         <div 
                           className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] text-white flex-shrink-0"
@@ -571,17 +582,12 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                           <div className={`font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                             {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
                           </div>
-                          {tx.description && (
-                            <div className={`text-[11px] truncate max-w-[150px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {tx.description}
-                            </div>
-                          )}
                         </div>
                       </div>
                     </td>
 
                     {/* Spent / Invested */}
-                    <td className={`py-3.5 px-4 text-right font-mono font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                    <td className={`py-2.5 px-3 text-right font-mono font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                       {spentActive > 0 ? (
                         <div>
                           <div>{formatActive(spentActive)}</div>
@@ -749,7 +755,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 <span className={`font-mono font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>{detailTx.receivedAmount} {detailTx.receivedCurrency}</span>
               </div>
               <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Ausgegebener Betrag:</span>
+                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Kauf- / Verkaufswert:</span>
                 <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.spentAmount} {detailTx.spentCurrency}</span>
               </div>
               {detailTx.nativeAmountUSD && (
