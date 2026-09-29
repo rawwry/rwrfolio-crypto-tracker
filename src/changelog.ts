@@ -15,16 +15,12 @@ export const CHANGELOG_DATA: ChangelogRelease[] = [
   {
     version: '0.5.8',
     date: '29.09.2026',
-    title: 'Trade Republic Krypto-Import, Coin Allokation 3-Spalten-Raster & Tabellen-Optimierungen',
+    title: 'Coin Allokation 3-Spalten-Raster, Tabellen-Struktur & UI-Feinschliff',
     badge: 'Aktuell',
     changes: [
       {
-        type: 'feat',
-        text: 'Trade Republic Krypto-Import: Unterstützung für Trade Republic CSV-Exporte mit automatischer Erkennung und strikter Krypto-Filterung (Aktien, ETFs, Zinsen und Dividenden werden vollständig ignoriert).',
-      },
-      {
         type: 'ui',
-        text: 'Coin Allokation Re-Design: Umbenennung in „Coin Allokation“. Zentrierte Wertanzeige im Donut-Innenkreis statt verdeckender Tooltips sowie Darstellung aller Coins in einem sauberen 3-Spalten-Raster ohne „Andere“-Kürzung.',
+        text: 'Coin Allokation Re-Design: Umbenennung in „Coin Allokation“. Zentrierte Wertanzeige im Donut-Innenkreis statt verdeckender Tooltips sowie Darstellung aller Coins in einem sauberen responsiven 3-Spalten-Raster ohne „Andere“-Kürzung.',
       },
       {
         type: 'ui',
@@ -32,11 +28,15 @@ export const CHANGELOG_DATA: ChangelogRelease[] = [
       },
       {
         type: 'ui',
-        text: 'Dashboard entrümpelt: Entfernung des redundanten Diagramms „Investitions-Entwicklung über Zeit“.',
+        text: 'Dashboard-Bereinigung: Entfernung des überflüssigen Diagramms „Investitions-Entwicklung über Zeit“.',
       },
       {
         type: 'ui',
         text: 'Steuerbereich verfeinert: „FIFO-Prinzip“-Pill entfernt, Umbenennung in „Coins in Haltefrist“ und „Coin Haltedauern & FIFO Bestände“, optimierter Scrollbereich bei „Nächste Steuerfreigaben“ und korrigierte Pfeilposition im Jahres-Dropdown.',
+      },
+      {
+        type: 'fix',
+        text: 'Aktionsbutton korrigiert: Doppeltes Plus-Zeichen im Button „Erfassung“ auf der Übersichtsseite behoben.',
       },
     ],
   },

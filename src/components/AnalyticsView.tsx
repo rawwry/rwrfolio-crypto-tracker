@@ -48,14 +48,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return val.toLocaleString('de-DE', { maximumFractionDigits: 8 });
   };
 
-  // Split calculations by exchange source: Kraken Pro vs Crypto.com vs Trade Republic
+  // Split calculations by exchange source: Kraken Pro vs Crypto.com
   const krakenTxs = useMemo(() => transactions.filter(t => t.source === 'kraken'), [transactions]);
   const cryptoComTxs = useMemo(() => transactions.filter(t => t.source === 'crypto_com'), [transactions]);
-  const trTxs = useMemo(() => transactions.filter(t => t.source === 'trade_republic'), [transactions]);
 
   const krakenSummary = useMemo(() => calculateAssetSummaries(krakenTxs, customPrices, currency), [krakenTxs, customPrices, currency]);
   const cryptoComSummary = useMemo(() => calculateAssetSummaries(cryptoComTxs, customPrices, currency), [cryptoComTxs, customPrices, currency]);
-  const trSummary = useMemo(() => calculateAssetSummaries(trTxs, customPrices, currency), [trTxs, customPrices, currency]);
 
   const krakenInvested = krakenSummary.totals.totalInvested || 0;
   const krakenValue = krakenSummary.totals.currentValue || 0;
@@ -69,18 +67,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const cryptoPnlPct = cryptoComSummary.totals.totalPnlPercentage || 0;
   const cryptoIsProfit = cryptoPnl >= 0;
 
-  const trInvested = trSummary.totals.totalInvested || 0;
-  const trValue = trSummary.totals.currentValue || 0;
-  const trPnl = trSummary.totals.totalPnl || 0;
-  const trPnlPct = trSummary.totals.totalPnlPercentage || 0;
-  const trIsProfit = trPnl >= 0;
-
-  const totalAllInvested = krakenInvested + cryptoInvested + trInvested;
+  const totalAllInvested = krakenInvested + cryptoInvested;
   const krakenShare = totalAllInvested > 0 ? (krakenInvested / totalAllInvested) * 100 : 0;
   const cryptoShare = totalAllInvested > 0 ? (cryptoInvested / totalAllInvested) * 100 : 0;
-  const trShare = totalAllInvested > 0 ? (trInvested / totalAllInvested) * 100 : 0;
-
-  const activeSourcesCount = (krakenTxs.length > 0 ? 1 : 0) + (cryptoComTxs.length > 0 ? 1 : 0) + (trTxs.length > 0 ? 1 : 0);
 
   const sortedCards = useMemo(() => {
     return [...assets].sort((a, b) => {
@@ -112,7 +101,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       {/* 2. Visual Charts Component (Allocation Donut & Cumulative Investment) */}
       <PortfolioCharts assets={assets} transactions={transactions} currency={currency} theme={theme} />
 
-      {/* 2.5 Börsen-Vergleich: Kraken Pro vs. Crypto.com vs. Trade Republic */}
+      {/* 2.5 Börsen-Vergleich: Kraken Pro vs. Crypto.com */}
       <div className={`p-5 sm:p-6 rounded-2xl border shadow-xl transition-colors space-y-5 ${
         isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800/90'
       }`}>
@@ -135,58 +124,37 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         </div>
 
         {/* Capital Split Bar */}
-        {activeSourcesCount >= 2 && (
+        {krakenTxs.length > 0 && cryptoComTxs.length > 0 && (
           <div className={`p-3.5 rounded-xl border text-xs space-y-2 ${
             isLight ? 'bg-slate-50 border-slate-200/80' : 'bg-slate-950/40 border-slate-800/60'
           }`}>
             <div className="flex flex-wrap items-center justify-between gap-2 font-mono font-semibold">
-              {krakenTxs.length > 0 && (
-                <span className="text-purple-400 flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
-                  <span>Kraken Pro: {krakenShare.toFixed(1)} % ({formatCurr(krakenInvested)})</span>
-                </span>
-              )}
-              {cryptoComTxs.length > 0 && (
-                <span className="text-blue-400 flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-                  <span>Crypto.com: {cryptoShare.toFixed(1)} % ({formatCurr(cryptoInvested)})</span>
-                </span>
-              )}
-              {trTxs.length > 0 && (
-                <span className="text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                  <span>Trade Republic: {trShare.toFixed(1)} % ({formatCurr(trInvested)})</span>
-                </span>
-              )}
+              <span className="text-purple-400 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
+                <span>Kraken Pro: {krakenShare.toFixed(1)} % ({formatCurr(krakenInvested)})</span>
+              </span>
+              <span className="text-blue-400 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
+                <span>Crypto.com: {cryptoShare.toFixed(1)} % ({formatCurr(cryptoInvested)})</span>
+              </span>
             </div>
             <div className="w-full h-2.5 rounded-full overflow-hidden flex bg-slate-800">
-              {krakenShare > 0 && (
-                <div 
-                  style={{ width: `${krakenShare}%` }} 
-                  className="bg-purple-500 h-full transition-all duration-500" 
-                  title={`Kraken Pro: ${krakenShare.toFixed(1)} %`} 
-                />
-              )}
-              {cryptoShare > 0 && (
-                <div 
-                  style={{ width: `${cryptoShare}%` }} 
-                  className="bg-blue-500 h-full transition-all duration-500" 
-                  title={`Crypto.com: ${cryptoShare.toFixed(1)} %`} 
-                />
-              )}
-              {trShare > 0 && (
-                <div 
-                  style={{ width: `${trShare}%` }} 
-                  className="bg-emerald-500 h-full transition-all duration-500" 
-                  title={`Trade Republic: ${trShare.toFixed(1)} %`} 
-                />
-              )}
+              <div 
+                style={{ width: `${krakenShare}%` }} 
+                className="bg-purple-500 h-full transition-all duration-500" 
+                title={`Kraken Pro: ${krakenShare.toFixed(1)} %`} 
+              />
+              <div 
+                style={{ width: `${cryptoShare}%` }} 
+                className="bg-blue-500 h-full transition-all duration-500" 
+                title={`Crypto.com: ${cryptoShare.toFixed(1)} %`} 
+              />
             </div>
           </div>
         )}
 
         {/* Side-by-Side Comparison Cards */}
-        <div className={`grid grid-cols-1 ${trTxs.length > 0 ? 'md:grid-cols-2 lg:grid-cols-3' : 'md:grid-cols-2'} gap-4`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Kraken Pro Card */}
           <div className={`p-5 rounded-xl border flex flex-col justify-between space-y-4 ${
             isLight ? 'bg-purple-50/30 border-purple-100' : 'bg-purple-950/15 border-purple-900/30'
@@ -304,59 +272,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </div>
             )}
           </div>
-
-          {/* Trade Republic Card (Rendered if any TR transactions exist) */}
-          {trTxs.length > 0 && (
-            <div className={`p-5 rounded-xl border flex flex-col justify-between space-y-4 ${
-              isLight ? 'bg-emerald-50/30 border-emerald-100' : 'bg-emerald-950/15 border-emerald-900/30'
-            }`}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
-                    TR
-                  </div>
-                  <div>
-                    <h4 className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>Trade Republic</h4>
-                    <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      {trTxs.length} Transaktion{trTxs.length !== 1 ? 'en' : ''} &bull; {trSummary.assets.length} Coins
-                    </span>
-                  </div>
-                </div>
-
-                <div className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-xs font-mono font-bold ${
-                  trIsProfit 
-                    ? (isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/25') 
-                    : (isLight ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-rose-500/15 text-rose-400 border border-rose-500/25')
-                }`}>
-                  {trIsProfit ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
-                  <span>{trIsProfit ? '+' : ''}{trPnlPct.toFixed(2)} %</span>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                <div className={`p-2.5 rounded-lg border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'}`}>
-                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Portfoliowert</span>
-                  <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{formatCurr(trValue)}</span>
-                </div>
-                <div className={`p-2.5 rounded-lg border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'}`}>
-                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Investiert</span>
-                  <span className={`text-sm font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatCurr(trInvested)}</span>
-                </div>
-                <div className={`p-2.5 rounded-lg border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'}`}>
-                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Gewinn / Verlust</span>
-                  <span className={`text-sm font-bold ${trIsProfit ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {trIsProfit ? '+' : ''}{formatCurr(trPnl)}
-                  </span>
-                </div>
-                <div className={`p-2.5 rounded-lg border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/60 border-slate-800'}`}>
-                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Top Asset</span>
-                  <span className={`text-sm font-bold truncate block ${isLight ? 'text-emerald-700' : 'text-emerald-300'}`}>
-                    {trSummary.totals.topAssetSymbol || '-'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

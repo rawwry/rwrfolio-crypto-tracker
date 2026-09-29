@@ -184,12 +184,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             Crypto.com
           </span>
         );
-      case 'trade_republic':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
-            Trade Republic
-          </span>
-        );
       case 'kraken':
         return (
           <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-500/15 text-purple-400 border border-purple-500/20">
@@ -398,7 +392,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <option value="ALL">Alle Börsen</option>
               <option value="kraken">Kraken Pro</option>
               <option value="crypto_com">Crypto.com</option>
-              <option value="trade_republic">Trade Republic</option>
               <option value="manual">Manuell</option>
             </select>
           </div>
@@ -446,7 +439,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
                 isLight ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
               }`}>
-                Börse: {sourceFilter === 'kraken' ? 'Kraken Pro' : sourceFilter === 'crypto_com' ? 'Crypto.com' : sourceFilter === 'trade_republic' ? 'Trade Republic' : sourceFilter}
+                Börse: {sourceFilter === 'kraken' ? 'Kraken Pro' : sourceFilter === 'crypto_com' ? 'Crypto.com' : sourceFilter}
                 <button onClick={() => setSourceFilter('ALL')} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}

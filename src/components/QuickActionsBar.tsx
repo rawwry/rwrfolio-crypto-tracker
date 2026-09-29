@@ -83,7 +83,7 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
           title="Neuen Kauf oder Trade manuell erfassen"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>+ Erfassung</span>
+          <span>Erfassung</span>
         </button>
       </div>
     </div>

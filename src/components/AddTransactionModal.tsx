@@ -193,7 +193,6 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               >
                 <option value="kraken">Kraken Pro</option>
                 <option value="crypto_com">Crypto.com</option>
-                <option value="trade_republic">Trade Republic</option>
                 <option value="bitpanda">Bitpanda</option>
                 <option value="coinbase">Coinbase</option>
                 <option value="manual">Manuell / Sonstige</option>
