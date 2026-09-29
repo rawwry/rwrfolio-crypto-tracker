@@ -1,6 +1,6 @@
 export type TransactionType = 'BUY' | 'SELL' | 'REWARD' | 'TRANSFER' | 'STAKE' | 'OTHER';
 
-export type ExchangeSource = 'crypto_com' | 'binance' | 'kraken' | 'coinbase' | 'bitpanda' | 'manual' | 'generic' | 'other';
+export type ExchangeSource = 'crypto_com' | 'kraken' | 'trade_republic' | 'coinbase' | 'bitpanda' | 'manual' | 'generic' | 'other';
 
 export type PortfolioCurrency = 'EUR' | 'USD';
 

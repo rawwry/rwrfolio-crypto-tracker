@@ -191,10 +191,10 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                 onChange={(e) => setSource(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 text-xs sm:text-sm focus:outline-none focus:border-indigo-500"
               >
+                <option value="kraken">Kraken Pro</option>
                 <option value="crypto_com">Crypto.com</option>
-                <option value="binance">Binance</option>
+                <option value="trade_republic">Trade Republic</option>
                 <option value="bitpanda">Bitpanda</option>
-                <option value="kraken">Kraken</option>
                 <option value="coinbase">Coinbase</option>
                 <option value="manual">Manuell / Sonstige</option>
               </select>

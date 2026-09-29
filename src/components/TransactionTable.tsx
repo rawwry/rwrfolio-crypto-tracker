@@ -184,10 +184,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
             Crypto.com
           </span>
         );
-      case 'binance':
+      case 'trade_republic':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/20">
-            Binance
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/25">
+            Trade Republic
           </span>
         );
       case 'kraken':
@@ -398,6 +398,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <option value="ALL">Alle Börsen</option>
               <option value="kraken">Kraken Pro</option>
               <option value="crypto_com">Crypto.com</option>
+              <option value="trade_republic">Trade Republic</option>
               <option value="manual">Manuell</option>
             </select>
           </div>
@@ -445,7 +446,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <span className={`inline-flex items-center px-2 py-0.5 rounded-full border ${
                 isLight ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-purple-500/20 text-purple-300 border-purple-500/30'
               }`}>
-                Börse: {sourceFilter === 'kraken' ? 'Kraken Pro' : sourceFilter === 'crypto_com' ? 'Crypto.com' : sourceFilter}
+                Börse: {sourceFilter === 'kraken' ? 'Kraken Pro' : sourceFilter === 'crypto_com' ? 'Crypto.com' : sourceFilter === 'trade_republic' ? 'Trade Republic' : sourceFilter}
                 <button onClick={() => setSourceFilter('ALL')} className="ml-1.5 hover:opacity-75">&times;</button>
               </span>
             )}
@@ -492,9 +493,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   }`}
                 />
               </th>
-              <th className="py-3 px-3">Datum / Zeit</th>
-              <th className="py-3 px-3">Typ &amp; Börse</th>
-              <th className="py-3 px-3">Erhalten / Asset</th>
+              <th className="py-3 px-3">Datum</th>
+              <th className="py-3 px-3">Typ</th>
+              <th className="py-3 px-3">Börse</th>
+              <th className="py-3 px-3">Erhalten</th>
               <th className="py-3 px-3 text-right">Kauf / Verkauf</th>
               <th className="py-3 px-3 text-right">Einzelkurs</th>
               <th className="py-3 px-3 text-center">Details</th>
@@ -504,7 +506,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           <tbody className={`divide-y ${isLight ? 'divide-slate-100' : 'divide-slate-800/60'}`}>
             {paginatedTransactions.length === 0 ? (
               <tr>
-                <td colSpan={8} className="py-12 text-center text-slate-400">
+                <td colSpan={9} className="py-12 text-center text-slate-400">
                   Keine Transaktionen für die aktuellen Filterkriterien gefunden.
                 </td>
               </tr>
@@ -561,12 +563,14 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       <div className={`text-[11px] font-sans ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{formatTimePart(tx.timestamp)} Uhr</div>
                     </td>
 
-                    {/* Type and Exchange Source */}
-                    <td className="py-2.5 px-3">
-                      <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
-                        {getTypeBadge(tx.type)}
-                        {getSourceBadge(tx.source)}
-                      </div>
+                    {/* Type */}
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      {getTypeBadge(tx.type)}
+                    </td>
+
+                    {/* Exchange Source */}
+                    <td className="py-2.5 px-3 whitespace-nowrap">
+                      {getSourceBadge(tx.source)}
                     </td>
 
                     {/* Received Asset & Amount */}

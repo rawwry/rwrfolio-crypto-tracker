@@ -89,9 +89,6 @@ export const TaxView: React.FC<TaxViewProps> = ({
               <h2 className={`text-base sm:text-lg font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Steuern &amp; Haltefristen (§ 23 EStG)
               </h2>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/10 text-indigo-500 border border-indigo-500/20">
-                FIFO-Prinzip
-              </span>
             </div>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Automatische 1-Jahres-Frist: Krypto-Bestände sind nach 365 Tagen Haltedauer zu 100 % steuerfrei.
@@ -101,23 +98,26 @@ export const TaxView: React.FC<TaxViewProps> = ({
 
         {/* Compact Right Controls */}
         <div className="flex items-center space-x-2 self-end sm:self-auto">
-          {/* Year selector */}
+          {/* Year selector with properly positioned arrow */}
           <div className="flex items-center space-x-1.5">
             <span className={`text-xs font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Jahr:</span>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}
-              aria-label="Steuerjahr auswählen"
-              className={`text-xs font-semibold px-2.5 py-1.5 rounded-xl border transition-colors cursor-pointer ${
-                isLight 
-                  ? 'bg-white border-slate-300 text-slate-900 shadow-sm' 
-                  : 'bg-slate-900 border-slate-700 text-white'
-              }`}
-            >
-              <option value={currentYear}>{currentYear}</option>
-              <option value={currentYear - 1}>{currentYear - 1}</option>
-              <option value={currentYear - 2}>{currentYear - 2}</option>
-            </select>
+            <div className="relative inline-flex items-center">
+              <select
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                aria-label="Steuerjahr auswählen"
+                className={`appearance-none text-xs font-semibold pl-3 pr-7 py-1.5 rounded-xl border transition-colors cursor-pointer ${
+                  isLight 
+                    ? 'bg-white border-slate-300 text-slate-900 shadow-sm' 
+                    : 'bg-slate-900 border-slate-700 text-white'
+                }`}
+              >
+                <option value={currentYear}>{currentYear}</option>
+                <option value={currentYear - 1}>{currentYear - 1}</option>
+                <option value={currentYear - 2}>{currentYear - 2}</option>
+              </select>
+              <ChevronDown className="w-3.5 h-3.5 absolute right-2 pointer-events-none text-slate-400" />
+            </div>
           </div>
 
           {/* Export dropdown */}
@@ -214,7 +214,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
         }`}>
           <div className="flex items-center justify-between text-xs">
             <span className={`font-semibold uppercase tracking-wider text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              In Haltefrist (&lt; 1 Jahr)
+              Coins in Haltefrist
             </span>
             <span className="p-1.5 rounded-lg bg-amber-500/10 text-amber-500">
               <Clock className="w-4 h-4" />
@@ -270,7 +270,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
         }`}>
           <div>
             <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              Asset Haltedauern &amp; FIFO-Bestände
+              Coin Haltedauern &amp; FIFO Bestände
             </h3>
             <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               Detaillierte Aufteilung aller Positionen nach steuerfreiem (&gt; 365 Tage) und steuerpflichtigem Anteil.
@@ -414,7 +414,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
           <div className="flex items-center justify-between">
             <h3 className={`text-sm font-bold flex items-center space-x-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Clock className="w-4 h-4 text-amber-500" />
-              <span>Nächste Steuerfreigaben (Countdown)</span>
+              <span>Nächste Steuerfreigaben</span>
             </h3>
             <span className="text-xs text-slate-500 font-mono">
               {taxReport.upcomingTaxFreeLots.length} ausstehend
@@ -426,7 +426,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
               🎉 100 % deiner aktuellen Bestände haben bereits die 1-Jahres-Frist überschritten und sind steuerfrei!
             </div>
           ) : (
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-60 overflow-y-auto pr-3">
               {taxReport.upcomingTaxFreeLots.slice(0, 8).map((lot, i) => (
                 <div 
                   key={i}

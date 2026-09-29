@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.7';
+export const APP_VERSION = '0.5.8';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.8',
+    date: '29.09.2026',
+    title: 'Trade Republic Krypto-Import, Coin Allokation 3-Spalten-Raster & Tabellen-Optimierungen',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Trade Republic Krypto-Import: Unterstützung für Trade Republic CSV-Exporte mit automatischer Erkennung und strikter Krypto-Filterung (Aktien, ETFs, Zinsen und Dividenden werden vollständig ignoriert).',
+      },
+      {
+        type: 'ui',
+        text: 'Coin Allokation Re-Design: Umbenennung in „Coin Allokation“. Zentrierte Wertanzeige im Donut-Innenkreis statt verdeckender Tooltips sowie Darstellung aller Coins in einem sauberen 3-Spalten-Raster ohne „Andere“-Kürzung.',
+      },
+      {
+        type: 'ui',
+        text: 'Transaktionstabelle aufgeteilt: „Typ“ und „Börse“ in zwei separate Spalten getrennt. „Datum / Zeit“ in „Datum“ und „Erhalten / Asset“ in „Erhalten“ verkürzt.',
+      },
+      {
+        type: 'ui',
+        text: 'Dashboard entrümpelt: Entfernung des redundanten Diagramms „Investitions-Entwicklung über Zeit“.',
+      },
+      {
+        type: 'ui',
+        text: 'Steuerbereich verfeinert: „FIFO-Prinzip“-Pill entfernt, Umbenennung in „Coins in Haltefrist“ und „Coin Haltedauern & FIFO Bestände“, optimierter Scrollbereich bei „Nächste Steuerfreigaben“ und korrigierte Pfeilposition im Jahres-Dropdown.',
+      },
+    ],
+  },
   {
     version: '0.5.7',
     date: '29.09.2026',
     title: 'Klares Dashboard-Layout, Thematische Unterseiten & Vollständige Entrümpelung',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

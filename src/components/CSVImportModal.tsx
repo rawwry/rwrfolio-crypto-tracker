@@ -16,8 +16,17 @@ import {
 import { Transaction, CSVParseResult, ExchangeSource } from '../types';
 import { parseCSVFile, USER_SAMPLE_CRYPTO_COM_CSV, parseCSVLines, isCryptoComCSV } from '../utils/csvParser';
 import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT } from '../utils/krakenParser';
+import { parseTradeRepublicCSV, isTradeRepublicCSV, isTradeRepublicText } from '../utils/tradeRepublicParser';
 import { deduplicateTransactions } from '../utils/transactionDedup';
 import { parsePdfApi } from '../utils/apiClient';
+
+export const USER_SAMPLE_TRADE_REPUBLIC_CSV = `"datetime","date","account_type","category","type","asset_class","name","symbol","shares","price","amount","fee","tax","currency","original_amount","original_currency","fx_rate","description","transaction_id","counterparty_name","counterparty_iban","payment_reference","mcc_code"
+"2025-01-03T09:38:14.352Z","2025-01-03","DEFAULT","TRADING","BUY","STOCK","Coinbase Global (A)","US19260Q1076","2.0000000000","251.400000","-502.80","-1.00","","EUR","","","","Buy trade US19260Q1076 COINBASE GLB.CL.A -,00001, quantity: 2","2a44a2b3-7f7a-49fe-ac16-12fe7d1ce62f","","","",""
+"2025-11-16T19:27:33.230Z","2025-11-16","DEFAULT","TRADING","BUY","CRYPTO","Bitcoin","BTC","0.0030550000","81825.5100000000","-249.98","-1.00","","EUR","","","","Buy trade XF000BTC0017 Bitcoin, quantity: 0.003055","95118061-8ef4-4f0f-931b-bc5fd62a881f","","","",""
+"2025-11-21T08:57:22.985Z","2025-11-21","DEFAULT","DELIVERY","FREE_RECEIPT","CRYPTO","Cardano","ADA","198.5000000000","0.3600000000","","","","EUR","","","","FREE_RECEIPT ADA","22998e8e-fbf3-4622-a94c-ee4d38404ce9","","","",""
+"2025-12-01T23:42:54.769Z","2025-12-02","DEFAULT","TRADING","SELL","CRYPTO","Ethereum","ETH","-0.0837170000","2388.8700000000","199.99","-1.00","","EUR","","","","Sell trade XF000ETH0019 Ethereum, quantity: 0.083717","5e20c622-224d-433d-8ceb-269007f439ef","","","",""
+"2026-03-10T23:37:52.174Z","2026-03-11","DEFAULT","TRADING","BUY","CRYPTO","NEAR","NEAR","177.0000000000","1.1295300000","-199.93","-1.00","","EUR","","","","Buy trade XF000NEAR017 NEAR Protocol, quantity: 177","349e0584-69ac-4b0a-8453-91c697cea7fd","","","",""
+`;
 
 interface CSVImportModalProps {
   isOpen: boolean;
@@ -76,18 +85,25 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       const csvRes = parseCSVFile(text);
       candidateTxs = csvRes.transactions;
       detected = 'crypto_com';
+    } else if (forcedExchange === 'trade_republic') {
+      candidateTxs = parseTradeRepublicCSV(text);
+      detected = 'trade_republic';
     } else {
       // Auto-detect exchange from headers and text patterns
       const parsedLines = parseCSVLines(text);
       const headers = parsedLines.length > 0 ? parsedLines[0] : [];
 
+      const trMatch = isTradeRepublicCSV(headers) || isTradeRepublicText(text);
       const krakenMatch = isKrakenCSV(headers) || isKrakenText(text);
       const cryptoComMatch = isCryptoComCSV ? isCryptoComCSV(headers) : headers.some(h => {
         const l = h.toLowerCase();
         return l.includes('timestamp (utc)') || l.includes('to currency') || l.includes('native currency');
       });
 
-      if (krakenMatch && !cryptoComMatch) {
+      if (trMatch) {
+        candidateTxs = parseTradeRepublicCSV(text);
+        detected = 'trade_republic';
+      } else if (krakenMatch && !cryptoComMatch) {
         candidateTxs = parseKrakenCSV(text);
         if (candidateTxs.length === 0) {
           candidateTxs = parseKrakenText(text);
@@ -98,18 +114,22 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         candidateTxs = csvRes.transactions;
         detected = 'crypto_com';
       } else {
-        // Try parsing with both to see if one cleanly yields transactions
+        // Try parsing with all parsers to see if one cleanly yields transactions
+        const trAttempt = parseTradeRepublicCSV(text);
         const krakenAttempt = parseKrakenCSV(text);
         const cdcAttempt = parseCSVFile(text);
 
-        if (krakenAttempt.length > 0 && cdcAttempt.transactions.length === 0) {
+        if (trAttempt.length > 0 && krakenAttempt.length === 0 && cdcAttempt.transactions.length === 0) {
+          candidateTxs = trAttempt;
+          detected = 'trade_republic';
+        } else if (krakenAttempt.length > 0 && cdcAttempt.transactions.length === 0 && trAttempt.length === 0) {
           candidateTxs = krakenAttempt;
           detected = 'kraken';
-        } else if (cdcAttempt.transactions.length > 0 && krakenAttempt.length === 0) {
+        } else if (cdcAttempt.transactions.length > 0 && krakenAttempt.length === 0 && trAttempt.length === 0) {
           candidateTxs = cdcAttempt.transactions;
           detected = 'crypto_com';
         } else {
-          // Genuinely ambiguous: ask user to choose Kraken vs Crypto.com
+          // Genuinely ambiguous: ask user to choose
           setAmbiguousData({ text, name });
           setParseResult(null);
           return;
@@ -265,6 +285,10 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
     handleProcessText(USER_SAMPLE_CRYPTO_COM_CSV, 'crypto_com_beispiel.csv', 'crypto_com');
   };
 
+  const handleLoadTradeRepublicSample = () => {
+    handleProcessText(USER_SAMPLE_TRADE_REPUBLIC_CSV, 'trade_republic_beispiel.csv', 'trade_republic');
+  };
+
   const handleConfirmImport = () => {
     if (!parseResult || parseResult.transactions.length === 0) return;
     onImportTransactions(parseResult.transactions, csvRawText, fileName, pdfBase64);
@@ -364,7 +388,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF-Statements) sowie <strong>Crypto.com App</strong> (Transaktionshistorie CSV).
+                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Crypto.com App</strong> (CSV) sowie <strong>Trade Republic</strong> (Krypto-Transaktionen CSV).
                 </p>
 
                 <div className="mt-3 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
@@ -383,24 +407,32 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 <span>Börsen-Zuordnung auswählen</span>
               </div>
               <p className="text-xs text-slate-300">
-                Die Spaltenstruktur in <strong>{ambiguousData.name}</strong> konnte nicht eindeutig einer Börse zugeordnet werden. Aus welcher Plattform stammt dieser Export?
+                Die Spaltenstruktur in <strong>{ambiguousData.name}</strong> konnte nicht eindeutig zugeordnet werden. Aus welcher Plattform stammt dieser Export?
               </p>
-              <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                 <button
                   type="button"
                   onClick={() => handleProcessText(ambiguousData.text, ambiguousData.name, 'kraken')}
-                  className="w-full sm:w-1/2 p-3 rounded-xl bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
+                  className="p-3 rounded-xl bg-purple-600/20 border border-purple-500/40 hover:bg-purple-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
-                  <span>🟣 Kraken Pro (Trades / Statement)</span>
+                  <span>Kraken Pro</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => handleProcessText(ambiguousData.text, ambiguousData.name, 'crypto_com')}
-                  className="w-full sm:w-1/2 p-3 rounded-xl bg-blue-600/20 border border-blue-500/40 hover:bg-blue-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
+                  className="p-3 rounded-xl bg-blue-600/20 border border-blue-500/40 hover:bg-blue-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
-                  <span>🔵 Crypto.com App (CSV)</span>
+                  <span>Crypto.com</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleProcessText(ambiguousData.text, ambiguousData.name, 'trade_republic')}
+                  className="p-3 rounded-xl bg-emerald-600/20 border border-emerald-500/40 hover:bg-emerald-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+                  <span>Trade Republic</span>
                 </button>
               </div>
             </div>
@@ -433,9 +465,16 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 <button
                   type="button"
                   onClick={handleLoadCryptoComSample}
-                  className="px-2.5 py-1.5 rounded-lg bg-indigo-600/70 hover:bg-indigo-600 text-white font-semibold transition-colors cursor-pointer"
+                  className="px-2.5 py-1.5 rounded-lg bg-blue-600/70 hover:bg-blue-600 text-white font-semibold transition-colors cursor-pointer"
                 >
                   Crypto.com CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLoadTradeRepublicSample}
+                  className="px-2.5 py-1.5 rounded-lg bg-emerald-600/70 hover:bg-emerald-600 text-white font-semibold transition-colors cursor-pointer"
+                >
+                  Trade Republic CSV
                 </button>
               </div>
             </div>
@@ -461,7 +500,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                   rows={5}
                   value={directPasteText}
                   onChange={(e) => setDirectPasteText(e.target.value)}
-                  placeholder="Kopiere hier CSV-Zeilen oder Statement-Text von Kraken oder Crypto.com hinein..."
+                  placeholder="Kopiere hier CSV-Zeilen oder Statement-Text von Kraken, Crypto.com oder Trade Republic hinein..."
                   className="w-full p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
                 <button
@@ -488,12 +527,16 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                       : parseResult.detectedExchange === 'crypto_com'
                       ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      : parseResult.detectedExchange === 'trade_republic'
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
                       : 'bg-slate-800 text-slate-300'
                   }`}>
                     {parseResult.detectedExchange === 'kraken' 
                       ? `Kraken Pro (${fileType.toUpperCase()})` 
                       : parseResult.detectedExchange === 'crypto_com'
                       ? 'Crypto.com App'
+                      : parseResult.detectedExchange === 'trade_republic'
+                      ? 'Trade Republic'
                       : parseResult.detectedExchange}
                   </span>
                 </div>

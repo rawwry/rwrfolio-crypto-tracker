@@ -1,5 +1,6 @@
 import { Transaction, TransactionType, ExchangeSource, CSVParseResult } from '../types';
 import { isKrakenCSV, parseKrakenCSVRows } from './krakenParser';
+import { isTradeRepublicCSV, parseTradeRepublicCSV } from './tradeRepublicParser';
 
 export const USER_SAMPLE_CRYPTO_COM_CSV = `Timestamp (UTC),Transaction Description,Currency,Amount,To Currency,To Amount,Native Currency,Native Amount,Native Amount (in USD),Transaction Kind,Transaction Hash
 2026-09-01 21:46:44,Bought POL,EUR,-300.00,POL,3537.49,USD,343.713311999867340190124011521,343.713311999867340190124011521,viban_purchase,
@@ -60,6 +61,9 @@ export function isCryptoComCSV(headers: string[]): boolean {
 }
 
 export function detectCSVFormat(headers: string[]): ExchangeSource | 'generic' {
+  if (isTradeRepublicCSV(headers)) {
+    return 'trade_republic';
+  }
   if (isCryptoComCSV(headers)) {
     return 'crypto_com';
   }
@@ -315,7 +319,9 @@ export function parseCSVFile(csvContent: string): CSVParseResult {
   const detectedExchange = detectCSVFormat(rows[0]);
   let transactions: Transaction[] = [];
 
-  if (detectedExchange === 'crypto_com') {
+  if (detectedExchange === 'trade_republic') {
+    transactions = parseTradeRepublicCSV(csvContent);
+  } else if (detectedExchange === 'crypto_com') {
     transactions = parseCryptoComCSV(rows);
   } else if (detectedExchange === 'kraken') {
     transactions = parseKrakenCSVRows(rows);
