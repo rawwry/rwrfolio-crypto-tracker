@@ -18,7 +18,11 @@ import {
   Send,
   AlertTriangle,
   FolderLock,
-  FileText
+  FileText,
+  Download,
+  FileSpreadsheet,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 import { AppSettings, ThemeMode, PortfolioCurrency } from '../types';
 import { sendTestEmailApi } from '../utils/apiClient';
@@ -30,6 +34,9 @@ interface SettingsModalProps {
   settings: AppSettings;
   onSaveSettings: (newSettings: AppSettings) => void;
   onLogout?: () => void;
+  onExportCSV?: () => void;
+  onExportJSON?: () => void;
+  onResetData?: () => void;
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({
@@ -38,8 +45,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   settings,
   onSaveSettings,
   onLogout,
+  onExportCSV,
+  onExportJSON,
+  onResetData,
 }) => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'email' | 'privacy'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'email' | 'privacy' | 'data'>('profile');
   
   // Form states
   const [username, setUsername] = useState(settings.user?.username || '');
@@ -220,6 +230,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('privacy')}
               className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer w-full text-left whitespace-nowrap ${
                 activeTab === 'privacy'
@@ -229,6 +240,19 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             >
               <FolderLock className="w-4 h-4" />
               <span>Privatsphäre &amp; GitHub</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab('data')}
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer w-full text-left whitespace-nowrap ${
+                activeTab === 'data'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : theme === 'light' ? 'text-slate-600 hover:bg-slate-200/60' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <Database className="w-4 h-4" />
+              <span>Daten &amp; Backup</span>
             </button>
           </div>
 
@@ -769,6 +793,109 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <strong>GitHub-Inhalt:</strong> Enthält nur den reinen Open-Source Programmcode (React, Tailwind, Dockerfile, Add-on Manifest) ohne jegliche persönliche Finanzdaten.
                     </li>
                   </ul>
+                </div>
+              </div>
+            )}
+
+            {/* TAB 5: DATA & BACKUP */}
+            {activeTab === 'data' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-bold flex items-center gap-2">
+                    <Database className="w-4 h-4 text-indigo-400" />
+                    Datenverwaltung, Backups &amp; Export
+                  </h3>
+                  <p className={`text-xs mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Sichere deine Bestände lokal auf deinem Rechner oder verwalte das Portfolio.
+                  </p>
+                </div>
+
+                {/* CSV Export Card */}
+                <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                }`}>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-500" />
+                      <span className="text-xs font-bold">CSV-Transaktionsexport</span>
+                    </div>
+                    <p className={`text-[11px] leading-relaxed max-w-md ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Exportiert alle deine Transaktionen als universelle CSV-Datei. Kann in Excel, Apple Numbers oder Google Sheets importiert werden.
+                    </p>
+                  </div>
+                  {onExportCSV && (
+                    <button
+                      type="button"
+                      onClick={onExportCSV}
+                      className={`inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shrink-0 shadow-sm ${
+                        theme === 'light' 
+                          ? 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' 
+                          : 'bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-400 border-emerald-800/60'
+                      }`}
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-500" />
+                      <span>CSV herunterladen</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* JSON Backup Card */}
+                <div className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                }`}>
+                  <div className="space-y-1">
+                    <div className="flex items-center space-x-2">
+                      <Database className="w-4 h-4 text-indigo-400" />
+                      <span className="text-xs font-bold">JSON Komplett-Backup</span>
+                    </div>
+                    <p className={`text-[11px] leading-relaxed max-w-md ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Erstellt ein vollständiges Backup deines Portfolios inklusive aller Metadaten, Historie und Einstellungen zur sicheren Aufbewahrung.
+                    </p>
+                  </div>
+                  {onExportJSON && (
+                    <button
+                      type="button"
+                      onClick={onExportJSON}
+                      className={`inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer shrink-0 shadow-sm ${
+                        theme === 'light' 
+                          ? 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200' 
+                          : 'bg-indigo-950/30 hover:bg-indigo-900/40 text-indigo-300 border-indigo-800/60'
+                      }`}
+                    >
+                      <Download className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>JSON sichern</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Danger Zone: Reset Portfolio */}
+                <div className={`p-4 rounded-xl border space-y-3 ${
+                  theme === 'light' ? 'bg-rose-50/40 border-rose-200' : 'bg-rose-950/20 border-rose-800/50'
+                }`}>
+                  <div className="flex items-center space-x-2 text-rose-500 font-bold text-xs">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span>Gefahrenzone: Portfolio zurücksetzen</span>
+                  </div>
+                  <p className={`text-[11px] leading-relaxed ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                    Löscht alle erfassten Transaktionen und Bestände unwiderruflich aus deiner lokalen SQLite-Datenbank auf dem Raspberry Pi.
+                  </p>
+                  {onResetData && (
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm('Bist du absolut sicher? Alle Transaktionen und Bestände werden unwiderruflich gelöscht.')) {
+                            onClose();
+                            onResetData();
+                          }
+                        }}
+                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white transition-all cursor-pointer shadow-md shadow-rose-600/20"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Portfolio unwiderruflich zurücksetzen</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

@@ -64,25 +64,17 @@ export const TopPerformerCards: React.FC<TopPerformerCardsProps> = ({
         }`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2.5">
-            <div 
-              className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-md flex-shrink-0"
-              style={{ backgroundColor: gainerDetails.color || '#10b981' }}
-            >
-              {topGainer.symbol.substring(0, 4)}
-            </div>
-            <div>
-              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                Top Performer
+          <div>
+            <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              Top Performer
+            </span>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                {topGainer.symbol}
               </span>
-              <div className="flex items-center gap-1.5">
-                <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  {topGainer.symbol}
-                </span>
-                <span className={`text-xs truncate max-w-[80px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {topGainer.name}
-                </span>
-              </div>
+              <span className={`text-xs truncate max-w-[120px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                {topGainer.name}
+              </span>
             </div>
           </div>
 
@@ -135,25 +127,17 @@ export const TopPerformerCards: React.FC<TopPerformerCardsProps> = ({
           }`}
         >
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2.5">
-              <div 
-                className="w-8 h-8 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-md flex-shrink-0"
-                style={{ backgroundColor: loserDetails?.color || '#f43f5e' }}
-              >
-                {topLoser.symbol.substring(0, 4)}
-              </div>
-              <div>
-                <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                  {loserIsProfit ? 'Niedrigste Rendite' : 'Größter Dip'}
+            <div>
+              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                {loserIsProfit ? 'Niedrigste Rendite' : 'Größter Dip'}
+              </span>
+              <div className="flex items-center gap-1.5 mt-0.5">
+                <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {topLoser.symbol}
                 </span>
-                <div className="flex items-center gap-1.5">
-                  <span className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                    {topLoser.symbol}
-                  </span>
-                  <span className={`text-xs truncate max-w-[80px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {topLoser.name}
-                  </span>
-                </div>
+                <span className={`text-xs truncate max-w-[120px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {topLoser.name}
+                </span>
               </div>
             </div>
 

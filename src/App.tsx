@@ -32,24 +32,18 @@ import { QuickActionsBar } from './components/QuickActionsBar';
 import { TopPerformerCards } from './components/TopPerformerCards';
 import { FearAndGreedWidget } from './components/FearAndGreedWidget';
 import { APP_VERSION } from './changelog';
-import { PixelGoatIcon } from './components/PixelGoatIcon';
 import { isSessionAuthenticated, clearSessionAuth, DEFAULT_ADMIN_HASH } from './utils/auth';
 import { deduplicateTransactions } from './utils/transactionDedup';
 import { 
-  Download, 
-  RotateCcw, 
   Plus, 
   Upload, 
   Check, 
   AlertCircle,
-  FileSpreadsheet,
   Database,
   History,
-  Settings as SettingsIcon,
   ShieldCheck,
   Eye,
-  EyeOff,
-  LogOut
+  EyeOff
 } from 'lucide-react';
 
 const STORAGE_KEY = 'rwrfolio_transactions_v2';
@@ -622,16 +616,13 @@ export default function App() {
 
       </main>
 
-      {/* Footer */}
-      <footer className={`border-t py-5 mt-12 text-xs ${
+      {/* Footer: Minimal, clean single-line, zero wrapping */}
+      <footer className={`border-t py-4 mt-12 text-xs ${
         isLight ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-800/80 bg-slate-950 text-slate-400'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <PixelGoatIcon size={18} />
-              <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>rwr/folio</span>
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+          <div className="flex items-center space-x-2 whitespace-nowrap">
+            <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>rwr/folio</span>
             <span className="text-slate-400">&bull;</span>
             <button
               onClick={() => setIsChangelogOpen(true)}
@@ -648,47 +639,8 @@ export default function App() {
             </button>
           </div>
 
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => setIsSettingsOpen(true)}
-              className="hover:text-indigo-500 flex items-center space-x-1 transition-colors cursor-pointer"
-              title="Einstellungen öffnen"
-            >
-              <SettingsIcon className="w-3.5 h-3.5 text-indigo-500" />
-              <span>Einstellungen</span>
-            </button>
-            <button
-              onClick={handleExportCSV}
-              className="hover:text-emerald-500 flex items-center space-x-1 transition-colors cursor-pointer"
-              title="CSV-Export herunterladen"
-            >
-              <Download className="w-3.5 h-3.5 text-emerald-500" />
-              <span>CSV Export</span>
-            </button>
-            <button
-              onClick={handleExportJSON}
-              className="hover:text-indigo-500 flex items-center space-x-1 transition-colors cursor-pointer"
-              title="JSON-Backup herunterladen"
-            >
-              <FileSpreadsheet className="w-3.5 h-3.5 text-indigo-500" />
-              <span>JSON Backup</span>
-            </button>
-            <button
-              onClick={handleResetData}
-              className="hover:text-rose-500 flex items-center space-x-1 transition-colors cursor-pointer"
-              title="Daten zurücksetzen"
-            >
-              <RotateCcw className="w-3.5 h-3.5 text-rose-500" />
-              <span>Zurücksetzen</span>
-            </button>
-            <button
-              onClick={handleLogout}
-              className="hover:text-amber-500 flex items-center space-x-1 transition-colors cursor-pointer"
-              title="Abmelden"
-            >
-              <LogOut className="w-3.5 h-3.5 text-amber-500" />
-              <span>Abmelden</span>
-            </button>
+          <div className="text-right text-[11px] whitespace-nowrap text-slate-400">
+            <span>Privater Krypto-Tracker</span>
           </div>
         </div>
       </footer>
@@ -700,6 +652,9 @@ export default function App() {
         settings={settings}
         onSaveSettings={handleSaveSettings}
         onLogout={handleLogout}
+        onExportCSV={handleExportCSV}
+        onExportJSON={handleExportJSON}
+        onResetData={handleResetData}
       />
 
       <ChangelogModal

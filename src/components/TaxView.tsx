@@ -294,21 +294,13 @@ export const TaxView: React.FC<TaxViewProps> = ({
                 <div key={asset.symbol} className="p-4 space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-12 items-center gap-4">
                     {/* Left: Asset info (fixed 4 columns) */}
-                    <div className="md:col-span-4 flex items-center space-x-3 min-w-0">
-                      <div 
-                        className="w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-sm flex-shrink-0"
-                        style={{ backgroundColor: details.color }}
-                      >
-                        {asset.symbol.substring(0, 3)}
+                    <div className="md:col-span-4 min-w-0">
+                      <div className="flex items-center space-x-2">
+                        <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
+                        <span className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
                       </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center space-x-2">
-                          <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
-                          <span className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
-                        </div>
-                        <div className="text-xs font-mono text-slate-500 truncate">
-                          Gesamt: {asset.totalBalance.toFixed(4)} {asset.symbol} &bull; Wert: {asset.totalCurrentValueEUR.toFixed(2)} €
-                        </div>
+                      <div className="text-xs font-mono text-slate-500 truncate mt-0.5">
+                        Gesamt: {asset.totalBalance.toFixed(4)} {asset.symbol} &bull; Wert: {asset.totalCurrentValueEUR.toFixed(2)} €
                       </div>
                     </div>
 

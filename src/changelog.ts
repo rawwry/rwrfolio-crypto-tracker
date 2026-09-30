@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.9';
+export const APP_VERSION = '0.5.10';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.10',
+    date: '30.09.2026',
+    title: 'Automatische Smartphone/Desktop-Ansichten, Footer-Neugestaltung & Datenverwaltung',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Automatische Smartphone- & Desktop-Darstellung: Manueller Umschalter unter „Coins“ und „Transaktionen“ entfernt. Auf Desktop-Browsern erscheint automatisch die vollständige Datentabelle, auf Smartphones die touchoptimierte Raster-Kartenansicht ohne horizontales Wischen.',
+      },
+      {
+        type: 'ui',
+        text: 'Footer minimalistisch neugestaltet: Keine Textumbrüche mehr auf mobilen Geräten. Entfernung überflüssiger Buttons und Ziegen-Icons zugunsten einer einzeiligen, aufgeräumten Status- und Changelog-Leiste.',
+      },
+      {
+        type: 'feat',
+        text: 'Datenverwaltung in Einstellungen verlegt: CSV-Export, JSON-Komplettbackup und die Sicherheitszone zum Zurücksetzen des Portfolios befinden sich nun geschützt im neuen Einstellungs-Reiter „Daten & Backup“ mit ausführlichen Erklärungen.',
+      },
+      {
+        type: 'ui',
+        text: 'Pseudo-Coin-Icons entfernt: Bunte Kürzel-Kästchen in Coin-Listen, Transaktionstabellen, Top-Performern und Steuerübersichten durch klare, hochwertige Typografie ersetzt.',
+      },
+    ],
+  },
   {
     version: '0.5.9',
     date: '30.09.2026',
     title: 'Steuer-ID & Voller Name, Steuerfreigaben-Karten & Menüleisten-Verschlankung',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

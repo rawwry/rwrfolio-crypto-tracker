@@ -5,7 +5,6 @@ import {
   Radio
 } from 'lucide-react';
 import { PortfolioCurrency } from '../types';
-import { PixelGoatIcon } from './PixelGoatIcon';
 
 interface QuickActionsBarProps {
   onOpenAddTransaction: () => void;
@@ -35,29 +34,22 @@ export const QuickActionsBar: React.FC<QuickActionsBarProps> = ({
     <div className={`p-4 sm:p-5 rounded-2xl border shadow-lg transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
       isLight ? 'bg-white border-slate-200' : 'bg-slate-900/90 border-slate-800'
     }`}>
-      {/* Left: Branding & Background Sync Status */}
-      <div className="flex items-center space-x-3.5">
-        <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center flex-shrink-0 shadow-sm ${
-          isLight ? 'bg-slate-100 border-slate-200 text-slate-800' : 'bg-slate-800/90 border-slate-700/80 text-slate-200'
-        }`}>
-          <PixelGoatIcon size={24} />
+      {/* Left: Status & Greeting */}
+      <div>
+        <div className="flex items-center space-x-2">
+          <h2 className={`text-base font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            {username ? `Willkommen, ${username}` : 'Portfolio Übersicht'}
+          </h2>
+          <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live aktiv</span>
+          </span>
         </div>
-        <div>
-          <div className="flex items-center space-x-2">
-            <h2 className={`text-base font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {username ? `Willkommen, ${username}` : 'Portfolio Übersicht'}
-            </h2>
-            <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 text-[10px] font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span>Live aktiv</span>
-            </span>
-          </div>
-          <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            <span>Live-Kurse synchronisiert</span>
-            <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>&bull;</span>
-            <span>Stand: <strong>{lastUpdatedText || 'gerade eben'}</strong></span>
-          </p>
-        </div>
+        <p className={`text-xs mt-0.5 flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          <span>Live-Kurse synchronisiert</span>
+          <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>&bull;</span>
+          <span>Stand: <strong>{lastUpdatedText || 'gerade eben'}</strong></span>
+        </p>
       </div>
 
       {/* Right: The 2 Core Action Buttons */}

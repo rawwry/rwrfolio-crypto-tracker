@@ -363,23 +363,15 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               >
                 {/* 1. Header: Icon, Names & Prominent PnL Badge */}
                 <div className="flex items-start justify-between gap-3">
-                  <div className="flex items-center space-x-3 min-w-0">
-                    <div 
-                      className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-sm flex-shrink-0"
-                      style={{ backgroundColor: details.color || '#6366f1' }}
-                    >
-                      {asset.symbol.substring(0, 4)}
+                  <div className="min-w-0">
+                    <div className="flex items-center space-x-1.5">
+                      <span className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
+                      <span className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`} title={asset.name}>
+                        {asset.name}
+                      </span>
                     </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center space-x-1.5">
-                        <span className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
-                        <span className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`} title={asset.name}>
-                          {asset.name}
-                        </span>
-                      </div>
-                      <div className={`text-xs font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {formatCoinAmount(asset.currentBalance)} {asset.symbol}
-                      </div>
+                    <div className={`text-xs font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      {formatCoinAmount(asset.currentBalance)} {asset.symbol}
                     </div>
                   </div>
 

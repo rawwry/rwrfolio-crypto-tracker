@@ -12,7 +12,6 @@ import {
   ChevronRight, 
   Info 
 } from 'lucide-react';
-import { getCoinDetails } from '../utils/priceService';
 
 interface TransactionTableProps {
   transactions: Transaction[];
@@ -467,8 +466,157 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         )}
       </div>
 
-      {/* Table Content */}
-      <div className="overflow-x-auto">
+      {/* 1. MOBILE TRANSACTIONS VIEW (Automatic on smartphones, no horizontal scrolling) */}
+      <div className={`block md:hidden divide-y ${
+        isLight ? 'divide-slate-100' : 'divide-slate-800/60'
+      }`}>
+        {paginatedTransactions.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 text-sm">
+            Keine Transaktionen für die aktuellen Filterkriterien gefunden.
+          </div>
+        ) : (
+          paginatedTransactions.map((tx) => {
+            const eurRate = 1.08;
+            let spentActive = 0;
+            let spentAlt = 0;
+
+            if (tx.spentAmount > 0) {
+              if (isUSD) {
+                spentActive = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
+                spentAlt = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate);
+              } else {
+                spentActive = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmount && tx.nativeCurrency === 'EUR' ? tx.nativeAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate));
+                spentAlt = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
+              }
+            }
+
+            const unitPriceActive = tx.receivedAmount > 0 && spentActive > 0 ? (spentActive / tx.receivedAmount) : 0;
+            const unitPriceAlt = tx.receivedAmount > 0 && spentAlt > 0 ? (spentAlt / tx.receivedAmount) : 0;
+            const unitPriceDecimals = unitPriceActive < 1 ? 4 : (unitPriceActive < 10 ? 3 : 2);
+
+            return (
+              <div 
+                key={tx.id} 
+                className={`p-4 space-y-3 transition-colors ${
+                  isLight 
+                    ? (selectedIds.has(tx.id) ? 'bg-indigo-50/80 hover:bg-indigo-50' : 'hover:bg-slate-50/80') 
+                    : (selectedIds.has(tx.id) ? 'bg-indigo-950/20 hover:bg-indigo-950/30' : 'hover:bg-slate-800/40')
+                }`}
+              >
+                {/* Header: Checkbox + Date + Badges */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(tx.id)}
+                      onChange={() => toggleSelectId(tx.id)}
+                      className={`rounded ${
+                        isLight 
+                          ? 'border-slate-300 bg-white text-indigo-600 focus:ring-indigo-500' 
+                          : 'border-slate-700 bg-slate-900 text-indigo-600 focus:ring-indigo-500'
+                      }`}
+                    />
+                    <div className="font-mono text-xs">
+                      <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                        {formatDatePart(tx.timestamp)}
+                      </span>
+                      <span className={`text-[11px] ml-1.5 font-sans ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                        {formatTimePart(tx.timestamp)} Uhr
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-1.5">
+                    {getTypeBadge(tx.type)}
+                    {getSourceBadge(tx.source)}
+                  </div>
+                </div>
+
+                {/* Amounts: Received & Spent */}
+                <div className="flex items-center justify-between gap-2">
+                  <div>
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Erhalten
+                    </div>
+                    <div className={`text-base font-extrabold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                      {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className={`text-[10px] uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Kauf / Verkauf
+                    </div>
+                    <div className={`text-base font-extrabold font-mono ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                      {spentActive > 0 ? formatActive(spentActive) : '-'}
+                    </div>
+                    {tx.spentCurrency !== 'EUR' && tx.spentCurrency !== 'USD' && tx.spentAmount > 0 && (
+                      <span className={`text-[11px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        ({tx.spentAmount} {tx.spentCurrency})
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Bottom: Einzelkurs + Actions */}
+                <div className={`pt-2 border-t flex items-center justify-between ${
+                  isLight ? 'border-slate-100' : 'border-slate-800/60'
+                }`}>
+                  <div className="text-xs font-mono">
+                    <span className={`text-[11px] font-sans mr-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      Einzelkurs:
+                    </span>
+                    <span className={`font-semibold ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
+                      {unitPriceActive > 0 ? formatActive(unitPriceActive, unitPriceDecimals) : '-'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={() => setDetailTx(tx)}
+                      title="Details"
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                        isLight 
+                          ? 'text-slate-400 hover:text-indigo-600 hover:bg-slate-100' 
+                          : 'text-slate-400 hover:text-indigo-300 hover:bg-slate-800'
+                      }`}
+                    >
+                      <Info className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => onEditTransaction(tx)}
+                      title="Bearbeiten"
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                        isLight 
+                          ? 'text-slate-400 hover:text-slate-800 hover:bg-slate-100' 
+                          : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                      }`}
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (window.confirm(`Transaktion ${tx.description || tx.receivedCurrency} wirklich löschen?`)) {
+                          onDeleteTransaction(tx.id);
+                        }
+                      }}
+                      title="Löschen"
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
+                        isLight 
+                          ? 'text-slate-400 hover:text-rose-600 hover:bg-rose-50' 
+                          : 'text-slate-400 hover:text-rose-400 hover:bg-slate-800'
+                      }`}
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* 2. DESKTOP TRANSACTIONS TABLE (Automatic on desktop) */}
+      <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className={`text-xs uppercase font-semibold tracking-wider border-b ${
             isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/60 text-slate-400 border-slate-800'
@@ -505,8 +653,6 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               </tr>
             ) : (
               paginatedTransactions.map((tx) => {
-                const coinMeta = getCoinDetails(tx.receivedCurrency);
-                
                 // Calculated unit prices
                 const eurRate = 1.08;
                 let spentActive = 0;
@@ -568,18 +714,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
 
                     {/* Received Asset & Amount */}
                     <td className="py-2.5 px-3">
-                      <div className="flex items-center space-x-2.5">
-                        <div 
-                          className="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-[11px] text-white flex-shrink-0"
-                          style={{ backgroundColor: coinMeta.color || '#6366f1' }}
-                        >
-                          {tx.receivedCurrency.substring(0, 3)}
-                        </div>
-                        <div>
-                          <div className={`font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                            {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
-                          </div>
-                        </div>
+                      <div className={`font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
                       </div>
                     </td>
 

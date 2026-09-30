@@ -4,8 +4,6 @@ import {
   Edit3, 
   Filter, 
   Sparkles,
-  LayoutGrid,
-  Table as TableIcon,
   ArrowUpRight,
   ArrowDownRight,
   ArrowUp,
@@ -34,8 +32,6 @@ export const AssetList: React.FC<AssetListProps> = ({
 }) => {
   const isLight = theme === 'light';
   const isUSD = currency === 'USD';
-  // Allow user to toggle between responsive card view and full table view
-  const [viewMode, setViewMode] = useState<'auto' | 'cards' | 'table'>('auto');
 
   // Sorting state: default to sorted by portfolio value descending
   const [sortKey, setSortKey] = useState<SortKey>('value');
@@ -175,8 +171,8 @@ export const AssetList: React.FC<AssetListProps> = ({
     <div className={`rounded-2xl border shadow-xl overflow-hidden ${
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/80 border-slate-800/90'
     }`}>
-      {/* Header with Title and Mobile View Mode Switcher */}
-      <div className={`p-4 sm:p-5 border-b flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
+      {/* Header with Title */}
+      <div className={`p-4 sm:p-5 border-b flex items-center justify-between gap-3 ${
         isLight ? 'border-slate-100 bg-white' : 'border-slate-800 bg-transparent'
       }`}>
         <div>
@@ -192,51 +188,10 @@ export const AssetList: React.FC<AssetListProps> = ({
             Automatisch berechneter Einkaufswert, aktueller Marktwert und Gewinn/Verlust
           </p>
         </div>
-
-        {/* View Switcher: Auto (cards on mobile, table on desktop), Force Cards, Force Table */}
-        <div className={`flex items-center self-start sm:self-auto space-x-1 p-1 rounded-xl border text-xs ${
-          isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/60 border-slate-800'
-        }`}>
-          <button
-            onClick={() => setViewMode('auto')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
-              viewMode === 'auto'
-                ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Auf dem Smartphone als kompakte Karten ohne horizontales Wischen, auf Desktop als Tabelle"
-          >
-            <span>Auto</span>
-          </button>
-          <button
-            onClick={() => setViewMode('cards')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
-              viewMode === 'cards'
-                ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Kompakte Kartenansicht für schnellen Gewinn/Verlust-Blick"
-          >
-            <LayoutGrid className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">Karten</span>
-          </button>
-          <button
-            onClick={() => setViewMode('table')}
-            className={`px-2.5 py-1 rounded-lg font-medium transition-all cursor-pointer flex items-center space-x-1.5 ${
-              viewMode === 'table'
-                ? 'bg-indigo-600 text-white font-semibold shadow-sm'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-slate-200'
-            }`}
-            title="Vollständige Tabelle mit allen Spalten"
-          >
-            <TableIcon className="w-3.5 h-3.5" />
-            <span className="hidden xs:inline">Tabelle</span>
-          </button>
-        </div>
       </div>
 
       {/* 1. MOBILE QUICK-CHECK VIEW (Zero horizontal scrolling on phone) */}
-      <div className={`${viewMode === 'table' ? 'hidden' : viewMode === 'cards' ? 'block' : 'block sm:hidden'} divide-y ${
+      <div className={`block md:hidden divide-y ${
         isLight ? 'divide-slate-100' : 'divide-slate-800/60'
       }`}>
         {sortedAssets.map((asset) => {
@@ -258,18 +213,11 @@ export const AssetList: React.FC<AssetListProps> = ({
             }`}>
               {/* Card Headline: Asset info on left, PROMINENT CURRENT VALUE & GAIN/LOSS ON RIGHT */}
               <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center space-x-2.5 min-w-0">
-                  <div 
-                    className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-xs text-white shadow-md flex-shrink-0"
-                    style={{ backgroundColor: details.color || '#6366f1' }}
-                  >
-                    {asset.symbol.substring(0, 4)}
+                <div className="min-w-0">
+                  <div className={`font-bold text-sm flex items-center space-x-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    <span className="font-extrabold">{asset.symbol}</span>
+                    <span className={`text-xs font-normal truncate max-w-[140px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
                   </div>
-                  <div className="min-w-0">
-                    <div className={`font-bold text-sm flex items-center space-x-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      <span>{asset.symbol}</span>
-                      <span className={`text-xs font-normal truncate max-w-[120px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
-                    </div>
                     <div className="flex items-center space-x-2 mt-0.5">
                       <span className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         {formatCoinAmount(asset.currentBalance)} {asset.symbol}
@@ -292,7 +240,6 @@ export const AssetList: React.FC<AssetListProps> = ({
                       )}
                     </div>
                   </div>
-                </div>
 
                 {/* Right Headline: Current Value & Profit/Loss (Immediately visible without swiping!) */}
                 <div className="text-right flex-shrink-0">
@@ -358,7 +305,7 @@ export const AssetList: React.FC<AssetListProps> = ({
       </div>
 
       {/* 2. REFINED DESKTOP TABLE (Single-line headers, perfectly aligned columns) */}
-      <div className={`${viewMode === 'cards' ? 'hidden' : viewMode === 'table' ? 'block' : 'hidden sm:block'} overflow-x-auto lg:overflow-x-visible`}>
+      <div className="hidden md:block overflow-x-auto lg:overflow-x-visible">
         <table className="w-full text-left text-sm border-collapse">
           <thead className={`text-xs uppercase font-semibold tracking-wider border-b ${
             isLight ? 'bg-slate-50 text-slate-600 border-slate-200' : 'bg-slate-950/70 text-slate-400 border-slate-800'
@@ -397,42 +344,34 @@ export const AssetList: React.FC<AssetListProps> = ({
                 >
                   {/* Asset Symbol & Name (text-left) */}
                   <td className="py-2.5 px-3 sm:px-4 text-left align-middle">
-                    <div className="flex items-center space-x-2.5 min-w-0">
-                      <div 
-                        className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs text-white shadow-sm flex-shrink-0"
-                        style={{ backgroundColor: details.color || '#6366f1' }}
-                      >
-                        {asset.symbol.substring(0, 4)}
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 whitespace-nowrap">
+                        <span className={`font-bold shrink-0 text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
+                        <span 
+                          className={`text-xs font-normal truncate max-w-[120px] lg:max-w-[180px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`} 
+                          title={asset.name}
+                        >
+                          {asset.name}
+                        </span>
                       </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-1.5 whitespace-nowrap">
-                          <span className={`font-bold shrink-0 text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
-                          <span 
-                            className={`text-xs font-normal truncate max-w-[100px] lg:max-w-[150px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`} 
-                            title={asset.name}
+                      <div className="mt-0.5">
+                        {onSelectAssetForFilter ? (
+                          <button
+                            onClick={() => onSelectAssetForFilter(asset.symbol)}
+                            className={`text-[11px] whitespace-nowrap cursor-pointer transition-colors ${
+                              isLight 
+                                ? 'text-slate-500 hover:text-slate-800' 
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
                           >
-                            {asset.name}
-                          </span>
-                        </div>
-                        <div className="mt-0.5">
-                          {onSelectAssetForFilter ? (
-                            <button
-                              onClick={() => onSelectAssetForFilter(asset.symbol)}
-                              className={`text-[11px] whitespace-nowrap cursor-pointer transition-colors ${
-                                isLight 
-                                  ? 'text-slate-500 hover:text-slate-800' 
-                                  : 'text-slate-400 hover:text-slate-200'
-                              }`}
-                              title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
-                            >
-                              <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
-                            </button>
-                          ) : (
-                            <div className={`text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
-                            </div>
-                          )}
-                        </div>
+                            <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
+                          </button>
+                        ) : (
+                          <div className={`text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                          </div>
+                        )}
                       </div>
                     </div>
                   </td>
