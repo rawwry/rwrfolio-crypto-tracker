@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.11';
+export const APP_VERSION = '0.5.12';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.12',
+    date: '30.09.2026',
+    title: 'Steuerbericht-Optimierungen, Beleg-Anhänge (Anhang B & C) & direkte CSV-Belegexporte',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Belegnachweise direkt im Steuerbericht (Anhang B & C): Vollständige Buchungsprotokolle für Kraken (Anhang B) und Crypto.com (Anhang C) werden nun direkt an den PDF-Steuerbericht angehängt, inklusive dynamischer Seitenzählung und grüner Bestätigung in Abschnitt 6.',
+      },
+      {
+        type: 'feat',
+        text: 'Separate Beleg-Exporte (CSV): Im Export-Menü unter „Steuern“ können die Rohdaten und Buchungsnachweise für Kraken und Crypto.com als eigenständige CSV-Dateien für den Veranlagungszeitraum heruntergeladen werden.',
+      },
+      {
+        type: 'ui',
+        text: 'Tabelle Coin-Bestand harmonisiert: Einheitliche einzeilige Spaltenüberschriften ohne Zeilenumbrüche, Umbenennung in „Steuerfrei ab“ und neuer Titel „Coin-Bestand zum [Datum]“ mit korrekter Spaltensummen-Ausrichtung.',
+      },
+      {
+        type: 'ui',
+        text: 'Layout-Bereinigung: Zeilenumbruch für nachrichtlich steuerfreie Erlöse auf Seite 1 eingefügt; Vorjahres-Nachweis und Disclaimer-Text auf Seite 4 wunschgemäß entfernt.',
+      },
+    ],
+  },
   {
     version: '0.5.11',
     date: '30.09.2026',
     title: 'Neuer 4-seitiger BMF-Steuerbericht (PDF & CSV) nach Steuerberater-Standard',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

@@ -1,9 +1,10 @@
 import { PortfolioTaxReport } from './taxCalculator';
-import { UserProfile } from '../types';
+import { UserProfile, Transaction } from '../types';
 
 export function exportTaxReportToPDF(
   report: PortfolioTaxReport,
-  userProfile?: UserProfile
+  userProfile?: UserProfile,
+  allTransactions?: Transaction[]
 ): void {
   const currentDate = new Date().toLocaleDateString('de-DE', {
     day: '2-digit',
@@ -279,6 +280,87 @@ export function exportTaxReportToPDF(
     }
   }
 
+  // --- 6. ATTACHMENT BUILDERS (Anhang B & C: Belegnachweise der Börsen) ---
+  const yearTxs = (allTransactions && allTransactions.length > 0)
+    ? allTransactions.filter(t => {
+        const d = new Date(t.timestamp);
+        return !isNaN(d.getTime()) && d.getFullYear() === report.taxYear;
+      })
+    : (report.yearTransactions || []);
+
+  const krakenTxs = yearTxs
+    .filter(t => (t.source || '').toLowerCase() === 'kraken')
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  const cryptoComTxs = yearTxs
+    .filter(t => (t.source || '').toLowerCase() === 'crypto_com')
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  const hasKrakenBeleg = krakenTxs.length > 0;
+  const hasCdcBeleg = cryptoComTxs.length > 0;
+
+  let totalPages = 4;
+  let krakenPageNr = 0;
+  let cdcPageNr = 0;
+
+  if (hasKrakenBeleg) {
+    totalPages++;
+    krakenPageNr = totalPages;
+  }
+  if (hasCdcBeleg) {
+    totalPages++;
+    cdcPageNr = totalPages;
+  }
+
+  const buildBelegRows = (txs: Transaction[]) => {
+    return txs.map((tx, idx) => {
+      const dt = new Date(tx.timestamp);
+      const dateFormatted = !isNaN(dt.getTime()) ? formatDate(tx.timestamp) : tx.timestamp;
+      const timeFormatted = !isNaN(dt.getTime()) ? dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+      
+      let badgeClass = 'badge-secondary';
+      let typeName = tx.type as string;
+      if (tx.type === 'BUY') {
+        badgeClass = 'badge-frei';
+        typeName = 'Kauf';
+      } else if (tx.type === 'SELL') {
+        badgeClass = 'badge-stpfl';
+        typeName = 'Verkauf';
+      } else if (tx.type === 'REWARD' || tx.type === 'STAKE') {
+        badgeClass = 'badge-info';
+        typeName = 'Reward';
+      } else if (tx.type === 'TRANSFER') {
+        typeName = 'Transfer';
+      }
+
+      const recStr = tx.receivedAmount && tx.receivedAmount > 0 
+        ? `${formatCoin(tx.receivedAmount)} ${tx.receivedCurrency}` 
+        : '–';
+      const spentStr = tx.spentAmount && tx.spentAmount > 0 
+        ? (tx.spentCurrency === 'EUR' ? formatEuro(tx.spentAmount) : `${formatCoin(tx.spentAmount)} ${tx.spentCurrency}`)
+        : '–';
+
+      const txRef = tx.transactionHash || tx.id || '';
+      const shortRef = txRef.length > 16 ? txRef.substring(0, 14) + '…' : txRef;
+
+      return `
+        <tr>
+          <td class="font-mono text-muted">${idx + 1}</td>
+          <td class="font-mono">${dateFormatted} <span class="text-muted" style="font-size: 6.5pt;">${timeFormatted}</span></td>
+          <td><span class="badge ${badgeClass}">${typeName}</span></td>
+          <td class="text-right font-mono font-bold">${recStr}</td>
+          <td class="text-right font-mono">${spentStr}</td>
+          <td class="text-right font-mono">${tx.pricePerUnitEUR ? formatEuro(tx.pricePerUnitEUR) : '–'}</td>
+          <td class="text-right font-mono text-muted">${tx.fee ? formatEuro(tx.fee) : '–'}</td>
+          <td class="font-mono text-muted" style="font-size: 6.5pt;" title="${txRef}">${shortRef || '–'}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  const krakenRowsHtml = buildBelegRows(krakenTxs);
+  const cdcRowsHtml = buildBelegRows(cryptoComTxs);
+
   // --- HTML DOCUMENT TEMPLATE ---
   const html = `<!DOCTYPE html>
 <html lang="de">
@@ -503,6 +585,9 @@ export function exportTaxReportToPDF(
       letter-spacing: 0.3px;
       color: #475569;
       text-align: left;
+      white-space: nowrap;
+      vertical-align: middle;
+      line-height: 1.2;
     }
     td {
       padding: 3.5px 5px;
@@ -552,6 +637,16 @@ export function exportTaxReportToPDF(
       background: #fffbeb;
       color: #b45309;
       border: 1px solid #fde68a;
+    }
+    .badge-info {
+      background: #eef2ff;
+      color: #3730a3;
+      border: 1px solid #c7d2fe;
+    }
+    .badge-secondary {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
     }
 
     /* Section 6 Two Columns */
@@ -747,7 +842,7 @@ export function exportTaxReportToPDF(
           </div>
 
           <div class="note-box-secondary">
-            Nachrichtlich steuerfrei (Haltedauer &gt; 1 Jahr): Erlöse ${formatEuro(report.taxFreeProceedsEUR)}, Gewinn ${report.realizedTaxFreeProfitEUR >= 0 ? '+' : ''}${formatEuro(report.realizedTaxFreeProfitEUR)}.
+            Nachrichtlich steuerfrei (Haltedauer &gt; 1 Jahr)<br>Erlöse ${formatEuro(report.taxFreeProceedsEUR)}, Gewinn ${report.realizedTaxFreeProfitEUR >= 0 ? '+' : ''}${formatEuro(report.realizedTaxFreeProfitEUR)}.
           </div>
         </div>
 
@@ -815,7 +910,7 @@ export function exportTaxReportToPDF(
     <!-- Page Footer -->
     <div class="page-footer">
       <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
-      <span>Seite 1 von 4</span>
+      <span>Seite 1 von ${totalPages}</span>
     </div>
   </div>
 
@@ -881,7 +976,7 @@ export function exportTaxReportToPDF(
     <!-- Page Footer -->
     <div class="page-footer">
       <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
-      <span>Seite 2 von 4</span>
+      <span>Seite 2 von ${totalPages}</span>
     </div>
   </div>
 
@@ -889,10 +984,10 @@ export function exportTaxReportToPDF(
   <!-- ==================== SEITE 3 ==================== -->
   <div class="page page-break">
     <div>
-      <!-- SECTION 4: Bestand zum Stichtag -->
+      <!-- SECTION 4: Coin-Bestand zum Stichtag -->
       <div class="section-badge-header">
         <span class="section-num">4</span>
-        <h2>Bestand zum ${report.reportDate}</h2>
+        <h2>Coin-Bestand zum ${report.reportDate}</h2>
       </div>
       <div class="section-subtitle">
         Nachrichtlich, nicht erklärungspflichtig. Relevant für künftige Haltedauern. Kurswerte zum Stichtag.
@@ -907,14 +1002,14 @@ export function exportTaxReportToPDF(
             ${showKrakenCol ? '<th class="text-right">Davon Kraken</th>' : ''}
             ${showCdcCol ? '<th class="text-right">Davon Crypto.com</th>' : ''}
             <th class="text-right">Steuerfrei</th>
-            <th class="text-center">Frühestens frei ab</th>
+            <th class="text-center">Steuerfrei ab</th>
             <th class="text-right">Wert €</th>
           </tr>
         </thead>
         <tbody>
           ${assetHoldingRows}
           <tr class="grandtotal-row">
-            <td colspan="${2 + (showKrakenCol ? 1 : 0) + (showCdcCol ? 1 : 0) + 1}">
+            <td colspan="${3 + (showKrakenCol ? 1 : 0) + (showCdcCol ? 1 : 0) + 1}">
               Gesamt &bull; davon steuerfrei ${formatEuro(report.totalTaxFreeValueEUR)} (${report.taxFreePercentage.toFixed(1)} %) &bull; Anschaffungskosten der offenen Tranchen ${formatEuro(report.totalOpenTranchesCostEUR)}
             </td>
             <td class="text-center font-mono"></td>
@@ -953,7 +1048,7 @@ export function exportTaxReportToPDF(
     <!-- Page Footer -->
     <div class="page-footer">
       <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
-      <span>Seite 3 von 4</span>
+      <span>Seite 3 von ${totalPages}</span>
     </div>
   </div>
 
@@ -995,20 +1090,16 @@ export function exportTaxReportToPDF(
           <div class="col-title" style="margin-top: 14px;">Beigefügte Belege</div>
           ${distinctSources.includes('kraken') ? `
             <div class="check-item">
-              <span class="check-box">&#x2610;</span>
-              <span>Kraken &ndash; Ledger-Export (CSV), 01.01.&ndash;31.12.${report.taxYear}</span>
+              <span class="check-box" style="color: #16a34a;">&#x2611;</span>
+              <span>Kraken &ndash; Ledger-Export (CSV &amp; im Bericht beigefügt &bull; Anhang B)</span>
             </div>
           ` : ''}
           ${distinctSources.includes('crypto_com') ? `
             <div class="check-item">
-              <span class="check-box">&#x2610;</span>
-              <span>Crypto.com &ndash; Transaktionshistorie (CSV), 01.01.&ndash;31.12.${report.taxYear}</span>
+              <span class="check-box" style="color: #16a34a;">&#x2611;</span>
+              <span>Crypto.com &ndash; Transaktionshistorie (CSV &amp; im Bericht beigefügt &bull; Anhang C)</span>
             </div>
           ` : ''}
-          <div class="check-item">
-            <span class="check-box">&#x2610;</span>
-            <span>Bei Anschaffungen vor ${report.taxYear}: Exporte der Vorjahre (Nachweis der Haltedauer)</span>
-          </div>
         </div>
 
         <!-- Right: Methodik -->
@@ -1037,19 +1128,92 @@ export function exportTaxReportToPDF(
           </div>
         </div>
       </div>
-
-      <!-- Legal Disclaimer -->
-      <div class="disclaimer-bar">
-        Dieser Bericht wurde automatisch aus den Börsendaten erstellt und dient als Arbeitsgrundlage für die steuerliche Beratung. Er ersetzt keine Prüfung durch eine Steuerberaterin oder einen Steuerberater.
-      </div>
     </div>
 
     <!-- Page Footer -->
     <div class="page-footer">
       <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
-      <span>Seite 4 von 4</span>
+      <span>Seite 4 von ${totalPages}</span>
     </div>
   </div>
+
+  ${hasKrakenBeleg ? `
+  <!-- ==================== ANHANG B ==================== -->
+  <div class="page page-break">
+    <div>
+      <div class="section-badge-header">
+        <span class="section-num">B</span>
+        <h2>Anhang B &bull; Belegnachweis: Kraken Ledger-Export</h2>
+      </div>
+      <div class="section-subtitle">
+        Vollständiges Transaktions- und Buchungsprotokoll VZ ${report.taxYear} &bull; Datenquelle: Kraken Import &bull; ${krakenTxs.length} Vorgänge
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28px;">Nr.</th>
+            <th>Datum &amp; Zeit</th>
+            <th>Typ</th>
+            <th class="text-right">Erhalten</th>
+            <th class="text-right">Ausgegeben</th>
+            <th class="text-right">Kurs €</th>
+            <th class="text-right">Gebühr</th>
+            <th>Transaktions-ID / Info</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${krakenRowsHtml}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+      <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; Kraken Ledger-Export</span>
+      <span>Seite ${krakenPageNr} von ${totalPages}</span>
+    </div>
+  </div>
+  ` : ''}
+
+  ${hasCdcBeleg ? `
+  <!-- ==================== ANHANG C ==================== -->
+  <div class="page page-break">
+    <div>
+      <div class="section-badge-header">
+        <span class="section-num">C</span>
+        <h2>Anhang C &bull; Belegnachweis: Crypto.com Transaktionshistorie</h2>
+      </div>
+      <div class="section-subtitle">
+        Vollständiges Transaktions- und Buchungsprotokoll VZ ${report.taxYear} &bull; Datenquelle: Crypto.com Import &bull; ${cryptoComTxs.length} Vorgänge
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 28px;">Nr.</th>
+            <th>Datum &amp; Zeit</th>
+            <th>Typ</th>
+            <th class="text-right">Erhalten</th>
+            <th class="text-right">Ausgegeben</th>
+            <th class="text-right">Kurs €</th>
+            <th class="text-right">Gebühr</th>
+            <th>Transaktions-ID / Info</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${cdcRowsHtml}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+      <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; Crypto.com Transaktionshistorie</span>
+      <span>Seite ${cdcPageNr} von ${totalPages}</span>
+    </div>
+  </div>
+  ` : ''}
 
   <script>
     window.addEventListener('DOMContentLoaded', () => {

@@ -150,6 +150,9 @@ export interface PortfolioTaxReport {
   
   // Section 6: Angaben, Belege und Methodik
   checklist: TaxChecklistFlags;
+
+  // Raw transactions for the tax year (Anhang B & C Belege)
+  yearTransactions: Transaction[];
 }
 
 export function getExchangeDisplayName(source?: string): string {
@@ -750,6 +753,12 @@ export function calculateFIFOTaxReport(
 
     // Section 6
     checklist,
+
+    // Raw transactions for the tax year (Anhang B & C Belege)
+    yearTransactions: sorted.filter(t => {
+      const d = new Date(t.timestamp);
+      return !isNaN(d.getTime()) && d.getFullYear() === taxYear;
+    }),
   };
 }
 
@@ -809,8 +818,8 @@ export function exportTaxReportToCSV(report: PortfolioTaxReport, userProfile?: U
   lines.push(`Summe Leistungen § 22 Nr. 3;;;;;${report.totalStakingRewardsEUR.toFixed(2)}`);
   lines.push('');
 
-  lines.push('--- 4. BESTAND ZUM STICHTAG ---');
-  lines.push('Asset;Bezeichnung;Gesamtbestand;Davon Kraken;Davon Crypto.com;Steuerfrei;Frühestens frei ab;Wert (EUR)');
+  lines.push('--- 4. COIN-BESTAND ZUM STICHTAG ---');
+  lines.push('Asset;Bezeichnung;Gesamtbestand;Davon Kraken;Davon Crypto.com;Steuerfrei;Steuerfrei ab;Wert (EUR)');
   for (const a of report.assets) {
     const krakenBal = a.balanceBySource['kraken'] ? a.balanceBySource['kraken'].toFixed(6) : '-';
     const cdcBal = a.balanceBySource['crypto_com'] ? a.balanceBySource['crypto_com'].toFixed(6) : '-';
@@ -830,4 +839,59 @@ export function exportTaxReportToCSV(report: PortfolioTaxReport, userProfile?: U
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Exports raw transactions of a single exchange for a specific tax year as a clean, standardized CSV file
+ * to provide as an official audit-proof attachment for tax advisors and tax offices.
+ */
+export function exportExchangeTransactionsCSV(
+  transactions: Transaction[],
+  exchange: 'kraken' | 'crypto_com',
+  taxYear: number
+): string {
+  const filtered = transactions.filter(t => {
+    const s = (t.source || '').toLowerCase();
+    const d = new Date(t.timestamp);
+    return s === exchange && !isNaN(d.getTime()) && d.getFullYear() === taxYear;
+  }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  const exchangeName = exchange === 'kraken' ? 'Kraken' : 'Crypto.com';
+  const lines: string[] = [];
+  lines.push(`BELEG-EXPORT ${exchangeName.toUpperCase()} - VERANLAGUNGSZEITRAUM ${taxYear}`);
+  lines.push(`Erstellt am;${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}`);
+  lines.push(`Anzahl Vorgänge;${filtered.length}`);
+  lines.push('');
+  lines.push('Nr.;Datum;Uhrzeit;Typ;Art;Erhalten Menge;Erhalten Währung;Ausgegeben Menge;Ausgegeben Währung;Kurs (EUR);Gebühr (EUR);Transaktions-ID;Beschreibung');
+
+  filtered.forEach((tx, idx) => {
+    const dt = new Date(tx.timestamp);
+    const dateStr = !isNaN(dt.getTime()) ? dt.toLocaleDateString('de-DE') : tx.timestamp;
+    const timeStr = !isNaN(dt.getTime()) ? dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+    
+    let typName = tx.type;
+    if (tx.type === 'BUY') typName = 'Kauf' as any;
+    else if (tx.type === 'SELL') typName = 'Verkauf' as any;
+    else if (tx.type === 'REWARD') typName = 'Reward' as any;
+    else if (tx.type === 'STAKE') typName = 'Staking' as any;
+    else if (tx.type === 'TRANSFER') typName = 'Transfer' as any;
+
+    lines.push([
+      idx + 1,
+      dateStr,
+      timeStr,
+      typName,
+      tx.transactionKind || '',
+      tx.receivedAmount ? tx.receivedAmount.toString().replace('.', ',') : '0',
+      tx.receivedCurrency || '',
+      tx.spentAmount ? tx.spentAmount.toString().replace('.', ',') : '0',
+      tx.spentCurrency || '',
+      tx.pricePerUnitEUR ? tx.pricePerUnitEUR.toFixed(4).replace('.', ',') : '',
+      tx.fee ? tx.fee.toFixed(2).replace('.', ',') : '0,00',
+      tx.transactionHash || tx.id,
+      `"${(tx.description || '').replace(/"/g, '""')}"`
+    ].join(';'));
+  });
+
+  return '\uFEFF' + lines.join('\r\n');
 }
