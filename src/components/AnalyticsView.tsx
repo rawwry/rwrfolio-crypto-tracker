@@ -52,8 +52,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const krakenTxs = useMemo(() => transactions.filter(t => t.source === 'kraken'), [transactions]);
   const cryptoComTxs = useMemo(() => transactions.filter(t => t.source === 'crypto_com'), [transactions]);
 
-  const krakenSummary = useMemo(() => calculateAssetSummaries(krakenTxs, customPrices, currency), [krakenTxs, customPrices, currency]);
-  const cryptoComSummary = useMemo(() => calculateAssetSummaries(cryptoComTxs, customPrices, currency), [cryptoComTxs, customPrices, currency]);
+  const krakenSummary = useMemo(() => calculateAssetSummaries(krakenTxs, customPrices, currency as PortfolioCurrency), [krakenTxs, customPrices, currency]);
+  const cryptoComSummary = useMemo(() => calculateAssetSummaries(cryptoComTxs, customPrices, currency as PortfolioCurrency), [cryptoComTxs, customPrices, currency]);
 
   const krakenInvested = krakenSummary.totals.totalInvested || 0;
   const krakenValue = krakenSummary.totals.currentValue || 0;

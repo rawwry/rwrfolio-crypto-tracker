@@ -54,7 +54,7 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
     for (const pt of historyData) {
       if (pt.coinValues) {
         for (const [coin, val] of Object.entries(pt.coinValues)) {
-          if (val > 0) set.add(coin);
+          if (Number(val) > 0) set.add(coin);
         }
       }
     }

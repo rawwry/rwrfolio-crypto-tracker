@@ -9,14 +9,45 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.10';
+export const APP_VERSION = '0.5.11';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.11',
+    date: '30.09.2026',
+    title: 'Neuer 4-seitiger BMF-Steuerbericht (PDF & CSV) nach Steuerberater-Standard',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Umfassender 4-seitiger PDF-Steuerbericht: Vollständige Neugestaltung des Steuerberichts für das Finanzamt und Steuerberater gemäß § 23 Abs. 1 Satz 1 Nr. 2 EStG, § 22 Nr. 3 EStG und aktuellem BMF-Schreiben vom 06.03.2025.',
+      },
+      {
+        type: 'feat',
+        text: 'Depotgetrennte FIFO-Berechnung: Getrennte FIFO-Warteschlangen je Börse (Kraken & Crypto.com) mit automatischer Aufteilung von Teillosverkäufen (z. B. Tx 3a, 3b) und exakter anteiliger Zuweisung von Verkaufsgebühren als Werbungskosten.',
+      },
+      {
+        type: 'feat',
+        text: 'Anlage SO & Freigrenzen-Logik: Übersichtskarten für private Veräußerungsgeschäfte (§ 23 EStG mit 1.000 € Freigrenze ab VZ 2024) und sonstige Einkünfte (§ 22 Nr. 3 EStG Staking & Rewards mit 256 € Freigrenze), tabellarische Aufschlüsselung nach Börse und Statusanzeige (Entwurf / Final).',
+      },
+      {
+        type: 'feat',
+        text: 'Offene Anschaffungstranchen & Stichtagsbestand: Detaillierte Bestandsaufstellung zum 31.12. inkl. Kennzeichnung steuerfreier Coins und Frühest-Freigabedaten sowie Anhang A mit allen offenen Tranchen (IDs K-xx, C-xx) und Anschaffungskosten.',
+      },
+      {
+        type: 'feat',
+        text: 'Methodik- & Beleg-Checkliste: Zweispaltige Prüfübersicht zu Crypto-to-Crypto-Swaps, Börsenherkunft, Revisionssicherheit und steuerlichen Rahmenbedingungen.',
+      },
+      {
+        type: 'feat',
+        text: 'CSV-Export synchronisiert: Der CSV-Steuerexport liefert nun dieselben 6 strukturierten Sektionen mit deutschen Dezimaltrennern und Semikolons für Excel und Steuersoftware.',
+      },
+    ],
+  },
   {
     version: '0.5.10',
     date: '30.09.2026',
     title: 'Automatische Smartphone/Desktop-Ansichten, Footer-Neugestaltung & Datenverwaltung',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',
