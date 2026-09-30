@@ -17,7 +17,7 @@ import {
   PieChart
 } from 'lucide-react';
 import { Transaction, UserProfile } from '../types';
-import { calculateFIFOTaxReport, exportTaxReportToCSV, exportExchangeTransactionsCSV, PortfolioTaxReport } from '../utils/taxCalculator';
+import { calculateFIFOTaxReport, exportTaxReportToCSV, PortfolioTaxReport } from '../utils/taxCalculator';
 import { exportTaxReportToPDF } from '../utils/taxPdfExport';
 import { getCoinDetails } from '../utils/priceService';
 
@@ -70,34 +70,6 @@ export const TaxView: React.FC<TaxViewProps> = ({
 
   const handleExportTaxPDF = () => {
     exportTaxReportToPDF(taxReport, userProfile, transactions);
-  };
-
-  const hasKrakenYearTxs = useMemo(() => {
-    return transactions.some(t => {
-      const s = (t.source || '').toLowerCase();
-      const d = new Date(t.timestamp);
-      return s === 'kraken' && !isNaN(d.getTime()) && d.getFullYear() === selectedYear;
-    });
-  }, [transactions, selectedYear]);
-
-  const hasCdcYearTxs = useMemo(() => {
-    return transactions.some(t => {
-      const s = (t.source || '').toLowerCase();
-      const d = new Date(t.timestamp);
-      return s === 'crypto_com' && !isNaN(d.getTime()) && d.getFullYear() === selectedYear;
-    });
-  }, [transactions, selectedYear]);
-
-  const handleExportExchangeCSV = (exchange: 'kraken' | 'crypto_com') => {
-    const csv = exportExchangeTransactionsCSV(transactions, exchange, selectedYear);
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', `${exchange}_belege_${selectedYear}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
   };
 
   const exemptionProgress = Math.min(
@@ -179,8 +151,8 @@ export const TaxView: React.FC<TaxViewProps> = ({
                 >
                   <FileText className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                   <div>
-                    <div className="font-bold">PDF-Steuerbericht</div>
-                    <div className="text-[10px] text-slate-400">Druckansicht inkl. Belegen</div>
+                    <div className="font-bold">Gesamter Steuerbericht (PDF)</div>
+                    <div className="text-[10px] text-slate-400">Inkl. aller Nachweise &amp; Börsen-Anlagen</div>
                   </div>
                 </button>
 
@@ -197,51 +169,9 @@ export const TaxView: React.FC<TaxViewProps> = ({
                   <FileSpreadsheet className="w-4 h-4 text-emerald-500 flex-shrink-0" />
                   <div>
                     <div className="font-bold">CSV-Steuerbericht</div>
-                    <div className="text-[10px] text-slate-400">Excel-kompatible FIFO-Daten</div>
+                    <div className="text-[10px] text-slate-400">Anlage SO &amp; FIFO-Kalkulation für Excel</div>
                   </div>
                 </button>
-
-                {(hasKrakenYearTxs || hasCdcYearTxs) && (
-                  <div className={`my-1 border-t ${isLight ? 'border-slate-100' : 'border-slate-800'}`} />
-                )}
-
-                {hasKrakenYearTxs && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleExportExchangeCSV('kraken');
-                      setIsExportDropdownOpen(false);
-                    }}
-                    className={`w-full p-2.5 rounded-xl text-left text-xs font-medium flex items-center space-x-2.5 transition-colors cursor-pointer ${
-                      isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
-                    }`}
-                  >
-                    <Download className="w-4 h-4 text-blue-500 flex-shrink-0" />
-                    <div>
-                      <div className="font-bold">Kraken Ledger (CSV)</div>
-                      <div className="text-[10px] text-slate-400">Belegdaten VZ {selectedYear}</div>
-                    </div>
-                  </button>
-                )}
-
-                {hasCdcYearTxs && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleExportExchangeCSV('crypto_com');
-                      setIsExportDropdownOpen(false);
-                    }}
-                    className={`w-full p-2.5 rounded-xl text-left text-xs font-medium flex items-center space-x-2.5 transition-colors cursor-pointer ${
-                      isLight ? 'hover:bg-slate-50 text-slate-800' : 'hover:bg-slate-800 text-slate-100'
-                    }`}
-                  >
-                    <Download className="w-4 h-4 text-sky-500 flex-shrink-0" />
-                    <div>
-                      <div className="font-bold">Crypto.com Historie (CSV)</div>
-                      <div className="text-[10px] text-slate-400">Belegdaten VZ {selectedYear}</div>
-                    </div>
-                  </button>
-                )}
               </div>
             )}
           </div>

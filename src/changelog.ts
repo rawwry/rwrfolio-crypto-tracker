@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.12';
+export const APP_VERSION = '0.5.13';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.13',
+    date: '30.09.2026',
+    title: 'Erweiterte Abschnittsabstände, nahtlose Beleg-Paginierung & zentraler PDF-Komplettbericht',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Abschnittsabstände vergrößert: Deutlichere visuelle Abgrenzung der Punkte 1 bis 6 durch vergrößerte Abstände (24–28px) und elegante Trennlinien zwischen den Sektionen auf geteilten Seiten.',
+      },
+      {
+        type: 'ui',
+        text: 'Moderne Abschnitts-Badges: Markante Squircle-Badges für die Ziffern 1 bis 6 sowie Anhänge B und C mit verbesserter Typografie für erstklassige Erkennbarkeit auf Papier und Monitor.',
+      },
+      {
+        type: 'feat',
+        text: 'Zentraler PDF-Komplettbericht: Das PDF enthält nun alle Belege und Buchungsprotokolle vollständig aufbereitet als Anhang B (Kraken) und Anhang C (Crypto.com) mit automatischer Paginierung und globaler Seitenzählung (Seite X von Y). Ein separates Anhängen von CSVs ist nicht mehr erforderlich.',
+      },
+      {
+        type: 'ui',
+        text: 'Export-Menü gestrafft: Fokussierung auf den Gesamten Steuerbericht (PDF) inklusive aller aufbereiteter Anlagen sowie den CSV-Bericht für Tabellenkalkulationen.',
+      },
+    ],
+  },
   {
     version: '0.5.12',
     date: '30.09.2026',
     title: 'Steuerbericht-Optimierungen, Beleg-Anhänge (Anhang B & C) & direkte CSV-Belegexporte',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',
