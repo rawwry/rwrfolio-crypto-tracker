@@ -8,6 +8,7 @@ import {
   Download, 
   CheckCircle2, 
   FileText,
+  ChevronLeft,
   ChevronRight,
   ChevronDown,
   FileSpreadsheet,
@@ -38,6 +39,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
+  const [unlockPage, setUnlockPage] = useState<number>(0);
   const exportDropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,7 +57,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
   }, [transactions, customPrices, selectedYear]);
 
   const handleExportTaxCSV = () => {
-    const csv = exportTaxReportToCSV(taxReport);
+    const csv = exportTaxReportToCSV(taxReport, userProfile);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -408,17 +410,57 @@ export const TaxView: React.FC<TaxViewProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Next Unlocks */}
-        <div className={`p-5 rounded-2xl border transition-colors space-y-3 ${
-          isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
+        <div className={`p-5 rounded-2xl border transition-colors space-y-4 ${
+          isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900 border-slate-800'
         }`}>
-          <div className="flex items-center justify-between">
-            <h3 className={`text-sm font-bold flex items-center space-x-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <Clock className="w-4 h-4 text-amber-500" />
-              <span>Nächste Steuerfreigaben</span>
-            </h3>
-            <span className="text-xs text-slate-500 font-mono">
-              {taxReport.upcomingTaxFreeLots.length} ausstehend
-            </span>
+          {/* Header with Title, Count badge and Pagination Controls */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                Nächste Steuerfreigaben
+              </h3>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
+                isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+              }`}>
+                {taxReport.upcomingTaxFreeLots.length}
+              </span>
+            </div>
+
+            {/* Pagination Controls */}
+            {Math.ceil(taxReport.upcomingTaxFreeLots.length / 4) > 1 && (
+              <div className="flex items-center space-x-1.5 text-xs font-mono">
+                <span className="text-[11px] text-slate-500 mr-0.5">
+                  {unlockPage + 1} / {Math.ceil(taxReport.upcomingTaxFreeLots.length / 4)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setUnlockPage(p => Math.max(0, p - 1))}
+                  disabled={unlockPage === 0}
+                  className={`p-1 rounded-lg border transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isLight 
+                      ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' 
+                      : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+                  }`}
+                  title="Vorherige Seite"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUnlockPage(p => Math.min(Math.ceil(taxReport.upcomingTaxFreeLots.length / 4) - 1, p + 1))}
+                  disabled={unlockPage >= Math.ceil(taxReport.upcomingTaxFreeLots.length / 4) - 1}
+                  className={`p-1 rounded-lg border transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed ${
+                    isLight 
+                      ? 'bg-slate-100 hover:bg-slate-200 border-slate-300 text-slate-700' 
+                      : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200'
+                  }`}
+                  title="Nächste Seite"
+                >
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
 
           {taxReport.upcomingTaxFreeLots.length === 0 ? (
@@ -426,24 +468,68 @@ export const TaxView: React.FC<TaxViewProps> = ({
               🎉 100 % deiner aktuellen Bestände haben bereits die 1-Jahres-Frist überschritten und sind steuerfrei!
             </div>
           ) : (
-            <div className="space-y-2 max-h-60 overflow-y-auto pr-3">
-              {taxReport.upcomingTaxFreeLots.slice(0, 8).map((lot, i) => (
-                <div 
-                  key={i}
-                  className={`flex items-center justify-between p-2.5 rounded-xl border text-xs font-mono ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <span className="font-bold text-indigo-500">{lot.symbol}</span>
-                    <span className="text-slate-400">({lot.amount.toFixed(4)})</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-amber-500 font-bold">in {lot.daysRemainingToTaxFree} Tagen</div>
-                    <div className="text-[10px] text-slate-500">am {lot.taxFreeDate}</div>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-2.5">
+              {taxReport.upcomingTaxFreeLots
+                .slice(unlockPage * 4, (unlockPage + 1) * 4)
+                .map((lot, i) => {
+                  const heldDays = Math.max(0, Math.min(365, lot.daysHeld));
+                  const progressPct = Math.min(100, Math.max(0, Math.round((heldDays / 365) * 100)));
+                  const isVerySoon = lot.daysRemainingToTaxFree <= 30;
+
+                  return (
+                    <div 
+                      key={lot.id || i}
+                      className={`p-3 rounded-xl border transition-all text-xs ${
+                        isLight 
+                          ? 'bg-slate-50 hover:bg-slate-100/60 border-slate-200 shadow-sm' 
+                          : 'bg-slate-950/60 hover:bg-slate-950 border-slate-800'
+                      }`}
+                    >
+                      {/* Top Row: Coin Symbol, Amount, EUR Value & Countdown Badge */}
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-extrabold text-sm text-indigo-500 font-mono">
+                            {lot.symbol}
+                          </span>
+                          <span className="font-mono text-xs text-slate-400">
+                            {lot.amount < 1 ? lot.amount.toFixed(4) : lot.amount.toLocaleString('de-DE', { maximumFractionDigits: 4 })}
+                          </span>
+                          {lot.currentValueEUR > 0 && (
+                            <span className={`text-[11px] font-mono ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                              &bull; {lot.currentValueEUR.toLocaleString('de-DE', { style: 'currency', currency: 'EUR' })}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="text-right">
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full font-bold font-mono text-[11px] ${
+                            isVerySoon
+                              ? 'bg-amber-500/15 text-amber-500 border border-amber-500/30 animate-pulse'
+                              : isLight ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' : 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/25'
+                          }`}>
+                            in {lot.daysRemainingToTaxFree} {lot.daysRemainingToTaxFree === 1 ? 'Tag' : 'Tagen'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Progress Bar of 365 Days Holding Period */}
+                      <div className="space-y-1">
+                        <div className={`w-full h-1.5 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}>
+                          <div 
+                            style={{ width: `${progressPct}%` }}
+                            className={`h-full transition-all duration-500 rounded-full ${
+                              progressPct >= 90 ? 'bg-emerald-500' : progressPct >= 50 ? 'bg-indigo-500' : 'bg-amber-500'
+                            }`}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                          <span>{heldDays} von 365 Tagen ({progressPct} %)</span>
+                          <span>Frei am {lot.taxFreeDate}</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>

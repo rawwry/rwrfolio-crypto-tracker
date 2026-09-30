@@ -246,7 +246,8 @@ export function exportTaxReportToPDF(
     <div class="meta">
       <div>Steuerjahr: <strong>${report.taxYear}</strong></div>
       <div>Erstellt am: <strong>${currentDate} ${currentTime}</strong></div>
-      ${userProfile?.username ? `<div>Steuerpflichtiger: <strong>${userProfile.username}</strong></div>` : ''}
+      ${(userProfile?.fullName || userProfile?.username) ? `<div>Steuerpflichtiger: <strong>${userProfile.fullName || userProfile.username}</strong></div>` : ''}
+      ${userProfile?.taxId ? `<div>Steuer-Identifikationsnummer (IdNr): <strong>${userProfile.taxId}</strong></div>` : ''}
       <div>Bewertungsmethode: <strong>FIFO (First-In, First-Out)</strong></div>
     </div>
   </div>

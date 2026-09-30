@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.8';
+export const APP_VERSION = '0.5.9';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.9',
+    date: '30.09.2026',
+    title: 'Steuer-ID & Voller Name, Steuerfreigaben-Karten & Menüleisten-Verschlankung',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Steuerdaten in Einstellungen: Konfiguration für vollständigen Namen und Steuer-Identifikationsnummer (IdNr), die direkt im offiziellen Steuer-Report (PDF & CSV) ausgewiesen werden.',
+      },
+      {
+        type: 'ui',
+        text: 'Steuerfreigaben modernisiert: Die Box „Nächste Steuerfreigaben“ wurde auf eine elegante kartenbasierte Paginierung umgestellt. Kein versteckter Scrollbalken mehr, inklusive 365-Tage-Fortschrittsbalken und Resttage-Countdown.',
+      },
+      {
+        type: 'ui',
+        text: 'Menüleiste verschlankt: Ziegen-Icon im Header entfernt (klarer Schriftzug „rwr/folio“) sowie Abmelden-Button aus der Desktop- und mobilen Navigationsleiste entfernt.',
+      },
+      {
+        type: 'fix',
+        text: 'Aktionsbutton Erfassung: Korrektur des doppelten Pluszeichens finalisiert und Versions-Release für Home Assistant Addon bereitgestellt.',
+      },
+    ],
+  },
   {
     version: '0.5.8',
     date: '29.09.2026',
     title: 'Coin Allokation 3-Spalten-Raster, Tabellen-Struktur & UI-Feinschliff',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

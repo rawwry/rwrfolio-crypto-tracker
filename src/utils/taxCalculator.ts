@@ -1,4 +1,4 @@
-import { Transaction } from '../types';
+import { Transaction, UserProfile } from '../types';
 import { getCoinPriceEUR, getCoinDetails } from './priceService';
 import { NON_CRYPTO_SYMBOLS } from './portfolioCalculations';
 
@@ -337,10 +337,16 @@ export function calculateFIFOTaxReport(
   };
 }
 
-export function exportTaxReportToCSV(report: PortfolioTaxReport): string {
+export function exportTaxReportToCSV(report: PortfolioTaxReport, userProfile?: UserProfile): string {
   const lines: string[] = [];
   lines.push(`rwr/folio - FIFO Steuer- & Haltedauer-Report (Steuerjahr ${report.taxYear})`);
   lines.push(`Erstellt am;${new Date().toLocaleDateString('de-DE')} ${new Date().toLocaleTimeString('de-DE')}`);
+  if (userProfile?.fullName || userProfile?.username) {
+    lines.push(`Steuerpflichtiger;${userProfile.fullName || userProfile.username}`);
+  }
+  if (userProfile?.taxId) {
+    lines.push(`Steuer-Identifikationsnummer (IdNr);${userProfile.taxId}`);
+  }
   lines.push('');
   lines.push('--- KENNZAHLEN ---');
   lines.push(`Gesamtwert Portfolio;${report.totalPortfolioValueEUR.toFixed(2)} EUR`);

@@ -17,7 +17,8 @@ import {
   Server,
   Send,
   AlertTriangle,
-  FolderLock
+  FolderLock,
+  FileText
 } from 'lucide-react';
 import { AppSettings, ThemeMode, PortfolioCurrency } from '../types';
 import { sendTestEmailApi } from '../utils/apiClient';
@@ -42,6 +43,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   
   // Form states
   const [username, setUsername] = useState(settings.user?.username || '');
+  const [fullName, setFullName] = useState(settings.user?.fullName || '');
+  const [taxId, setTaxId] = useState(settings.user?.taxId || '');
   const [email, setEmail] = useState(settings.user?.email || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -94,6 +97,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       privacyMode,
       user: {
         username: cleanUsername,
+        fullName: fullName.trim(),
+        taxId: taxId.trim(),
         email: email.trim(),
         hasPassword: true,
         passwordHash: finalPasswordHash,
@@ -300,6 +305,55 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     <p className={`text-[11px] mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
                       Kann alternativ zum Benutzernamen beim Login verwendet werden und empfängt Benachrichtigungen.
                     </p>
+                  </div>
+
+                  {/* Steuerdaten & Steuer-Export Angaben */}
+                  <div className={`pt-4 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800/80'} space-y-3`}>
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Steuerdaten &amp; Personalisierung</span>
+                      </div>
+                      <p className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Wird auf dem offiziellen Steuer-Report (PDF &amp; CSV) für dein Finanzamt bzw. deinen Steuerberater ausgewiesen.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className={`block text-[11px] font-medium mb-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                          Vollständiger Name
+                        </label>
+                        <input
+                          type="text"
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="z. B. Max Mustermann"
+                          className={`w-full px-3 py-2 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
+                            theme === 'light'
+                              ? 'bg-white border-slate-300 text-slate-900'
+                              : 'bg-slate-950 border-slate-800 text-white'
+                          }`}
+                        />
+                      </div>
+
+                      <div>
+                        <label className={`block text-[11px] font-medium mb-1 ${theme === 'light' ? 'text-slate-600' : 'text-slate-400'}`}>
+                          Steuer-Identifikationsnummer (IdNr)
+                        </label>
+                        <input
+                          type="text"
+                          value={taxId}
+                          onChange={(e) => setTaxId(e.target.value)}
+                          placeholder="z. B. 12 345 678 901"
+                          className={`w-full px-3 py-2 rounded-xl text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono ${
+                            theme === 'light'
+                              ? 'bg-white border-slate-300 text-slate-900'
+                              : 'bg-slate-950 border-slate-800 text-white'
+                          }`}
+                        />
+                      </div>
+                    </div>
                   </div>
 
                   <div className={`pt-4 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800/80'} space-y-4`}>

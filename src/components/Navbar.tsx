@@ -6,11 +6,9 @@ import {
   Settings as SettingsIcon, 
   Sun, 
   Moon, 
-  User, 
-  LogOut
+  User
 } from 'lucide-react';
 import { PortfolioTotals, ThemeMode, UserProfile, PortfolioCurrency } from '../types';
-import { PixelGoatIcon } from './PixelGoatIcon';
 
 interface NavbarProps {
   totals: PortfolioTotals;
@@ -19,7 +17,7 @@ interface NavbarProps {
   onExportData: () => void;
   onResetData: () => void;
   onOpenSettings: () => void;
-  onLogout: () => void;
+  onLogout?: () => void;
   lastUpdatedText?: string | null;
   dbConnected?: boolean;
   activeTab: 'dashboard' | 'transactions' | 'assets' | 'analytics' | 'taxes';
@@ -58,21 +56,14 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-13 sm:h-14 gap-4">
           
-          {/* Logo & Brand: rwr/folio with Pixel Goat Icon */}
+          {/* Logo & Brand: rwr/folio */}
           <div 
             onClick={() => setActiveTab('dashboard')}
-            className="flex items-center space-x-2.5 cursor-pointer group select-none"
+            className="flex items-center cursor-pointer group select-none py-1"
           >
-            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shadow-inner transition-colors ${
-              isLight ? 'bg-slate-100 border border-slate-300' : 'bg-slate-800 border border-slate-700/80 group-hover:border-indigo-500/50'
-            }`}>
-              <PixelGoatIcon size={20} className="transform group-hover:scale-105 transition-transform" />
-            </div>
-            <div className="flex items-baseline space-x-1.5">
-              <span className={`font-extrabold text-base sm:text-lg tracking-tight font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                rwr<span className="text-indigo-500">/folio</span>
-              </span>
-            </div>
+            <span className={`font-extrabold text-lg sm:text-xl tracking-tight font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
+              rwr<span className="text-indigo-500">/folio</span>
+            </span>
           </div>
 
           {/* Center Navigation Tabs */}
@@ -165,20 +156,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {userProfile?.username || 'Einstellungen'}
               </span>
             </button>
-
-            {/* Logout Button */}
-            <button
-              onClick={onLogout}
-              title="App sperren / Abmelden"
-              className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                isLight
-                  ? 'bg-slate-100 hover:bg-rose-50 text-slate-700 hover:text-rose-600 border-slate-200 hover:border-rose-200'
-                  : 'bg-slate-800/80 hover:bg-rose-950/40 text-slate-300 hover:text-rose-400 border-slate-700/60 hover:border-rose-800/60'
-              }`}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className="hidden lg:inline">Abmelden</span>
-            </button>
           </div>
         </div>
 
@@ -225,13 +202,6 @@ export const Navbar: React.FC<NavbarProps> = ({
             }`}
           >
             Steuern
-          </button>
-          <button
-            onClick={onLogout}
-            title="Abmelden"
-            className="px-2 py-1 rounded-lg font-medium text-rose-500 hover:bg-rose-500/10 flex items-center"
-          >
-            <LogOut className="w-3.5 h-3.5" />
           </button>
         </div>
 

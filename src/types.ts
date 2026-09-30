@@ -89,6 +89,8 @@ export type ThemeMode = 'dark' | 'light' | 'system';
 
 export interface UserProfile {
   username: string;
+  fullName?: string;
+  taxId?: string;
   email: string;
   hasPassword?: boolean;
   passwordHash?: string; // stored locally/in SQLite on the Pi
