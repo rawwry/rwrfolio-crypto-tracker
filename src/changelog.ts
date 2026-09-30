@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.13';
+export const APP_VERSION = '0.5.14';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.14',
+    date: '30.09.2026',
+    title: 'Querformat für PDF-Belege, vollständige Spalten & scharfe Darstellung ohne Kürzungen',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Querformat (A4 Landscape) für Anhänge B & C: Buchungs- und Belegprotokolle werden nun im Querformat ausgegeben. Dadurch steht mit 297 mm Breite maximaler Platz für alle Spalten zur Verfügung.',
+      },
+      {
+        type: 'fix',
+        text: 'Keine Kürzungen ("...") mehr: Sämtliche Transaktions-IDs, Hashes, Order-IDs und Ledger-Referenzen werden in voller Länge in präziser Monospace-Schrift ohne Textabschneiden dargestellt.',
+      },
+      {
+        type: 'feat',
+        text: 'Vollständige Spalten für Kraken (Anhang B): Dedizierte Spalten für Trade-ID (txid), Order- / PostTx-ID, Ledgers / Ref, Handelspaar, Ordertyp/Art, Volumen, Gegenwert, Kurs EUR und Gebühren.',
+      },
+      {
+        type: 'feat',
+        text: 'Vollständige Spalten für Crypto.com (Anhang C): Dedizierte Spalten für Transaktionsart (Kind), Beschreibung, Erhalten, Ausgegeben, Kurs EUR, nativer Gegenwert (USD), Gebühr und Transaktions-Hash.',
+      },
+      {
+        type: 'ui',
+        text: 'Optimierte Zeilenpaginierung: 22 Zeilen pro Querformat-Seite für harmonische optische Ausnutzung und lückenlose Seitennummerierung.',
+      },
+    ],
+  },
   {
     version: '0.5.13',
     date: '30.09.2026',
     title: 'Erweiterte Abschnittsabstände, nahtlose Beleg-Paginierung & zentraler PDF-Komplettbericht',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

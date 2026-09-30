@@ -21,6 +21,9 @@ export interface Transaction {
   nativeAmountUSD?: number;
   transactionKind?: string;
   transactionHash?: string;
+  orderId?: string;
+  ledgerId?: string;
+  tradingPair?: string;
   fee?: number;
   feeCurrency?: string;
   notes?: string;

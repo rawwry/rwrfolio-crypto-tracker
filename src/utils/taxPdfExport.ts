@@ -300,7 +300,7 @@ export function exportTaxReportToPDF(
   const krakenTxs = filterExchangeTxs('kraken');
   const cryptoComTxs = filterExchangeTxs('crypto_com');
 
-  const paginateRows = (txs: Transaction[], pageSize = 28) => {
+  const paginateRows = (txs: Transaction[], pageSize = 22) => {
     if (txs.length === 0) return [];
     const pages: Transaction[][] = [];
     for (let i = 0; i < txs.length; i += pageSize) {
@@ -309,31 +309,120 @@ export function exportTaxReportToPDF(
     return pages;
   };
 
-  const krakenPages = paginateRows(krakenTxs, 28);
-  const cdcPages = paginateRows(cryptoComTxs, 28);
+  const krakenPages = paginateRows(krakenTxs, 22);
+  const cdcPages = paginateRows(cryptoComTxs, 22);
 
   const totalPages = 4 + krakenPages.length + cdcPages.length;
 
-  const buildBelegRows = (txs: Transaction[], startIndex = 0) => {
+  const buildKrakenRows = (txs: Transaction[], startIndex = 0) => {
     return txs.map((tx, idx) => {
       const dt = new Date(tx.timestamp);
       const dateFormatted = !isNaN(dt.getTime()) ? formatDate(tx.timestamp) : tx.timestamp;
-      const timeFormatted = !isNaN(dt.getTime()) ? dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) : '';
+      const timeFormatted = !isNaN(dt.getTime())
+        ? dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        : '';
       
       let badgeClass = 'badge-secondary';
-      let typeName = tx.type as string;
+      let typeLabel = tx.type as string;
       if (tx.type === 'BUY') {
         badgeClass = 'badge-frei';
-        typeName = 'Kauf';
+        typeLabel = 'Kauf';
       } else if (tx.type === 'SELL') {
         badgeClass = 'badge-stpfl';
-        typeName = 'Verkauf';
+        typeLabel = 'Verkauf';
       } else if (tx.type === 'REWARD' || tx.type === 'STAKE') {
         badgeClass = 'badge-info';
-        typeName = 'Reward';
+        typeLabel = 'Reward';
       } else if (tx.type === 'TRANSFER') {
-        typeName = 'Transfer';
+        typeLabel = 'Transfer';
       }
+
+      // Pair
+      let pairStr = tx.tradingPair || '';
+      if (!pairStr && tx.notes) {
+        const m = tx.notes.match(/Pair:\s*([^\s|]+)/i);
+        if (m) pairStr = m[1];
+      }
+      if (!pairStr) {
+        pairStr = tx.type === 'BUY'
+          ? `${tx.receivedCurrency}/${tx.spentCurrency}`
+          : `${tx.spentCurrency}/${tx.receivedCurrency}`;
+      }
+
+      // Order / Subtype
+      const orderTypeStr = (tx.transactionKind || 'Spot').toLowerCase();
+
+      // Volume (Menge)
+      const volStr = tx.type === 'BUY'
+        ? `${formatCoin(tx.receivedAmount)} ${tx.receivedCurrency}`
+        : `${formatCoin(tx.spentAmount)} ${tx.spentCurrency}`;
+
+      // Cost (Gegenwert)
+      const costVal = tx.type === 'BUY' ? tx.spentAmount : tx.receivedAmount;
+      const costCurr = tx.type === 'BUY' ? tx.spentCurrency : tx.receivedCurrency;
+      const costStr = costCurr === 'EUR' ? formatEuro(costVal) : `${formatCoin(costVal)} ${costCurr}`;
+
+      // Order ID / PostTxID
+      let orderIdStr = tx.orderId || '';
+      if (!orderIdStr && tx.notes) {
+        const m = tx.notes.match(/(?:Order ID|PostTxID):\s*([^\s|]+)/i);
+        if (m) orderIdStr = m[1];
+      }
+
+      // Ledger ID
+      let ledgerIdStr = tx.ledgerId || '';
+      if (!ledgerIdStr && tx.notes) {
+        const m = tx.notes.match(/Ledgers?:\s*([^\s|]+)/i);
+        if (m) ledgerIdStr = m[1];
+      }
+
+      // Trade ID
+      const txidStr = tx.transactionHash || tx.id.replace(/^kraken_/, '');
+
+      return `
+        <tr>
+          <td class="text-center font-mono text-muted">${startIndex + idx + 1}</td>
+          <td class="font-mono">${dateFormatted} <span class="text-muted" style="font-size: 6pt;">${timeFormatted}</span></td>
+          <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+          <td class="font-mono text-muted" style="font-size: 6.5pt;">${orderTypeStr}</td>
+          <td class="font-bold">${pairStr}</td>
+          <td class="text-right font-mono font-bold">${volStr}</td>
+          <td class="text-right font-mono">${costStr}</td>
+          <td class="text-right font-mono">${tx.pricePerUnitEUR ? formatEuro(tx.pricePerUnitEUR) : '–'}</td>
+          <td class="text-right font-mono text-muted">${tx.fee ? formatEuro(tx.fee) : '–'}</td>
+          <td class="id-code" title="${txidStr}">${txidStr || '–'}</td>
+          <td class="id-code" title="${orderIdStr}">${orderIdStr || '–'}</td>
+          <td class="id-code" title="${ledgerIdStr}">${ledgerIdStr || '–'}</td>
+        </tr>
+      `;
+    }).join('');
+  };
+
+  const buildCdcRows = (txs: Transaction[], startIndex = 0) => {
+    return txs.map((tx, idx) => {
+      const dt = new Date(tx.timestamp);
+      const dateFormatted = !isNaN(dt.getTime()) ? formatDate(tx.timestamp) : tx.timestamp;
+      const timeFormatted = !isNaN(dt.getTime())
+        ? dt.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        : '';
+      
+      let badgeClass = 'badge-secondary';
+      let typeLabel = tx.type as string;
+      if (tx.type === 'BUY') {
+        badgeClass = 'badge-frei';
+        typeLabel = 'Kauf';
+      } else if (tx.type === 'SELL') {
+        badgeClass = 'badge-stpfl';
+        typeLabel = 'Verkauf';
+      } else if (tx.type === 'REWARD' || tx.type === 'STAKE') {
+        badgeClass = 'badge-info';
+        typeLabel = 'Reward';
+      } else if (tx.type === 'TRANSFER') {
+        typeLabel = 'Transfer';
+      }
+
+      const kindStr = tx.transactionKind || '–';
+      const descStr = tx.description || '–';
 
       const recStr = tx.receivedAmount && tx.receivedAmount > 0 
         ? `${formatCoin(tx.receivedAmount)} ${tx.receivedCurrency}` 
@@ -342,19 +431,25 @@ export function exportTaxReportToPDF(
         ? (tx.spentCurrency === 'EUR' ? formatEuro(tx.spentAmount) : `${formatCoin(tx.spentAmount)} ${tx.spentCurrency}`)
         : '–';
 
-      const txRef = tx.transactionHash || tx.id || '';
-      const shortRef = txRef.length > 16 ? txRef.substring(0, 14) + '…' : txRef;
+      const nativeValStr = tx.nativeAmountUSD
+        ? `$ ${formatCoin(tx.nativeAmountUSD, 2)}`
+        : (tx.nativeAmount && tx.nativeCurrency ? `${formatCoin(tx.nativeAmount, 2)} ${tx.nativeCurrency}` : '–');
+
+      const hashOrId = tx.transactionHash || tx.id.replace(/^cdc_/, '');
 
       return `
         <tr>
-          <td class="font-mono text-muted">${startIndex + idx + 1}</td>
-          <td class="font-mono">${dateFormatted} <span class="text-muted" style="font-size: 6.5pt;">${timeFormatted}</span></td>
-          <td><span class="badge ${badgeClass}">${typeName}</span></td>
+          <td class="text-center font-mono text-muted">${startIndex + idx + 1}</td>
+          <td class="font-mono">${dateFormatted} <span class="text-muted" style="font-size: 6pt;">${timeFormatted}</span></td>
+          <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
+          <td class="font-mono text-muted" style="font-size: 6.5pt;">${kindStr}</td>
+          <td style="font-size: 7pt;">${descStr}</td>
           <td class="text-right font-mono font-bold">${recStr}</td>
           <td class="text-right font-mono">${spentStr}</td>
           <td class="text-right font-mono">${tx.pricePerUnitEUR ? formatEuro(tx.pricePerUnitEUR) : '–'}</td>
+          <td class="text-right font-mono text-muted">${nativeValStr}</td>
           <td class="text-right font-mono text-muted">${tx.fee ? formatEuro(tx.fee) : '–'}</td>
-          <td class="font-mono text-muted" style="font-size: 6.5pt;" title="${txRef}">${shortRef || '–'}</td>
+          <td class="id-code" title="${hashOrId}">${hashOrId || '–'}</td>
         </tr>
       `;
     }).join('');
@@ -366,33 +461,37 @@ export function exportTaxReportToPDF(
     krakenPagesHtml = krakenPages.map((pageTxs, pageIdx) => {
       runningPageCounter++;
       const currentGlobalPage = runningPageCounter;
-      const rowsHtml = buildBelegRows(pageTxs, pageIdx * 28);
+      const rowsHtml = buildKrakenRows(pageTxs, pageIdx * 22);
       const isMulti = krakenPages.length > 1;
       const pageTitleSuffix = isMulti ? ` &bull; Teil ${pageIdx + 1} von ${krakenPages.length}` : '';
 
       return `
   <!-- ==================== ANHANG B (Seite ${pageIdx + 1}) ==================== -->
-  <div class="page page-break">
+  <div class="page-landscape">
     <div>
-      <div class="section-badge-header" style="margin-top: 8px; margin-bottom: 6px;">
+      <div class="section-badge-header" style="margin-top: 4px; margin-bottom: 4px;">
         <span class="section-num">B</span>
         <h2>Anhang B &bull; Belegnachweis: Kraken Ledger-Export${pageTitleSuffix}</h2>
       </div>
-      <div class="section-subtitle">
-        Vollständiges Transaktions- und Buchungsprotokoll bis 31.12.${report.taxYear} &bull; Datenquelle: Kraken Import &bull; ${krakenTxs.length} Vorgänge gesamt
+      <div class="section-subtitle" style="margin-bottom: 8px;">
+        Vollständiges Transaktions- und Buchungsprotokoll bis 31.12.${report.taxYear} &bull; Datenquelle: Kraken Import &bull; ${krakenTxs.length} Vorgänge gesamt &bull; Querformat (A4)
       </div>
 
-      <table>
+      <table class="appendix-table">
         <thead>
           <tr>
-            <th style="width: 26px;">Nr.</th>
-            <th>Datum &amp; Zeit</th>
-            <th>Typ</th>
-            <th class="text-right">Erhalten</th>
-            <th class="text-right">Ausgegeben</th>
-            <th class="text-right">Kurs €</th>
-            <th class="text-right">Gebühr</th>
-            <th>Transaktions-ID / Info</th>
+            <th style="width: 22px;" class="text-center">Nr.</th>
+            <th style="width: 80px;">Datum &amp; Zeit</th>
+            <th style="width: 48px;">Typ</th>
+            <th style="width: 52px;">Order/Art</th>
+            <th style="width: 65px;">Handelspaar</th>
+            <th style="width: 88px;" class="text-right">Menge (Vol)</th>
+            <th style="width: 76px;" class="text-right">Gegenwert</th>
+            <th style="width: 70px;" class="text-right">Kurs €</th>
+            <th style="width: 50px;" class="text-right">Gebühr</th>
+            <th style="width: 140px;">Trade-ID (txid)</th>
+            <th style="width: 140px;">Order- / PostTx-ID</th>
+            <th style="width: 80px;">Ledgers / Ref</th>
           </tr>
         </thead>
         <tbody>
@@ -416,33 +515,36 @@ export function exportTaxReportToPDF(
     cdcPagesHtml = cdcPages.map((pageTxs, pageIdx) => {
       runningPageCounter++;
       const currentGlobalPage = runningPageCounter;
-      const rowsHtml = buildBelegRows(pageTxs, pageIdx * 28);
+      const rowsHtml = buildCdcRows(pageTxs, pageIdx * 22);
       const isMulti = cdcPages.length > 1;
       const pageTitleSuffix = isMulti ? ` &bull; Teil ${pageIdx + 1} von ${cdcPages.length}` : '';
 
       return `
   <!-- ==================== ANHANG C (Seite ${pageIdx + 1}) ==================== -->
-  <div class="page page-break">
+  <div class="page-landscape">
     <div>
-      <div class="section-badge-header" style="margin-top: 8px; margin-bottom: 6px;">
+      <div class="section-badge-header" style="margin-top: 4px; margin-bottom: 4px;">
         <span class="section-num">C</span>
         <h2>Anhang C &bull; Belegnachweis: Crypto.com Transaktionshistorie${pageTitleSuffix}</h2>
       </div>
-      <div class="section-subtitle">
-        Vollständiges Transaktions- und Buchungsprotokoll bis 31.12.${report.taxYear} &bull; Datenquelle: Crypto.com Import &bull; ${cryptoComTxs.length} Vorgänge gesamt
+      <div class="section-subtitle" style="margin-bottom: 8px;">
+        Vollständiges Transaktions- und Buchungsprotokoll bis 31.12.${report.taxYear} &bull; Datenquelle: Crypto.com Import &bull; ${cryptoComTxs.length} Vorgänge gesamt &bull; Querformat (A4)
       </div>
 
-      <table>
+      <table class="appendix-table">
         <thead>
           <tr>
-            <th style="width: 26px;">Nr.</th>
-            <th>Datum &amp; Zeit</th>
-            <th>Typ</th>
-            <th class="text-right">Erhalten</th>
-            <th class="text-right">Ausgegeben</th>
-            <th class="text-right">Kurs €</th>
-            <th class="text-right">Gebühr</th>
-            <th>Transaktions-ID / Info</th>
+            <th style="width: 22px;" class="text-center">Nr.</th>
+            <th style="width: 80px;">Datum &amp; Zeit</th>
+            <th style="width: 48px;">Typ</th>
+            <th style="width: 95px;">Transaktionsart</th>
+            <th style="width: 95px;">Beschreibung</th>
+            <th style="width: 90px;" class="text-right">Erhalten</th>
+            <th style="width: 78px;" class="text-right">Ausgegeben</th>
+            <th style="width: 70px;" class="text-right">Kurs €</th>
+            <th style="width: 72px;" class="text-right">Gegenwert USD</th>
+            <th style="width: 48px;" class="text-right">Gebühr</th>
+            <th style="width: 175px;">Transaktions-Hash / Ref-ID</th>
           </tr>
         </thead>
         <tbody>
@@ -472,6 +574,10 @@ export function exportTaxReportToPDF(
       size: A4 portrait;
       margin: 12mm 14mm 12mm 14mm;
     }
+    @page landscape-appendix {
+      size: A4 landscape;
+      margin: 8mm 10mm 8mm 10mm;
+    }
     * {
       box-sizing: border-box;
       -webkit-print-color-adjust: exact !important;
@@ -495,6 +601,35 @@ export function exportTaxReportToPDF(
       justify-content: space-between;
       min-height: 270mm;
       padding-bottom: 8mm;
+    }
+    .page-landscape {
+      page: landscape-appendix;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 194mm;
+      page-break-before: always;
+      break-before: page;
+      box-sizing: border-box;
+    }
+    @media screen {
+      .page-landscape {
+        width: 297mm;
+        min-height: 210mm;
+        padding: 8mm 10mm;
+        margin: 20px auto;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+        background: #ffffff;
+      }
+    }
+    @media print {
+      .page-landscape {
+        page: landscape-appendix;
+        min-height: 194mm;
+        padding: 0;
+        margin: 0;
+      }
     }
     .page-break {
       page-break-before: always;
@@ -723,6 +858,49 @@ export function exportTaxReportToPDF(
       font-weight: 800;
       font-size: 8.5pt;
       padding: 5px 6px;
+    }
+
+    /* Appendix Tables (Landscape Dense) */
+    .appendix-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 7pt;
+      margin-bottom: 6px;
+    }
+    .appendix-table th {
+      background: #f8fafc;
+      border-top: 1px solid #cbd5e1;
+      border-bottom: 1.5px solid #94a3b8;
+      padding: 4px 4px;
+      font-size: 6.5pt;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: #475569;
+      line-height: 1.2;
+      vertical-align: middle;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .appendix-table td {
+      padding: 3.5px 4px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      font-size: 7pt;
+      line-height: 1.25;
+      overflow-wrap: break-word;
+    }
+    .appendix-table tr:nth-child(even) td {
+      background-color: #fafbfd;
+    }
+    .id-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 5.5pt;
+      color: #334155;
+      word-break: break-all;
+      line-height: 1.15;
     }
 
     /* Badges */

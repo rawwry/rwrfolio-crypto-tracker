@@ -164,6 +164,8 @@ export function parseKrakenCSVRows(rows: string[][]): Transaction[] {
 
   const txidIdx = getIndex('txid', 'trade id', 'id');
   const orderTxidIdx = getIndex('ordertxid', 'order id');
+  const postTxidIdx = getIndex('posttxid');
+  const ledgersIdx = getIndex('ledgers', 'ledger id', 'ledger', 'refid');
   const pairIdx = getIndex('pair', 'market', 'symbol');
   const timeIdx = getIndex('time', 'date', 'timestamp');
   const typeIdx = getIndex('type', 'side');
@@ -182,6 +184,9 @@ export function parseKrakenCSVRows(rows: string[][]): Transaction[] {
 
     const rawTxid = txidIdx !== -1 ? row[txidIdx]?.trim() : '';
     const rawOrderTxid = orderTxidIdx !== -1 ? row[orderTxidIdx]?.trim() : '';
+    const rawPostTxid = postTxidIdx !== -1 ? row[postTxidIdx]?.trim() : '';
+    const finalOrderOrPostId = rawOrderTxid || rawPostTxid;
+    const rawLedgers = ledgersIdx !== -1 ? row[ledgersIdx]?.trim() : '';
     const rawPair = pairIdx !== -1 ? row[pairIdx]?.trim() : '';
     const rawTime = timeIdx !== -1 ? row[timeIdx]?.trim() : '';
     const rawType = typeIdx !== -1 ? row[typeIdx]?.trim() : '';
@@ -246,6 +251,11 @@ export function parseKrakenCSVRows(rows: string[][]): Transaction[] {
     const txIdUnique = rawTxid || `kraken_${timestamp}_${base}_${volume}_${cost}`;
     const id = `kraken_${txIdUnique}`.replace(/[^a-zA-Z0-9_-]/g, '_');
 
+    const notesParts = [`Kraken Pro | Pair: ${rawPair}`];
+    if (finalOrderOrPostId) notesParts.push(`Order ID: ${finalOrderOrPostId}`);
+    if (rawPostTxid && rawPostTxid !== finalOrderOrPostId) notesParts.push(`PostTxID: ${rawPostTxid}`);
+    if (rawLedgers) notesParts.push(`Ledgers: ${rawLedgers}`);
+
     transactions.push({
       id,
       timestamp,
@@ -261,8 +271,11 @@ export function parseKrakenCSVRows(rows: string[][]): Transaction[] {
       fee: fee > 0 ? fee : undefined,
       feeCurrency: quote,
       transactionHash: rawTxid || undefined,
+      orderId: finalOrderOrPostId || undefined,
+      ledgerId: rawLedgers || undefined,
+      tradingPair: rawPair || undefined,
       transactionKind: rawSubtype || rawOrdertype || 'spot',
-      notes: `Kraken Pro | Pair: ${rawPair}${rawOrderTxid ? ` | Order ID: ${rawOrderTxid}` : ''}`,
+      notes: notesParts.join(' | '),
     });
   }
 
