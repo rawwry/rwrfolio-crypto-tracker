@@ -34,6 +34,7 @@ import { FearAndGreedWidget } from './components/FearAndGreedWidget';
 import { APP_VERSION } from './changelog';
 import { isSessionAuthenticated, clearSessionAuth, DEFAULT_ADMIN_HASH } from './utils/auth';
 import { deduplicateTransactions } from './utils/transactionDedup';
+import { useAppRouter } from './utils/router';
 import { 
   Plus, 
   Upload, 
@@ -108,7 +109,18 @@ export default function App() {
   const [customPrices, setCustomPrices] = useState<Record<string, number>>(() => getStoredCustomPrices());
   const [isRefreshingPrices, setIsRefreshingPrices] = useState(false);
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string | null>(() => getLastPriceUpdateTime());
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'transactions' | 'assets' | 'analytics' | 'taxes'>('dashboard');
+  const {
+    activeTab,
+    selectedAssetFilter,
+    isSettingsOpen,
+    isChangelogOpen,
+    setActiveTab,
+    openSettings,
+    closeSettings,
+    openChangelog,
+    closeChangelog,
+    setCoinFilter,
+  } = useAppRouter();
   const [dbConnected, setDbConnected] = useState<boolean>(true);
 
   // Authentication State
@@ -117,11 +129,8 @@ export default function App() {
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isChangelogOpen, setIsChangelogOpen] = useState(false);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
   const [priceEditTarget, setPriceEditTarget] = useState<{ symbol: string; price: number } | null>(null);
-  const [selectedAssetFilter, setSelectedAssetFilter] = useState<string>('ALL');
 
   // Toast Notification
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -377,8 +386,7 @@ export default function App() {
   };
 
   const handleSelectAssetForFilter = (symbol: string) => {
-    setSelectedAssetFilter(symbol);
-    setActiveTab('transactions');
+    setActiveTab('transactions', symbol);
   };
 
   // Auth Handlers
@@ -448,7 +456,7 @@ export default function App() {
         isRefreshingPrices={isRefreshingPrices}
         onExportData={handleExportCSV}
         onResetData={handleResetData}
-        onOpenSettings={() => setIsSettingsOpen(true)}
+        onOpenSettings={openSettings}
         onLogout={handleLogout}
         lastUpdatedText={formattedLastUpdated}
         dbConnected={dbConnected}
@@ -483,7 +491,7 @@ export default function App() {
             </div>
             <button
               type="button"
-              onClick={() => setIsSettingsOpen(true)}
+              onClick={openSettings}
               className="px-3.5 py-1.5 rounded-xl font-semibold bg-amber-500 text-slate-950 hover:bg-amber-400 transition-colors shrink-0 text-center cursor-pointer shadow-sm"
             >
               Zugangsdaten ändern
@@ -575,7 +583,7 @@ export default function App() {
               onDeleteTransaction={handleDeleteTransaction}
               onBulkDelete={handleBulkDelete}
               selectedAssetFilter={selectedAssetFilter}
-              onClearAssetFilter={() => setSelectedAssetFilter('ALL')}
+              onClearAssetFilter={() => setCoinFilter('ALL')}
             />
           </div>
         )}
@@ -625,7 +633,7 @@ export default function App() {
             <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>rwr/folio</span>
             <span className="text-slate-400">&bull;</span>
             <button
-              onClick={() => setIsChangelogOpen(true)}
+              onClick={openChangelog}
               className={`inline-flex items-center space-x-1 px-2 py-0.5 rounded-full border font-mono text-[11px] transition-all cursor-pointer group ${
                 isLight 
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700' 
@@ -648,7 +656,7 @@ export default function App() {
       {/* Modals */}
       <SettingsModal
         isOpen={isSettingsOpen}
-        onClose={() => setIsSettingsOpen(false)}
+        onClose={closeSettings}
         settings={settings}
         onSaveSettings={handleSaveSettings}
         onLogout={handleLogout}
@@ -659,7 +667,7 @@ export default function App() {
 
       <ChangelogModal
         isOpen={isChangelogOpen}
-        onClose={() => setIsChangelogOpen(false)}
+        onClose={closeChangelog}
       />
       
       <AddTransactionModal

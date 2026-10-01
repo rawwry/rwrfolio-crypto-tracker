@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.14';
+export const APP_VERSION = '0.5.15';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.15',
+    date: '01.10.2026',
+    title: 'Echtes Multi-Page-Routing, Browser-History (Vor & Zurück) & direkte URL-Unterseiten',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'URL-Synchronisation für alle Unterseiten: Jede Ansicht besitzt nun eine eigene, direkte URL (/, /transactions, /coins, /analytics, /taxes sowie /settings und /changelog). Lesezeichen, Direktaufrufe und Neuladen (F5) bleiben exakt auf der gewählten Unterseite.',
+      },
+      {
+        type: 'feat',
+        text: 'Browser-History Support (Vor & Zurück): Die Vor- und Zurück-Buttons von Webbrowsern (Desktop & Mobil) navigieren nun nahtlos durch den Verlauf der besuchten Ansichten und Unterseiten.',
+      },
+      {
+        type: 'ui',
+        text: 'Echte semantische Navigation: Navigations-Tabs und Logo verfügen über echte Links mit Link-Vorschau in der Browser-Statusleiste sowie Rechtsklick-Option ("In neuem Tab öffnen").',
+      },
+      {
+        type: 'ui',
+        text: 'Dynamische Browser-Titel: Der Tab-Titel passt sich automatisch an die aktive Unterseite an (z. B. "rwrfolio • Transaktionen", "rwrfolio • Coins", "rwrfolio • Steuern & Haltefristen").',
+      },
+      {
+        type: 'fix',
+        text: 'Coin-Filterung in URL verankert: Beim Klick auf einen Coin in den Performance-Karten oder der Coin-Liste wird der Filter direkt in der URL festgehalten (/transactions?coin=BTC).',
+      },
+    ],
+  },
   {
     version: '0.5.14',
     date: '30.09.2026',
     title: 'Querformat für PDF-Belege, vollständige Spalten & scharfe Darstellung ohne Kürzungen',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

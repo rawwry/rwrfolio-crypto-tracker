@@ -45,7 +45,7 @@ async function startServer() {
     res.json({ 
       status: 'ok', 
       app: 'rwrfolio', 
-      version: '0.5.14',
+      version: '0.5.15',
       database: 'sqlite',
       databasePath: resolveDatabasePath(),
       importedCsvPath: resolveImportedCsvPath()
@@ -288,6 +288,24 @@ async function startServer() {
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
+    app.use('/assets', express.static(path.join(distPath, 'assets')));
+    app.use((req, res, next) => {
+      if (req.path.includes('/assets/')) {
+        const assetFile = req.path.substring(req.path.indexOf('/assets/') + 8);
+        return res.sendFile(path.join(distPath, 'assets', assetFile));
+      }
+      if (req.path.endsWith('/favicon.svg')) {
+        return res.sendFile(path.join(distPath, 'favicon.svg'));
+      }
+      if (req.path.endsWith('/manifest.json')) {
+        return res.sendFile(path.join(distPath, 'manifest.json'));
+      }
+      if (req.path.length > 1 && req.path.endsWith('/')) {
+        const query = req.url.slice(req.path.length);
+        return res.redirect(301, req.path.slice(0, -1) + query);
+      }
+      next();
+    });
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
