@@ -179,7 +179,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     switch (source) {
       case 'crypto_com':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-500/15 text-blue-400 border border-blue-500/20">
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30">
             Crypto.com
           </span>
         );

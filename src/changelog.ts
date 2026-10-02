@@ -9,14 +9,45 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.15';
+export const APP_VERSION = '0.5.16';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.16',
+    date: '02.10.2026',
+    title: 'UI/UX Facelift, Interaktive Coin- & Trade-Charts, Performance-Matrix & Custom Branding',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Interaktive Coin-Charts mit Kauf- & Verkauf-Markern: Für jeden beliebigen Coin oder das Gesamt-Portfolio können nun interaktive Charts angezeigt werden. Käufe (grüne Punkte) und Verkäufe (rote Punkte) werden direkt auf der Kurve platziert mit genauen Trade-Details im Tooltip.',
+      },
+      {
+        type: 'feat',
+        text: 'Zeitfenster-Switches & Metriken: Schnelle Umschaltung zwischen 24h, 7T, 30T, 90T, 1J und Gesamt-Historie sowie Umschaltung zwischen Einzelkurs, Gesamtwert und P&L.',
+      },
+      {
+        type: 'feat',
+        text: 'Coin-Performance Matrix: Übersichtliche tabellarische und mobile Vergleichsmatrix aller Coins mit Allokation, Kapitaleinsatz, Portfoliowert, Ø Kaufkurs (DCA) vs. Live-Marktkurs und 1-Klick Chart-Aktivierung.',
+      },
+      {
+        type: 'ui',
+        text: 'Optimaler Kontrast & Lesbarkeit: Kontrastarme blaue Schriften auf dunklem Hintergrund vollständig eliminiert. Optimierte visuelle Hierarchie mit klaren Smaragdgrün- und Korallen-Akzenten und hochauflösender Slate/Weiß-Typografie.',
+      },
+      {
+        type: 'feat',
+        text: 'Eigene Touchicons & Logo-Upload in den Einstellungen: Im Bereich "Logo & Touchicon" können individuelle Webapp-Logos sowie Homescreen-Touchicons für iOS, Android und Browser hochgeladen und sofort live angewendet werden.',
+      },
+      {
+        type: 'ui',
+        text: 'Neues Pixel-Art Fox-Emblem: Integriert in Navigationsleiste mit subtiler Schwebe- und Rotations-Animation sowie als native Touchicons (180x180, 192x192, 512x512, SVG) und Home Assistant Add-on Icon.',
+      },
+    ],
+  },
   {
     version: '0.5.15',
     date: '01.10.2026',
     title: 'Echtes Multi-Page-Routing, Browser-History (Vor & Zurück) & direkte URL-Unterseiten',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

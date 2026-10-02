@@ -121,4 +121,6 @@ export interface AppSettings {
   user: UserProfile;
   email: EmailNotificationSettings;
   privacyMode: boolean; // hide balances with ***
+  customLogoUrl?: string;
+  customTouchiconUrl?: string;
 }

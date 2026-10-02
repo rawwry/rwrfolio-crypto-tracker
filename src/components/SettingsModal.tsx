@@ -22,11 +22,16 @@ import {
   Download,
   FileSpreadsheet,
   RotateCcw,
-  Trash2
+  Trash2,
+  Sparkles,
+  Upload,
+  Image as ImageIcon,
+  Smartphone
 } from 'lucide-react';
 import { AppSettings, ThemeMode, PortfolioCurrency } from '../types';
 import { sendTestEmailApi } from '../utils/apiClient';
 import { hashPassword } from '../utils/auth';
+import { AppLogo } from './AppLogo';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -49,7 +54,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onExportJSON,
   onResetData,
 }) => {
-  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'email' | 'privacy' | 'data'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'appearance' | 'branding' | 'email' | 'privacy' | 'data'>('profile');
   
   // Form states
   const [username, setUsername] = useState(settings.user?.username || '');
@@ -63,6 +68,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [theme, setTheme] = useState<ThemeMode>(settings.theme || 'dark');
   const [currency, setCurrency] = useState<PortfolioCurrency>(settings.currency || 'EUR');
   const [privacyMode, setPrivacyMode] = useState(settings.privacyMode || false);
+
+  // Custom Branding states
+  const [customLogoUrl, setCustomLogoUrl] = useState(settings.customLogoUrl || '');
+  const [customTouchiconUrl, setCustomTouchiconUrl] = useState(settings.customTouchiconUrl || '');
 
   // Email notifications
   const [emailEnabled, setEmailEnabled] = useState(settings.email?.enabled ?? false);
@@ -105,6 +114,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       theme,
       currency,
       privacyMode,
+      customLogoUrl: customLogoUrl.trim() || undefined,
+      customTouchiconUrl: customTouchiconUrl.trim() || undefined,
       user: {
         username: cleanUsername,
         fullName: fullName.trim(),
@@ -136,6 +147,30 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       setSavedFeedback(false);
       onClose();
     }, 800);
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCustomLogoUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleTouchiconUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setCustomTouchiconUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSendTestEmail = async () => {
@@ -206,6 +241,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             <button
+              type="button"
               onClick={() => setActiveTab('appearance')}
               className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer w-full text-left whitespace-nowrap ${
                 activeTab === 'appearance'
@@ -218,6 +254,20 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             </button>
 
             <button
+              type="button"
+              onClick={() => setActiveTab('branding')}
+              className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer w-full text-left whitespace-nowrap ${
+                activeTab === 'branding'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : theme === 'light' ? 'text-slate-600 hover:bg-slate-200/60' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Logo &amp; Touchicon</span>
+            </button>
+
+            <button
+              type="button"
               onClick={() => setActiveTab('email')}
               className={`flex items-center space-x-2.5 px-3 py-2 rounded-xl text-xs font-semibold transition-colors cursor-pointer w-full text-left whitespace-nowrap ${
                 activeTab === 'email'
@@ -594,6 +644,158 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                     className="w-5 h-5 rounded text-indigo-600 focus:ring-indigo-500 bg-slate-900 border-slate-700 cursor-pointer"
                   />
                 </div>
+              </div>
+            )}
+
+            {/* TAB: BRANDING & CUSTOM LOGO / TOUCHICON */}
+            {activeTab === 'branding' && (
+              <div className="space-y-6">
+                <div>
+                  <h3 className="text-sm font-bold flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-indigo-400" />
+                    Branding &amp; Eigene Grafiken
+                  </h3>
+                  <p className={`text-xs mt-1 ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                    Individualisiere das Logo in der Navigationsleiste sowie das Touchicon für Browser-Tabs und Smartphone-Homescreens (PWA / iOS / Android).
+                  </p>
+                </div>
+
+                {/* 1. App Logo Section */}
+                <div className={`p-4 rounded-2xl border space-y-4 ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                        <ImageIcon className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Webapp-Logo (Navigationsleiste)</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Wird oben links neben "rwr/folio" angezeigt. Standard: Pixel-Emblem.
+                      </p>
+                    </div>
+
+                    {customLogoUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomLogoUrl('')}
+                        className="text-[11px] px-2.5 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                      >
+                        Standard wiederherstellen
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Logo Preview & Upload */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center p-2 shadow-inner">
+                        {customLogoUrl ? (
+                          <img src={customLogoUrl} alt="Logo Vorschau" className="max-w-full max-h-full object-contain" />
+                        ) : (
+                          <AppLogo size={44} />
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        <div className="font-semibold text-slate-200">
+                          {customLogoUrl ? 'Eigenes Logo aktiv' : 'Standard-Logo (Pixel-Emblem)'}
+                        </div>
+                        <div className="text-[11px] opacity-80">Empfohlen: Quadratisch, mind. 64x64 px</div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 w-full flex flex-col gap-2">
+                      <label className="inline-flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors shadow-sm text-center">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Neues Logo hochladen (PNG/SVG/JPG)</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/svg+xml,image/jpeg,image/webp"
+                          onChange={handleLogoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        value={customLogoUrl}
+                        onChange={(e) => setCustomLogoUrl(e.target.value)}
+                        placeholder="Oder Bild-URL / Data-URL einfügen..."
+                        className={`w-full px-3 py-1.5 rounded-lg text-xs border focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+                          theme === 'light' ? 'bg-white border-slate-300 text-slate-900' : 'bg-slate-900 border-slate-800 text-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* 2. Touchicon & Favicon Section */}
+                <div className={`p-4 rounded-2xl border space-y-4 ${
+                  theme === 'light' ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+                        <Smartphone className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Touchicon &amp; Favicon (Homescreen &amp; Browser-Tab)</span>
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Wird beim Hinzufügen zum Homescreen auf iOS / Android sowie als Tab-Icon verwendet.
+                      </p>
+                    </div>
+
+                    {customTouchiconUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setCustomTouchiconUrl('')}
+                        className="text-[11px] px-2.5 py-1 rounded-lg border border-slate-700 hover:bg-slate-800 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                      >
+                        Standard wiederherstellen
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Touchicon Preview & Upload */}
+                  <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-16 h-16 rounded-2xl bg-slate-900 border border-slate-700 flex items-center justify-center p-2 shadow-inner">
+                        {customTouchiconUrl ? (
+                          <img src={customTouchiconUrl} alt="Touchicon Vorschau" className="max-w-full max-h-full object-contain rounded-xl" />
+                        ) : (
+                          <img src="/apple-touch-icon.png" alt="Touchicon Standard" className="max-w-full max-h-full object-contain rounded-xl" />
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        <div className="font-semibold text-slate-200">
+                          {customTouchiconUrl ? 'Eigenes Touchicon aktiv' : 'Standard-Touchicon (180x180 px)'}
+                        </div>
+                        <div className="text-[11px] opacity-80">Empfohlen: 180x180 px oder 512x512 px PNG</div>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 w-full flex flex-col gap-2">
+                      <label className="inline-flex items-center justify-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer transition-colors shadow-sm text-center">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>Neues Touchicon hochladen (PNG/SVG/ICO)</span>
+                        <input
+                          type="file"
+                          accept="image/png,image/svg+xml,image/x-icon,image/jpeg"
+                          onChange={handleTouchiconUpload}
+                          className="hidden"
+                        />
+                      </label>
+                      <input
+                        type="text"
+                        value={customTouchiconUrl}
+                        onChange={(e) => setCustomTouchiconUrl(e.target.value)}
+                        placeholder="Oder Bild-URL / Data-URL einfügen..."
+                        className={`w-full px-3 py-1.5 rounded-lg text-xs border focus:outline-none focus:ring-1 focus:ring-indigo-500 ${
+                          theme === 'light' ? 'bg-white border-slate-300 text-slate-900' : 'bg-slate-900 border-slate-800 text-slate-200'
+                        }`}
+                      />
+                    </div>
+                  </div>
+                </div>
+
               </div>
             )}
 

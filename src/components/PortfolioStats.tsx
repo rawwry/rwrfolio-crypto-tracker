@@ -112,12 +112,12 @@ export const PortfolioStats: React.FC<PortfolioStatsProps> = ({ totals, assets, 
 
       {/* 3. Invested Capital Card */}
       <div className={cardBaseClass}>
-        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all" />
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-all" />
         <div className="flex items-center justify-between mb-3">
           <span className={titleClass}>
             Investiertes Kapital
           </span>
-          <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
             <CircleDollarSign className="w-4 h-4" />
           </div>
         </div>

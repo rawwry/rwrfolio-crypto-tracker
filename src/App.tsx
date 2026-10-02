@@ -430,6 +430,19 @@ export default function App() {
     );
   }
 
+  // Dynamic custom touchicon & favicon injection
+  useEffect(() => {
+    if (settings.customTouchiconUrl) {
+      const updateLink = (selector: string, href: string) => {
+        const el = document.querySelector<HTMLLinkElement>(selector);
+        if (el) el.href = href;
+      };
+      updateLink('link[rel="icon"]', settings.customTouchiconUrl);
+      updateLink('link[rel="apple-touch-icon"]', settings.customTouchiconUrl);
+      updateLink('link[rel="apple-touch-icon-precomposed"]', settings.customTouchiconUrl);
+    }
+  }, [settings.customTouchiconUrl]);
+
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
       isLight ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
@@ -466,6 +479,7 @@ export default function App() {
         userProfile={settings.user}
         currency={settings.currency || 'EUR'}
         onToggleCurrency={handleToggleCurrency}
+        customLogoUrl={settings.customLogoUrl}
       />
 
       {/* Main Container */}

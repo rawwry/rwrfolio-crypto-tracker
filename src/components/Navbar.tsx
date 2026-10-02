@@ -4,6 +4,7 @@ import {
 } from 'lucide-react';
 import { PortfolioTotals, ThemeMode, UserProfile, PortfolioCurrency } from '../types';
 import { TabType, buildFullPath } from '../utils/router';
+import { AppLogo } from './AppLogo';
 
 interface NavbarProps {
   totals: PortfolioTotals;
@@ -21,6 +22,7 @@ interface NavbarProps {
   userProfile?: UserProfile;
   currency?: PortfolioCurrency;
   onToggleCurrency?: () => void;
+  customLogoUrl?: string;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -30,6 +32,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   setActiveTab,
   theme,
   userProfile,
+  customLogoUrl,
 }) => {
   const isLight = theme === 'light';
 
@@ -42,16 +45,17 @@ export const Navbar: React.FC<NavbarProps> = ({
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-13 sm:h-14 gap-4">
           
-          {/* Logo & Brand: rwr/folio */}
+          {/* Logo & Brand: Emblem + rwr/folio */}
           <a 
             href={buildFullPath('/')}
             onClick={(e) => {
               e.preventDefault();
               setActiveTab('dashboard');
             }}
-            className="flex items-center cursor-pointer group select-none py-1 no-underline"
+            className="flex items-center space-x-2.5 cursor-pointer group select-none py-1 no-underline"
           >
-            <span className={`font-extrabold text-lg sm:text-xl tracking-tight font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <AppLogo customLogoUrl={customLogoUrl} size={30} />
+            <span className={`font-extrabold text-lg sm:text-xl tracking-tight font-sans transition-colors ${isLight ? 'text-slate-900 group-hover:text-indigo-600' : 'text-white group-hover:text-slate-100'}`}>
               rwr<span className="text-indigo-500">/folio</span>
             </span>
           </a>

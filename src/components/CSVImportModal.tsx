@@ -345,7 +345,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                   <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400" title="Kraken Pro">
                     <FileText className="w-5 h-5" />
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400" title="Crypto.com">
+                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-300" title="Crypto.com">
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                 </div>
@@ -487,7 +487,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                     parseResult.detectedExchange === 'kraken'
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                       : parseResult.detectedExchange === 'crypto_com'
-                      ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                      ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
                       : 'bg-slate-800 text-slate-300'
                   }`}>
                     {parseResult.detectedExchange === 'kraken' 

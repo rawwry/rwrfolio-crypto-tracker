@@ -1,6 +1,6 @@
 name: "rwrfolio"
 description: "Krypto Portfolio Tracker mit SQLite Datenbank und Live-Kursen"
-version: "0.5.15"
+version: "0.5.16"
 slug: "rwrfolio"
 init: false
 arch:
