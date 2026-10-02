@@ -9,14 +9,25 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.16';
+export const APP_VERSION = '0.5.17';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.17',
+    date: '02.10.2026',
+    title: 'Korrektur der Gesamt-Portfolio Bewertung & P&L im Analyse-Chart',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Berechnung des Gesamt-Portfoliowerts im Analyse-Chart korrigiert: Behebt einen Rechenfehler, bei dem im Gesamt-Portfolio-Modus fälschlicherweise Einzelpreise ganzer Coins aufsummiert wurden, anstatt jeden Coin mit seinem tatsächlichen Bestand zu multiplizieren. Portfoliowert, Investiertes Kapital und Gewinn/Verlust (P&L) stimmen nun exakt mit den Dashboard-Daten überein.',
+      },
+    ],
+  },
   {
     version: '0.5.16',
     date: '02.10.2026',
     title: 'UI/UX Facelift, Interaktive Coin- & Trade-Charts, Performance-Matrix & Custom Branding',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

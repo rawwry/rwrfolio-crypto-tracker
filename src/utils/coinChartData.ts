@@ -173,12 +173,12 @@ export function generateCoinChartSeries(
     txByDay.get(day)!.push(item);
   }
 
-  // 5. Track cumulative balance and execution prices
+  // 5. Track cumulative balance and execution prices per coin
+  const holdings: Record<string, number> = {};
   const knownPrices: Record<string, number> = {};
-  let currentBalance = 0;
   let cumulativeInvested = 0;
 
-  // Live prices today
+  // Live prices today for single coin
   const livePriceToday = isPortfolio
     ? 0
     : (isUSD ? getCoinPriceUSD(targetSymbol, customPrices) : getCoinPriceEUR(targetSymbol, customPrices));
@@ -212,28 +212,41 @@ export function generateCoinChartSeries(
   }
 
   // Prior balance before startDate
+  const firstSampledDay = sampledDays[0];
   for (const tx of relevantTxs) {
     const day = (tx.timestamp || '').substring(0, 10);
-    if (day < sampledDays[0]) {
-      const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === targetSymbol;
-      const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === targetSymbol;
-      const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
+    if (!day || day >= firstSampledDay) continue;
 
-      let cost = isUSD
-        ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
-        : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
+    const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === targetSymbol;
+    const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === targetSymbol;
+    if (!isBuy && !isSell) continue;
 
-      if (isBuy) {
-        currentBalance += amount;
-        cumulativeInvested += cost;
-        const p = isUSD
-          ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
-          : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
-        if (p > 0) knownPrices[targetSymbol] = p;
-      } else if (isSell) {
-        currentBalance = Math.max(0, currentBalance - amount);
-        cumulativeInvested = Math.max(0, cumulativeInvested - cost);
-      }
+    const sym = isBuy ? (tx.receivedCurrency || '').toUpperCase() : (tx.spentCurrency || '').toUpperCase();
+    if (NON_CRYPTO_SYMBOLS.has(sym)) continue;
+    if (!isPortfolio && sym !== targetSymbol) continue;
+
+    const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
+
+    let price = isUSD
+      ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
+      : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
+
+    let cost = isUSD
+      ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
+      : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
+
+    if ((!price || price <= 0) && amount > 0 && cost > 0) {
+      price = cost / amount;
+    }
+
+    if (isBuy) {
+      holdings[sym] = (holdings[sym] || 0) + amount;
+      cumulativeInvested += cost;
+      if (price > 0) knownPrices[sym] = price;
+    } else if (isSell) {
+      holdings[sym] = Math.max(0, (holdings[sym] || 0) - amount);
+      cumulativeInvested = Math.max(0, cumulativeInvested - cost);
+      if (price > 0) knownPrices[sym] = price;
     }
   }
 
@@ -241,48 +254,61 @@ export function generateCoinChartSeries(
 
   for (let i = 0; i < sampledDays.length; i++) {
     const day = sampledDays[i];
+    const isLast = i === sampledDays.length - 1;
     const tradesOnDay = txByDay.get(day) || [];
 
     // Process trades on this day
     for (const trade of tradesOnDay) {
+      const sym = trade.symbol;
+      if (NON_CRYPTO_SYMBOLS.has(sym)) continue;
+      if (!isPortfolio && sym !== targetSymbol) continue;
+
       if (trade.type === 'BUY') {
-        currentBalance += trade.amount;
+        holdings[sym] = (holdings[sym] || 0) + trade.amount;
         cumulativeInvested += trade.totalCost;
-        if (trade.price > 0) knownPrices[trade.symbol] = trade.price;
+        if (trade.price > 0) knownPrices[sym] = trade.price;
       } else {
-        currentBalance = Math.max(0, currentBalance - trade.amount);
+        holdings[sym] = Math.max(0, (holdings[sym] || 0) - trade.amount);
         cumulativeInvested = Math.max(0, cumulativeInvested - trade.totalCost);
+        if (trade.price > 0) knownPrices[sym] = trade.price;
       }
     }
 
-    const isLast = i === sampledDays.length - 1;
+    const progress = sampledDays.length > 1 ? i / (sampledDays.length - 1) : 1;
+    let holdingVal = 0;
     let dayPrice = 0;
+    let balance = 0;
 
     if (isPortfolio) {
-      // Portfolio valuation mode
-      let dayVal = 0;
-      for (const [coin, p] of Object.entries(knownPrices)) {
-        dayVal += p;
+      // Portfolio valuation mode: accurately sum (amount * coinPrice) across all held coins
+      for (const [coin, amount] of Object.entries(holdings)) {
+        if (amount <= 0.00000001) continue;
+        const live = isUSD ? getCoinPriceUSD(coin, customPrices) : getCoinPriceEUR(coin, customPrices);
+        const hist = knownPrices[coin] || live;
+        // Interpolate smoothly towards live price
+        const interp = isLast ? live : hist + (live - hist) * progress;
+        const coinPrice = interp > 0 ? interp : (live || hist);
+        holdingVal += amount * coinPrice;
+        balance += amount;
       }
-      dayPrice = Math.max(dayVal, cumulativeInvested);
+      dayPrice = holdingVal;
     } else {
-      // Coin price calculation:
-      // If there's a trade today, use its execution price.
-      // If today is the last day, use live market price.
-      // Otherwise, interpolate between last known execution price and live price.
-      if (isLast && livePriceToday > 0) {
-        dayPrice = livePriceToday;
+      // Single coin mode:
+      balance = holdings[targetSymbol] || 0;
+      const live = isUSD ? getCoinPriceUSD(targetSymbol, customPrices) : getCoinPriceEUR(targetSymbol, customPrices);
+      const hist = knownPrices[targetSymbol] || live;
+
+      if (isLast && live > 0) {
+        dayPrice = live;
       } else if (tradesOnDay.length > 0 && tradesOnDay[tradesOnDay.length - 1].price > 0) {
         dayPrice = tradesOnDay[tradesOnDay.length - 1].price;
       } else {
-        const lastKnown = knownPrices[targetSymbol] || livePriceToday;
-        // Interpolate progress towards livePriceToday
-        const progress = sampledDays.length > 1 ? i / (sampledDays.length - 1) : 1;
-        dayPrice = lastKnown + (livePriceToday - lastKnown) * progress;
+        dayPrice = hist + (live - hist) * progress;
       }
+
+      holdingVal = balance * dayPrice;
     }
 
-    const holdingVal = isPortfolio ? dayPrice : currentBalance * dayPrice;
     const pnl = holdingVal - cumulativeInvested;
     const pnlPercentage = cumulativeInvested > 0 ? (pnl / cumulativeInvested) * 100 : 0;
 
@@ -302,8 +328,8 @@ export function generateCoinChartSeries(
       formattedDate: isLast ? 'Heute (Live)' : formattedDate,
       shortLabel,
       timestamp: isNaN(d.getTime()) ? now.getTime() : d.getTime(),
-      price: Math.round(dayPrice * 10000) / 10000,
-      holdingBalance: Math.round(currentBalance * 10000) / 10000,
+      price: Math.round(dayPrice * 100) / 100,
+      holdingBalance: Math.round(balance * 10000) / 10000,
       holdingValue: Math.round(holdingVal * 100) / 100,
       investedCapital: Math.round(cumulativeInvested * 100) / 100,
       pnl: Math.round(pnl * 100) / 100,

@@ -80,21 +80,38 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const coinDetail = isPortfolio ? null : getCoinDetails(selectedCoin);
   const assetItem = isPortfolio ? null : assets.find(a => a.symbol.toUpperCase() === selectedCoin.toUpperCase());
 
+  // Authoritative live portfolio totals calculated from assets
+  const portfolioTotalVal = useMemo(() => {
+    return assets.reduce((sum, a) => sum + (isUSD ? (a.currentValueUSD ?? a.currentValue) : (a.currentValueEUR ?? a.currentValue)), 0);
+  }, [assets, isUSD]);
+
+  const portfolioTotalInvested = useMemo(() => {
+    return assets.reduce((sum, a) => sum + (isUSD ? (a.totalInvestedUSD ?? a.totalInvested) : (a.totalInvestedEUR ?? a.totalInvested)), 0);
+  }, [assets, isUSD]);
+
+  const portfolioTotalPnl = portfolioTotalVal - portfolioTotalInvested;
+  const portfolioTotalPnlPct = portfolioTotalInvested > 0 ? (portfolioTotalPnl / portfolioTotalInvested) * 100 : 0;
+
   // Metrics for header
   const latestPoint = points.length > 0 ? points[points.length - 1] : null;
   const firstPoint = points.length > 0 ? points[0] : null;
 
-  const currentPrice = latestPoint ? latestPoint.price : 0;
-  const currentHolding = latestPoint ? latestPoint.holdingBalance : 0;
-  const currentValue = latestPoint ? latestPoint.holdingValue : 0;
-  const currentInvested = latestPoint ? latestPoint.investedCapital : 0;
-  const currentPnl = latestPoint ? latestPoint.pnl : 0;
-  const currentPnlPct = latestPoint ? latestPoint.pnlPercentage : 0;
+  const currentPrice = isPortfolio ? portfolioTotalVal : (latestPoint ? latestPoint.price : (assetItem?.currentPrice || 0));
+  const currentHolding = isPortfolio ? assets.length : (latestPoint ? latestPoint.holdingBalance : (assetItem?.currentBalance || 0));
+  const currentValue = isPortfolio ? portfolioTotalVal : (isUSD ? (assetItem?.currentValueUSD ?? assetItem?.currentValue ?? (latestPoint?.holdingValue || 0)) : (assetItem?.currentValueEUR ?? assetItem?.currentValue ?? (latestPoint?.holdingValue || 0)));
+  const currentInvested = isPortfolio ? portfolioTotalInvested : (isUSD ? (assetItem?.totalInvestedUSD ?? assetItem?.totalInvested ?? (latestPoint?.investedCapital || 0)) : (assetItem?.totalInvestedEUR ?? assetItem?.totalInvested ?? (latestPoint?.investedCapital || 0)));
+  const currentPnl = isPortfolio ? portfolioTotalPnl : (currentValue - currentInvested);
+  const currentPnlPct = isPortfolio ? portfolioTotalPnlPct : (currentInvested > 0 ? (currentPnl / currentInvested) * 100 : 0);
 
   // Period price change
   const periodPriceDiff = firstPoint && latestPoint ? latestPoint.price - firstPoint.price : 0;
   const periodPricePct = firstPoint && firstPoint.price > 0 ? (periodPriceDiff / firstPoint.price) * 100 : 0;
-  const isProfit = isPortfolio ? currentPnl >= 0 : (metricMode === 'price' ? periodPriceDiff >= 0 : currentPnl >= 0);
+  const periodValueDiff = firstPoint && latestPoint ? latestPoint.holdingValue - firstPoint.holdingValue : 0;
+  const periodValuePct = firstPoint && firstPoint.holdingValue > 0 ? (periodValueDiff / firstPoint.holdingValue) * 100 : currentPnlPct;
+
+  const isProfit = isPortfolio 
+    ? (timeframe === 'all' ? currentPnl >= 0 : periodValueDiff >= 0)
+    : (metricMode === 'price' ? periodPriceDiff >= 0 : currentPnl >= 0);
 
   // Count trades in series
   const allTradesInPeriod = useMemo(() => {
@@ -287,7 +304,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 }`}>
                   {isProfit ? '+' : ''}
                   {isPortfolio 
-                    ? `${currentPnlPct.toFixed(2)} % Rendite` 
+                    ? (timeframe === 'all' ? `${currentPnlPct.toFixed(2)} % Rendite` : `${periodValuePct.toFixed(2)} % (${timeframe})`)
                     : `${periodPricePct.toFixed(2)} % (${timeframe})`}
                 </span>
               </div>
