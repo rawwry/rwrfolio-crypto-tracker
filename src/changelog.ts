@@ -9,14 +9,45 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.17';
+export const APP_VERSION = '0.5.18';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.18',
+    date: '03.10.2026',
+    title: 'Stetige Chart-Interpolation, Matrix-Interaktion, Allokation-Facelift & Color Themes',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Chart-Kurven Dellen behoben: Stückweise stetige Interpolation zwischen aufeinanderfolgenden Kauf-/Verkaufszeitpunkten und dem heutigen Live-Kurs. Künstliche V-Zacken an Transaktionstagen wurden vollständig eliminiert.',
+      },
+      {
+        type: 'fix',
+        text: 'Y-Achsen Zahlen-Abschneidung im Chart behoben: Breiten- und Randabstand-Optimierung verhindert das Abschneiden führender Ziffern bei Werten wie 68.0k €.',
+      },
+      {
+        type: 'ui',
+        text: 'Analyse Matrix: Sämtliche störenden Chart-Buttons entfernt. Sowohl auf Desktop als auch in der mobilen Kartenansicht ist nun die gesamte Zeile bzw. Kachel direkt klickbar.',
+      },
+      {
+        type: 'feat',
+        text: 'Coin-Allokation Facelift: Kompaktes, informationsdichtes Redesign mit Switch zwischen Marktwert und Investitionskapital, Konzentrations-Kennzahlen (Top 1, Top 3) und Werttreiber-Indikatoren.',
+      },
+      {
+        type: 'ui',
+        text: 'Strikte Farbtrennung Kraken vs. Crypto.com: Kraken wird in königlichem Lila (Royal Purple), Crypto.com in leuchtendem Cyan (Electric Cyan) für maximale optische Unterscheidbarkeit abgebildet.',
+      },
+      {
+        type: 'feat',
+        text: 'Farb-Themen (Color Themes) in den Einstellungen: Wähle zwischen Midnight Slate (Standard), OLED Pure Black (#000000), Cyber Emerald, Nordic Cyan und Amber Gold mit Farbmuster-Vorschau.',
+      },
+    ],
+  },
   {
     version: '0.5.17',
     date: '02.10.2026',
     title: 'Korrektur der Gesamt-Portfolio Bewertung & P&L im Analyse-Chart',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

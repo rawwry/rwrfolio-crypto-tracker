@@ -89,6 +89,7 @@ export interface CSVParseResult {
 }
 
 export type ThemeMode = 'dark' | 'light' | 'system';
+export type ColorThemePreset = 'midnight' | 'oled' | 'cyber' | 'nordic' | 'amber';
 
 export interface UserProfile {
   username: string;
@@ -117,6 +118,7 @@ export interface EmailNotificationSettings {
 
 export interface AppSettings {
   theme: ThemeMode;
+  colorTheme?: ColorThemePreset;
   currency?: PortfolioCurrency;
   user: UserProfile;
   email: EmailNotificationSettings;

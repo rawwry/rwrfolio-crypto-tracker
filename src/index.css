@@ -1,1 +1,58 @@
 @import "tailwindcss";
+
+/* Color Theme Presets Custom Overrides */
+html[data-color-theme="oled"] body {
+  background-color: #000000;
+}
+
+html[data-color-theme="oled"] .bg-slate-900,
+html[data-color-theme="oled"] .bg-slate-900\/90,
+html[data-color-theme="oled"] .bg-slate-950,
+html[data-color-theme="oled"] .bg-slate-950\/50,
+html[data-color-theme="oled"] .bg-slate-950\/60,
+html[data-color-theme="oled"] .bg-slate-950\/80 {
+  background-color: #050505 !important;
+  border-color: #222222 !important;
+}
+
+html[data-color-theme="cyber"] body {
+  background-color: #030a06;
+}
+
+html[data-color-theme="cyber"] .bg-slate-900,
+html[data-color-theme="cyber"] .bg-slate-900\/90,
+html[data-color-theme="cyber"] .bg-slate-950,
+html[data-color-theme="cyber"] .bg-slate-950\/50,
+html[data-color-theme="cyber"] .bg-slate-950\/60,
+html[data-color-theme="cyber"] .bg-slate-950\/80 {
+  background-color: #06170e !important;
+  border-color: #0e3320 !important;
+}
+
+html[data-color-theme="nordic"] body {
+  background-color: #030a14;
+}
+
+html[data-color-theme="nordic"] .bg-slate-900,
+html[data-color-theme="nordic"] .bg-slate-900\/90,
+html[data-color-theme="nordic"] .bg-slate-950,
+html[data-color-theme="nordic"] .bg-slate-950\/50,
+html[data-color-theme="nordic"] .bg-slate-950\/60,
+html[data-color-theme="nordic"] .bg-slate-950\/80 {
+  background-color: #07172b !important;
+  border-color: #0f3056 !important;
+}
+
+html[data-color-theme="amber"] body {
+  background-color: #0c0803;
+}
+
+html[data-color-theme="amber"] .bg-slate-900,
+html[data-color-theme="amber"] .bg-slate-900\/90,
+html[data-color-theme="amber"] .bg-slate-950,
+html[data-color-theme="amber"] .bg-slate-950\/50,
+html[data-color-theme="amber"] .bg-slate-950\/60,
+html[data-color-theme="amber"] .bg-slate-950\/80 {
+  background-color: #191107 !important;
+  border-color: #3b280e !important;
+}

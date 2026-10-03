@@ -52,6 +52,7 @@ const SETTINGS_STORAGE_KEY = 'rwrfolio_settings_v1';
 
 const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
+  colorTheme: 'midnight',
   currency: 'EUR',
   privacyMode: false,
   user: {
@@ -443,10 +444,32 @@ export default function App() {
     }
   }, [settings.customTouchiconUrl]);
 
+  // Dynamic color theme preset attribute on document root
+  useEffect(() => {
+    const activeColorTheme = settings.colorTheme || 'midnight';
+    document.documentElement.setAttribute('data-color-theme', activeColorTheme);
+  }, [settings.colorTheme]);
+
+  const activeColorTheme = settings.colorTheme || 'midnight';
+  const getThemeWrapperClass = () => {
+    if (isLight) return 'bg-slate-50 text-slate-900';
+    switch (activeColorTheme) {
+      case 'oled':
+        return 'bg-black text-slate-100 theme-oled';
+      case 'cyber':
+        return 'bg-[#030a06] text-slate-100 theme-cyber';
+      case 'nordic':
+        return 'bg-[#030a14] text-slate-100 theme-nordic';
+      case 'amber':
+        return 'bg-[#0c0803] text-slate-100 theme-amber';
+      case 'midnight':
+      default:
+        return 'bg-slate-950 text-slate-100 theme-midnight';
+    }
+  };
+
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${
-      isLight ? 'bg-slate-50 text-slate-900' : 'bg-slate-950 text-slate-100'
-    }`}>
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${getThemeWrapperClass()}`}>
       
       {/* Toast Notification */}
       {toast && (

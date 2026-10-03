@@ -105,7 +105,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               </span>
             </div>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Direkter Rendite-Vergleich: Ø Kaufkurs (DCA), Live-Kurs, Kapitaleinsatz &amp; P&amp;L
+              Rendite-Vergleich nach DCA, Live-Kurs &amp; P&amp;L &bull; <span className="text-indigo-400 font-medium">Zeile oder Kachel anklicken</span>, um den interaktiven Chart oben zu laden
             </p>
           </div>
         </div>
@@ -156,7 +156,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               >
                 Gewinn / Rendite {sortField === 'pnlPct' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
-              <th className="py-3 px-3 font-semibold text-center">Aktion</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/40 font-mono">
@@ -173,16 +172,18 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               return (
                 <tr 
                   key={asset.symbol}
-                  className={`transition-colors ${
+                  onClick={() => onSelectCoinForChart(asset.symbol)}
+                  title={`${asset.symbol} anklicken, um interaktiven Chart oben zu laden`}
+                  className={`transition-colors cursor-pointer select-none ${
                     isSelected 
-                      ? (isLight ? 'bg-indigo-50/80' : 'bg-indigo-950/20') 
-                      : (isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-800/40')
+                      ? (isLight ? 'bg-indigo-50/90 ring-1 ring-inset ring-indigo-400' : 'bg-indigo-950/40 ring-1 ring-inset ring-indigo-500/50') 
+                      : (isLight ? 'hover:bg-slate-100/70' : 'hover:bg-slate-800/50')
                   }`}
                 >
                   {/* Asset Identity */}
                   <td className="py-3 px-3">
                     <div className="flex items-center space-x-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
                         {asset.symbol.substring(0, 3)}
                       </div>
                       <div>
@@ -191,6 +192,11 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                           <span className="text-[11px] font-normal text-slate-400 font-sans">
                             {details.name}
                           </span>
+                          {isSelected && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans font-medium">
+                              Chart aktiv
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-slate-400">
                           {asset.currentBalance.toLocaleString('de-DE', { maximumFractionDigits: 4 })} {asset.symbol}
@@ -244,25 +250,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                       <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %</span>
                     </div>
                   </td>
-
-                  {/* Action: Open in Chart */}
-                  <td className="py-3 px-3 text-center">
-                    <button
-                      type="button"
-                      onClick={() => onSelectCoinForChart(asset.symbol)}
-                      className={`inline-flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
-                        isSelected
-                          ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
-                          : isLight
-                            ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700'
-                            : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-slate-200 hover:text-white'
-                      }`}
-                      title={`${asset.symbol} im interaktiven Chart anzeigen`}
-                    >
-                      <LineChartIcon className="w-3.5 h-3.5" />
-                      <span>Chart</span>
-                    </button>
-                  </td>
                 </tr>
               );
             })}
@@ -270,7 +257,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
         </table>
       </div>
 
-      {/* 3. Mobile Card View */}
+      {/* 3. Mobile Card View - fully clickable, no bulky buttons */}
       <div className="md:hidden space-y-3">
         {sortedAssets.map(asset => {
           const details = getCoinDetails(asset.symbol);
@@ -285,16 +272,29 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
           return (
             <div 
               key={asset.symbol}
-              className={`p-4 rounded-xl border transition-all ${
+              onClick={() => onSelectCoinForChart(asset.symbol)}
+              className={`p-4 rounded-xl border transition-all cursor-pointer active:scale-[0.99] select-none ${
                 isSelected
-                  ? (isLight ? 'bg-indigo-50/80 border-indigo-300' : 'bg-indigo-950/20 border-indigo-700/60')
-                  : (isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800')
+                  ? (isLight ? 'bg-indigo-50/80 border-indigo-400 ring-1 ring-indigo-400 shadow-md' : 'bg-indigo-950/30 border-indigo-500/80 ring-1 ring-indigo-500/50 shadow-md')
+                  : (isLight ? 'bg-slate-50 hover:bg-slate-100 border-slate-200' : 'bg-slate-950/60 hover:bg-slate-900 border-slate-800')
               }`}
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center space-x-2">
-                  <span className="font-bold text-base text-white">{asset.symbol}</span>
-                  <span className="text-xs text-slate-400">{details.name}</span>
+                  <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs">
+                    {asset.symbol.substring(0, 3)}
+                  </div>
+                  <div>
+                    <div className="font-bold text-sm text-white flex items-center gap-1.5">
+                      <span>{asset.symbol}</span>
+                      {isSelected && (
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans">
+                          Chart aktiv
+                        </span>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-slate-400">{details.name}</span>
+                  </div>
                 </div>
                 <div className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold ${
                   isProfit ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
@@ -324,18 +324,11 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                 </div>
               </div>
 
-              <div className="mt-3 pt-2 border-t border-slate-800/60 flex items-center justify-between">
-                <span className="text-[11px] text-slate-400 font-mono">
-                  Allokation: {asset.allocationPercentage.toFixed(1)} %
+              <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+                <span>Allokation: {asset.allocationPercentage.toFixed(1)} %</span>
+                <span className="text-[10px] text-slate-500 font-sans">
+                  {asset.currentBalance.toLocaleString('de-DE', { maximumFractionDigits: 4 })} {asset.symbol}
                 </span>
-                <button
-                  type="button"
-                  onClick={() => onSelectCoinForChart(asset.symbol)}
-                  className="inline-flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold bg-indigo-600 text-white cursor-pointer"
-                >
-                  <LineChartIcon className="w-3.5 h-3.5" />
-                  <span>Chart anzeigen</span>
-                </button>
               </div>
             </div>
           );

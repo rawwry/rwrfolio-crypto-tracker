@@ -345,7 +345,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                   <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400" title="Kraken Pro">
                     <FileText className="w-5 h-5" />
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-300" title="Crypto.com">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-300" title="Crypto.com">
                     <FileSpreadsheet className="w-5 h-5" />
                   </div>
                 </div>
@@ -397,9 +397,9 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 <button
                   type="button"
                   onClick={() => handleProcessText(ambiguousData.text, ambiguousData.name, 'crypto_com')}
-                  className="p-3 rounded-xl bg-blue-600/20 border border-blue-500/40 hover:bg-blue-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
+                  className="p-3 rounded-xl bg-cyan-600/20 border border-cyan-500/40 hover:bg-cyan-600/30 text-white font-semibold text-xs flex items-center justify-center space-x-2 cursor-pointer transition-all shadow-sm"
                 >
-                  <span className="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
                   <span>Crypto.com</span>
                 </button>
               </div>
@@ -487,7 +487,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                     parseResult.detectedExchange === 'kraken'
                       ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
                       : parseResult.detectedExchange === 'crypto_com'
-                      ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30'
+                      ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                       : 'bg-slate-800 text-slate-300'
                   }`}>
                     {parseResult.detectedExchange === 'kraken' 

@@ -250,14 +250,117 @@ export function generateCoinChartSeries(
     }
   }
 
+  // 6. Build piecewise price anchors per coin (Trade 1 -> Trade 2 -> ... -> Today Live)
+  // This guarantees smooth, continuous curves without artificial sawtooth dips on trade dates.
+  interface PriceAnchor {
+    timestamp: number;
+    price: number;
+  }
+
+  const coinAnchorsMap: Record<string, PriceAnchor[]> = {};
+  const todayMidTs = new Date(now.toISOString().substring(0, 10) + 'T12:00:00').getTime();
+
+  const allRelevantCoins = isPortfolio ? Array.from(coinsSet) : [targetSymbol];
+  for (const sym of allRelevantCoins) {
+    const live = isUSD ? getCoinPriceUSD(sym, customPrices) : getCoinPriceEUR(sym, customPrices);
+    const dayPricesMap = new Map<string, { totalCost: number; totalAmount: number; lastPrice: number }>();
+
+    for (const tx of relevantTxs) {
+      const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === sym;
+      const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === sym;
+      if (!isBuy && !isSell) continue;
+
+      const day = (tx.timestamp || '').substring(0, 10);
+      if (!day) continue;
+
+      const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
+      let price = isUSD
+        ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
+        : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
+      const cost = isUSD
+        ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
+        : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
+
+      if ((!price || price <= 0) && amount > 0 && cost > 0) {
+        price = cost / amount;
+      }
+      if (price > 0) {
+        if (!dayPricesMap.has(day)) {
+          dayPricesMap.set(day, { totalCost: 0, totalAmount: 0, lastPrice: price });
+        }
+        const entry = dayPricesMap.get(day)!;
+        entry.totalCost += cost;
+        entry.totalAmount += amount;
+        entry.lastPrice = price;
+      }
+    }
+
+    const anchors: PriceAnchor[] = [];
+    const sortedDays = Array.from(dayPricesMap.keys()).sort();
+    for (const d of sortedDays) {
+      const entry = dayPricesMap.get(d)!;
+      const avgPrice = entry.totalAmount > 0 && entry.totalCost > 0
+        ? entry.totalCost / entry.totalAmount
+        : entry.lastPrice;
+      const dTs = new Date(d + 'T12:00:00').getTime();
+      anchors.push({ timestamp: dTs, price: avgPrice });
+    }
+
+    // Add today's live price as authoritative end anchor
+    const effectiveLive = live > 0 ? live : (anchors.length > 0 ? anchors[anchors.length - 1].price : 0);
+    if (effectiveLive > 0) {
+      anchors.push({ timestamp: todayMidTs, price: effectiveLive });
+    }
+
+    // Sort and deduplicate anchors by timestamp
+    anchors.sort((a, b) => a.timestamp - b.timestamp);
+    const deduped: PriceAnchor[] = [];
+    for (const a of anchors) {
+      if (deduped.length > 0 && deduped[deduped.length - 1].timestamp === a.timestamp) {
+        deduped[deduped.length - 1] = a; // take the latest for the same timestamp
+      } else {
+        deduped.push(a);
+      }
+    }
+
+    coinAnchorsMap[sym] = deduped;
+  }
+
+  function getInterpolatedCoinPrice(sym: string, targetTs: number, fallbackPrice: number): number {
+    const anchors = coinAnchorsMap[sym];
+    if (!anchors || anchors.length === 0) return fallbackPrice;
+    if (anchors.length === 1) return anchors[0].price;
+
+    if (targetTs <= anchors[0].timestamp) {
+      return anchors[0].price;
+    }
+    if (targetTs >= anchors[anchors.length - 1].timestamp) {
+      return anchors[anchors.length - 1].price;
+    }
+
+    for (let i = 0; i < anchors.length - 1; i++) {
+      const a1 = anchors[i];
+      const a2 = anchors[i + 1];
+      if (targetTs >= a1.timestamp && targetTs <= a2.timestamp) {
+        const span = a2.timestamp - a1.timestamp;
+        if (span <= 0) return a2.price;
+        const fraction = (targetTs - a1.timestamp) / span;
+        return a1.price + (a2.price - a1.price) * fraction;
+      }
+    }
+
+    return fallbackPrice;
+  }
+
   const rawPoints: CoinChartPoint[] = [];
 
   for (let i = 0; i < sampledDays.length; i++) {
     const day = sampledDays[i];
     const isLast = i === sampledDays.length - 1;
     const tradesOnDay = txByDay.get(day) || [];
+    const dayTs = new Date(day + 'T12:00:00').getTime();
 
-    // Process trades on this day
+    // Process trades on this day to maintain balance & invested capital
     for (const trade of tradesOnDay) {
       const sym = trade.symbol;
       if (NON_CRYPTO_SYMBOLS.has(sym)) continue;
@@ -274,7 +377,6 @@ export function generateCoinChartSeries(
       }
     }
 
-    const progress = sampledDays.length > 1 ? i / (sampledDays.length - 1) : 1;
     let holdingVal = 0;
     let dayPrice = 0;
     let balance = 0;
@@ -284,10 +386,8 @@ export function generateCoinChartSeries(
       for (const [coin, amount] of Object.entries(holdings)) {
         if (amount <= 0.00000001) continue;
         const live = isUSD ? getCoinPriceUSD(coin, customPrices) : getCoinPriceEUR(coin, customPrices);
-        const hist = knownPrices[coin] || live;
-        // Interpolate smoothly towards live price
-        const interp = isLast ? live : hist + (live - hist) * progress;
-        const coinPrice = interp > 0 ? interp : (live || hist);
+        const fallback = knownPrices[coin] || live;
+        const coinPrice = isLast && live > 0 ? live : getInterpolatedCoinPrice(coin, dayTs, fallback);
         holdingVal += amount * coinPrice;
         balance += amount;
       }
@@ -296,14 +396,12 @@ export function generateCoinChartSeries(
       // Single coin mode:
       balance = holdings[targetSymbol] || 0;
       const live = isUSD ? getCoinPriceUSD(targetSymbol, customPrices) : getCoinPriceEUR(targetSymbol, customPrices);
-      const hist = knownPrices[targetSymbol] || live;
+      const fallback = knownPrices[targetSymbol] || live;
 
       if (isLast && live > 0) {
         dayPrice = live;
-      } else if (tradesOnDay.length > 0 && tradesOnDay[tradesOnDay.length - 1].price > 0) {
-        dayPrice = tradesOnDay[tradesOnDay.length - 1].price;
       } else {
-        dayPrice = hist + (live - hist) * progress;
+        dayPrice = getInterpolatedCoinPrice(targetSymbol, dayTs, fallback);
       }
 
       holdingVal = balance * dayPrice;

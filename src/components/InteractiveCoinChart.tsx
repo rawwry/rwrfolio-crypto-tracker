@@ -513,7 +513,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <AreaChart data={points} margin={{ top: 10, right: 15, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={chartThemeColor} stopOpacity={0.35} />
@@ -538,6 +538,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               <YAxis 
                 stroke={isLight ? '#94a3b8' : '#64748b'} 
                 fontSize={11}
+                width={65}
                 tickLine={false}
                 axisLine={false}
                 domain={['auto', 'auto']}

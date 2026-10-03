@@ -127,20 +127,20 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block shadow-sm" />
                 <span>Kraken Pro: {krakenShare.toFixed(1)} % ({formatCurr(krakenInvested)})</span>
               </span>
-              <span className="text-sky-300 flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm" />
+              <span className="text-cyan-300 flex items-center gap-1.5">
+                <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 inline-block shadow-sm shadow-cyan-400/50" />
                 <span>Crypto.com: {cryptoShare.toFixed(1)} % ({formatCurr(cryptoInvested)})</span>
               </span>
             </div>
             <div className="w-full h-3 rounded-full overflow-hidden flex bg-slate-800/80 p-0.5">
               <div 
                 style={{ width: `${krakenShare}%` }} 
-                className="bg-purple-500 h-full rounded-l-full transition-all duration-500" 
+                className="bg-purple-600 h-full rounded-l-full transition-all duration-500" 
                 title={`Kraken Pro: ${krakenShare.toFixed(1)} %`} 
               />
               <div 
                 style={{ width: `${cryptoShare}%` }} 
-                className="bg-sky-400 h-full rounded-r-full transition-all duration-500" 
+                className="bg-cyan-400 h-full rounded-r-full transition-all duration-500" 
                 title={`Crypto.com: ${cryptoShare.toFixed(1)} %`} 
               />
             </div>
@@ -149,13 +149,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
         {/* Side-by-Side Comparison Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Kraken Pro Card */}
+          {/* Kraken Pro Card (Royal Purple) */}
           <div className={`p-5 rounded-xl border flex flex-col justify-between space-y-4 ${
             isLight ? 'bg-purple-50/40 border-purple-200/60' : 'bg-purple-950/20 border-purple-800/40'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-xs shadow-md shadow-purple-600/20">
                   KP
                 </div>
                 <div>
@@ -208,13 +208,13 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             )}
           </div>
 
-          {/* Crypto.com Card (High Contrast: Sky/Cyan & White instead of dark murky blue) */}
+          {/* Crypto.com Card (High Contrast: Electric Cyan & Black) */}
           <div className={`p-5 rounded-xl border flex flex-col justify-between space-y-4 ${
-            isLight ? 'bg-sky-50/40 border-sky-200/60' : 'bg-sky-950/20 border-sky-800/40'
+            isLight ? 'bg-cyan-50/40 border-cyan-200/60' : 'bg-cyan-950/25 border-cyan-800/50'
           }`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2.5">
-                <div className="w-9 h-9 rounded-xl bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-xs shadow-md">
+                <div className="w-9 h-9 rounded-xl bg-cyan-400 text-slate-950 flex items-center justify-center font-black text-xs shadow-md shadow-cyan-400/20">
                   CDC
                 </div>
                 <div>
@@ -255,7 +255,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 </div>
                 <div className={`p-2.5 rounded-lg border ${isLight ? 'bg-white border-slate-200' : 'bg-slate-900/80 border-slate-800'}`}>
                   <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Top Asset</span>
-                  <span className={`text-sm font-bold truncate block ${isLight ? 'text-sky-700' : 'text-sky-200'}`}>
+                  <span className={`text-sm font-bold truncate block ${isLight ? 'text-cyan-700' : 'text-cyan-300'}`}>
                     {cryptoComSummary.totals.topAssetSymbol || '-'}
                   </span>
                 </div>

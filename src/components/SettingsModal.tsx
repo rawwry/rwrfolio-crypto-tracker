@@ -28,10 +28,60 @@ import {
   Image as ImageIcon,
   Smartphone
 } from 'lucide-react';
-import { AppSettings, ThemeMode, PortfolioCurrency } from '../types';
+import { AppSettings, ThemeMode, PortfolioCurrency, ColorThemePreset } from '../types';
 import { sendTestEmailApi } from '../utils/apiClient';
 import { hashPassword } from '../utils/auth';
 import { AppLogo } from './AppLogo';
+
+export const COLOR_THEME_OPTIONS: {
+  id: ColorThemePreset;
+  name: string;
+  description: string;
+  previewBg: string;
+  previewCard: string;
+  previewAccent: string;
+}[] = [
+  {
+    id: 'midnight',
+    name: 'Midnight Slate (Standard)',
+    description: 'Klassisches Deep Slate & Indigo – augenfreundlich & elegant',
+    previewBg: '#020617',
+    previewCard: '#0f172a',
+    previewAccent: '#6366f1',
+  },
+  {
+    id: 'oled',
+    name: 'OLED Pure Black',
+    description: 'Echtes Tiefschwarz (#000000) für OLED-Displays & maximalen Kontrast',
+    previewBg: '#000000',
+    previewCard: '#0a0a0a',
+    previewAccent: '#818cf8',
+  },
+  {
+    id: 'cyber',
+    name: 'Cyber Emerald',
+    description: 'Matrix/DeFi Green auf dunklem Obsidian-Hintergrund',
+    previewBg: '#030a06',
+    previewCard: '#061a10',
+    previewAccent: '#10b981',
+  },
+  {
+    id: 'nordic',
+    name: 'Nordic Cyan',
+    description: 'Arktisches Dunkelblau mit leuchtendem Electric Cyan & Türkis',
+    previewBg: '#030a14',
+    previewCard: '#08172c',
+    previewAccent: '#06b6d4',
+  },
+  {
+    id: 'amber',
+    name: 'Amber Gold',
+    description: 'Luxuriöses dunkles Titan mit warmen Gold- & Amber-Akzenten',
+    previewBg: '#0c0803',
+    previewCard: '#1c1306',
+    previewAccent: '#f59e0b',
+  },
+];
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -66,6 +116,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [showPassword, setShowPassword] = useState(false);
   
   const [theme, setTheme] = useState<ThemeMode>(settings.theme || 'dark');
+  const [colorTheme, setColorTheme] = useState<ColorThemePreset>(settings.colorTheme || 'midnight');
   const [currency, setCurrency] = useState<PortfolioCurrency>(settings.currency || 'EUR');
   const [privacyMode, setPrivacyMode] = useState(settings.privacyMode || false);
 
@@ -112,6 +163,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
     const updatedSettings: AppSettings = {
       theme,
+      colorTheme,
       currency,
       privacyMode,
       customLogoUrl: customLogoUrl.trim() || undefined,
@@ -572,6 +624,58 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                       <div className="h-2 w-20 bg-slate-300 rounded" />
                     </div>
                     <p className="text-[11px] text-slate-500 mt-2">Klares, kontrastreiches helles Farbschema</p>
+                  </div>
+                </div>
+
+                {/* Color Themes Section */}
+                <div className={`space-y-3 pt-4 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800/80'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Farbschema &amp; Akzent-Themen (Color Themes)</span>
+                      </div>
+                      <p className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Passe den optischen Grundcharakter, Kontraste und Akzenttöne an deinen Geschmack an.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {COLOR_THEME_OPTIONS.map((opt) => {
+                      const isSelected = colorTheme === opt.id;
+                      return (
+                        <div
+                          key={opt.id}
+                          onClick={() => setColorTheme(opt.id)}
+                          className={`p-3 rounded-xl border-2 transition-all cursor-pointer flex flex-col justify-between select-none ${
+                            isSelected
+                              ? 'border-indigo-500 bg-indigo-950/20 shadow-md ring-1 ring-indigo-500'
+                              : theme === 'light'
+                                ? 'border-slate-200 bg-white hover:border-slate-300'
+                                : 'border-slate-800 bg-slate-900/60 hover:border-slate-700'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`font-bold text-xs ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>
+                              {opt.name}
+                            </span>
+                            {isSelected && <Check className="w-3.5 h-3.5 text-indigo-400 font-bold" />}
+                          </div>
+
+                          {/* Color Preview Swatch Bar */}
+                          <div className="h-6 rounded-lg overflow-hidden flex items-center border border-white/10 mb-2">
+                            <div className="h-full flex-1" style={{ backgroundColor: opt.previewBg }} title="Hintergrund" />
+                            <div className="h-full flex-1" style={{ backgroundColor: opt.previewCard }} title="Karten & Panels" />
+                            <div className="h-full w-5 flex-shrink-0" style={{ backgroundColor: opt.previewAccent }} title="Akzentfarbe" />
+                          </div>
+
+                          <p className={`text-[10px] leading-tight ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {opt.description}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
