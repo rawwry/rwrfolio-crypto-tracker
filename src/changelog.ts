@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.20';
+export const APP_VERSION = '0.5.21';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.21',
+    date: '03.10.2026',
+    title: 'Echte historische Marktkurse für Coin-Charts & Bereinigung doppelter Coin-Icons',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Echte historische Börsen-Marktkurse für Coin-Charts: Direkte Integration von historischen Marktdaten von Binance & Kraken für BTC, ETH, SOL, DOT, HBAR, AKT, POL und alle weiteren Assets. Anstelle einfacher Verbindungslinien wird der echte historische Kursverlauf des Coins dargestellt, auf dem die eigenen Käufe (grüne Punkte) und Verkäufe (rote Punkte) mit exakten Einstiegskursen interaktiv eingeblendet werden.',
+      },
+      {
+        type: 'ui',
+        text: 'Doppelte Coin-Kürzel-Boxen entfernt: Die redundanten quadratischen Boxen mit Wiederholungen („DOT“ neben „DOT“ oder abgeschnittenes „HBA“ vor „HBAR“) in der Coin-Performance-Matrix wurden komplett durch dezente vertikale Brand-Farbakzente ersetzt.',
+      },
+      {
+        type: 'ui',
+        text: 'Fokus auf Einzel-Coins in der Analyse: Die Analyseseite startet nun direkt mit dem Chart des führenden Coins (z. B. BTC) und seinen konkreten Trades. Die Coin-Schnellauswahl sortiert Assets nach Allokation und hält das Gesamt-Portfolio als separate Option bereit.',
+      },
+    ],
+  },
   {
     version: '0.5.20',
     date: '03.10.2026',
     title: 'Präzisions-Fix für Micro-Cent Altcoins & Verlust-Anzeige im Coin-Chart',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

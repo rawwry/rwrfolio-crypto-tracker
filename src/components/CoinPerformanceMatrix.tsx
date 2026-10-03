@@ -183,9 +183,10 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   {/* Asset Identity */}
                   <td className="py-3 px-3">
                     <div className="flex items-center space-x-2.5">
-                      <div className="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                        {asset.symbol.substring(0, 3)}
-                      </div>
+                      <div 
+                        className="w-1.5 h-8 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: details.color || '#6366f1' }}
+                      />
                       <div>
                         <div className="font-bold text-sm font-sans text-white flex items-center gap-1.5">
                           <span>{asset.symbol}</span>
@@ -280,15 +281,16 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 text-white flex items-center justify-center font-bold text-xs">
-                    {asset.symbol.substring(0, 3)}
-                  </div>
+                <div className="flex items-center space-x-2.5">
+                  <div 
+                    className="w-1.5 h-8 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: details.color || '#6366f1' }}
+                  />
                   <div>
                     <div className="font-bold text-sm text-white flex items-center gap-1.5">
                       <span>{asset.symbol}</span>
                       {isSelected && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans">
+                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans font-medium">
                           Chart aktiv
                         </span>
                       )}

@@ -31,8 +31,24 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   const isLight = theme === 'light';
   const isUSD = currency === 'USD';
 
-  // Active chart coin state, allowing interaction from performance matrix
-  const [selectedChartCoin, setSelectedChartCoin] = useState<string>('ALL');
+  // Default to BTC or the top holding asset by allocation instead of flat Gesamt-Portfolio
+  const defaultChartCoin = useMemo(() => {
+    if (assets.some(a => a.symbol.toUpperCase() === 'BTC')) return 'BTC';
+    if (assets.length > 0) {
+      const topAsset = [...assets].sort((a, b) => b.allocationPercentage - a.allocationPercentage)[0];
+      return topAsset ? topAsset.symbol : assets[0].symbol;
+    }
+    return 'ALL';
+  }, [assets]);
+
+  const [selectedChartCoin, setSelectedChartCoin] = useState<string>(() => defaultChartCoin);
+
+  // Sync when assets finish loading if still unselected
+  React.useEffect(() => {
+    if (selectedChartCoin === 'ALL' && assets.length > 0 && defaultChartCoin !== 'ALL') {
+      setSelectedChartCoin(defaultChartCoin);
+    }
+  }, [defaultChartCoin]);
 
   const formatCurr = (val: number, decimals: number = 2) => {
     return new Intl.NumberFormat(isUSD ? 'en-US' : 'de-DE', {

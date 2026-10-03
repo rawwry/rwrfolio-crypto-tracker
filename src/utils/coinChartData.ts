@@ -122,7 +122,8 @@ export function generateCoinChartSeries(
   transactions: Transaction[],
   customPrices: Record<string, number> = {},
   currency: PortfolioCurrency = 'EUR',
-  timeframe: ChartTimeframe = 'all'
+  timeframe: ChartTimeframe = 'all',
+  historicalPrices?: Map<string, number>
 ): { points: CoinChartPoint[]; availableCoins: string[] } {
   const isUSD = currency === 'USD';
   const eurUsdRate = getLiveEurUsdRate();
@@ -212,10 +213,13 @@ export function generateCoinChartSeries(
       break;
   }
 
-  // 4. Map transactions by calendar date (YYYY-MM-DD)
+  // 4. Map transactions by calendar date (YYYY-MM-DD) and hourly slot (YYYY-MM-DDTHH)
   const txByDay = new Map<string, ChartTradeItem[]>();
+  const txBySlot = new Map<string, ChartTradeItem[]>();
+
   for (const tx of relevantTxs) {
     const day = (tx.timestamp || '').substring(0, 10);
+    const slot = (tx.timestamp || '').substring(0, 13);
     if (!day) continue;
 
     const txDate = new Date(tx.timestamp);
@@ -240,6 +244,10 @@ export function generateCoinChartSeries(
           };
           if (!txByDay.has(day)) txByDay.set(day, []);
           txByDay.get(day)!.push(item);
+          if (slot) {
+            if (!txBySlot.has(slot)) txBySlot.set(slot, []);
+            txBySlot.get(slot)!.push(item);
+          }
         }
       }
     } else {
@@ -258,28 +266,41 @@ export function generateCoinChartSeries(
         };
         if (!txByDay.has(day)) txByDay.set(day, []);
         txByDay.get(day)!.push(item);
+        if (slot) {
+          if (!txBySlot.has(slot)) txBySlot.set(slot, []);
+          txBySlot.get(slot)!.push(item);
+        }
       }
     }
   }
 
-  // 5. Determine calendar days list
+  // 5. Determine calendar days / hourly intervals list
+  const is24h = timeframe === '24h';
   const dayList: string[] = [];
-  const cur = new Date(startDate);
-  cur.setHours(0, 0, 0, 0);
-  const end = new Date(now);
-  end.setHours(0, 0, 0, 0);
 
-  if (cur.getTime() >= end.getTime()) {
-    dayList.push(end.toISOString().substring(0, 10));
+  if (is24h) {
+    for (let h = 23; h >= 0; h--) {
+      const d = new Date(now.getTime() - h * 3600 * 1000);
+      dayList.push(d.toISOString().substring(0, 13)); // 'YYYY-MM-DDTHH'
+    }
   } else {
-    while (cur.getTime() <= end.getTime()) {
-      dayList.push(cur.toISOString().substring(0, 10));
-      cur.setDate(cur.getDate() + 1);
+    const cur = new Date(startDate);
+    cur.setHours(0, 0, 0, 0);
+    const end = new Date(now);
+    end.setHours(0, 0, 0, 0);
+
+    if (cur.getTime() >= end.getTime()) {
+      dayList.push(end.toISOString().substring(0, 10));
+    } else {
+      while (cur.getTime() <= end.getTime()) {
+        dayList.push(cur.toISOString().substring(0, 10));
+        cur.setDate(cur.getDate() + 1);
+      }
     }
   }
 
   let sampledDays: string[] = dayList;
-  if (dayList.length > 180) {
+  if (!is24h && dayList.length > 180) {
     const step = Math.ceil(dayList.length / 120);
     sampledDays = dayList.filter((d, idx) => {
       if (txByDay.has(d) || idx === 0 || idx === dayList.length - 1) return true;
@@ -382,7 +403,7 @@ export function generateCoinChartSeries(
   const firstSampledDay = sampledDays[0];
   const priorTxs = transactions
     .filter(t => {
-      const day = (t.timestamp || '').substring(0, 10);
+      const day = (t.timestamp || '').substring(0, is24h ? 13 : 10);
       return day && day < firstSampledDay;
     })
     .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
@@ -443,8 +464,12 @@ export function generateCoinChartSeries(
   for (let i = 0; i < sampledDays.length; i++) {
     const day = sampledDays[i];
     const isLast = i === sampledDays.length - 1;
-    const tradesOnDay = txByDay.get(day) || [];
-    const dayTs = new Date(day + 'T12:00:00').getTime();
+    const tradesOnDay = is24h
+      ? (txBySlot.get(day) || [])
+      : (txByDay.get(day) || []);
+    const dayTs = is24h
+      ? new Date(day + ':00:00Z').getTime()
+      : new Date(day + 'T12:00:00').getTime();
 
     // Process trades on this day to maintain balance & invested capital
     for (const trade of tradesOnDay) {
@@ -515,8 +540,13 @@ export function generateCoinChartSeries(
       const live = isUSD ? getCoinPriceUSD(targetSymbol, customPrices) : getCoinPriceEUR(targetSymbol, customPrices);
       const fallback = knownPrices[targetSymbol] || live;
 
+      // Authentic historical market price lookup from Binance / Kraken
+      const histPrice = historicalPrices?.get(day) ?? (is24h ? historicalPrices?.get(day.substring(0, 13)) : historicalPrices?.get(day.substring(0, 10)));
+
       if (isLast && live > 0) {
         dayPrice = live;
+      } else if (histPrice && histPrice > 0) {
+        dayPrice = isUSD ? histPrice * eurUsdRate : histPrice;
       } else {
         dayPrice = getInterpolatedCoinPrice(targetSymbol, dayTs, fallback);
       }
@@ -531,22 +561,39 @@ export function generateCoinChartSeries(
     const pnl = holdingVal - cumulativeInvested;
     const pnlPercentage = cumulativeInvested > 0 ? (pnl / cumulativeInvested) * 100 : 0;
 
-    const d = new Date(day);
-    const formattedDate = isNaN(d.getTime())
-      ? day
-      : d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: '2-digit' });
-    const shortLabel = isNaN(d.getTime())
-      ? day
-      : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    let formattedDate = day;
+    let shortLabel = day;
+
+    if (is24h) {
+      const d = new Date(day + ':00:00Z');
+      shortLabel = isNaN(d.getTime())
+        ? day.substring(11) + ':00'
+        : d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+      formattedDate = isNaN(d.getTime())
+        ? day
+        : d.toLocaleString('de-DE', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+    } else {
+      const d = new Date(day);
+      formattedDate = isNaN(d.getTime())
+        ? day
+        : d.toLocaleDateString('de-DE', { day: '2-digit', month: 'short', year: '2-digit' });
+      shortLabel = isNaN(d.getTime())
+        ? day
+        : d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' });
+    }
 
     const hasBuy = tradesOnDay.some(t => t.type === 'BUY');
     const hasSell = tradesOnDay.some(t => t.type === 'SELL');
+
+    const pointTs = is24h
+      ? new Date(day + ':00:00Z').getTime()
+      : new Date(day).getTime();
 
     rawPoints.push({
       date: day,
       formattedDate: isLast ? 'Heute (Live)' : formattedDate,
       shortLabel,
-      timestamp: isNaN(d.getTime()) ? now.getTime() : d.getTime(),
+      timestamp: isNaN(pointTs) ? now.getTime() : pointTs,
       price: isPortfolio ? Math.round(dayPrice * 100) / 100 : Number(dayPrice.toFixed(8)),
       holdingBalance: Number(balance.toFixed(8)),
       holdingValue: holdingVal > 0 && holdingVal < 0.01 ? Number(holdingVal.toFixed(6)) : Math.round(holdingVal * 100) / 100,

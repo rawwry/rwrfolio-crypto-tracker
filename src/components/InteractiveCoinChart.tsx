@@ -21,11 +21,13 @@ import {
   Sparkles,
   ShoppingBag,
   ArrowRightLeft,
-  Coins
+  Coins,
+  Loader2
 } from 'lucide-react';
 import { Transaction, PortfolioCurrency, AssetSummary } from '../types';
 import { generateCoinChartSeries, ChartTimeframe, CoinChartPoint, ChartTradeItem } from '../utils/coinChartData';
-import { getCoinDetails } from '../utils/priceService';
+import { getCoinDetails, getLiveEurUsdRate } from '../utils/priceService';
+import { fetchHistoricalMarketPrices } from '../utils/historicalPriceService';
 
 interface InteractiveCoinChartProps {
   assets: AssetSummary[];
@@ -53,6 +55,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const [selectedCoin, setSelectedCoin] = useState<string>(selectedCoinInitial);
   const [timeframe, setTimeframe] = useState<ChartTimeframe>('all');
   const [metricMode, setMetricMode] = useState<'price' | 'value' | 'pnl'>('price');
+  const [historicalPrices, setHistoricalPrices] = useState<Map<string, number>>(new Map());
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
   // Sync when parent changes selectedCoinInitial
   React.useEffect(() => {
@@ -66,17 +70,47 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     if (onSelectCoin) onSelectCoin(coin);
   };
 
+  const isPortfolio = selectedCoin === 'ALL';
+
+  // Fetch real historical market candles for the active coin from Binance & Kraken
+  React.useEffect(() => {
+    if (isPortfolio) {
+      setHistoricalPrices(new Map());
+      return;
+    }
+
+    let isMounted = true;
+    setIsLoadingHistory(true);
+
+    fetchHistoricalMarketPrices(selectedCoin, timeframe, getLiveEurUsdRate())
+      .then(prices => {
+        if (isMounted) {
+          setHistoricalPrices(prices);
+          setIsLoadingHistory(false);
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setIsLoadingHistory(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedCoin, timeframe, isPortfolio]);
+
   const { points, availableCoins } = useMemo(() => {
     return generateCoinChartSeries(
       selectedCoin,
       transactions,
       customPrices,
       currency as PortfolioCurrency,
-      timeframe
+      timeframe,
+      historicalPrices
     );
-  }, [selectedCoin, transactions, customPrices, currency, timeframe]);
+  }, [selectedCoin, transactions, customPrices, currency, timeframe, historicalPrices]);
 
-  const isPortfolio = selectedCoin === 'ALL';
   const coinDetail = isPortfolio ? null : getCoinDetails(selectedCoin);
   const assetItem = isPortfolio ? null : assets.find(a => a.symbol.toUpperCase() === selectedCoin.toUpperCase());
 
@@ -338,12 +372,17 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         {/* Left: Active Asset Identity */}
         <div>
           <div className="flex items-center space-x-2.5">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-md border ${
-              isPortfolio 
-                ? 'bg-indigo-600 border-indigo-500 text-white' 
-                : 'bg-slate-800 border-slate-700 text-white'
-            }`}>
-              {isPortfolio ? <Layers className="w-5 h-5" /> : selectedCoin.substring(0, 3)}
+            <div 
+              className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm shadow-md border flex-shrink-0 ${
+                isPortfolio 
+                  ? 'bg-indigo-600 border-indigo-500 text-white' 
+                  : (isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-800/80 border-slate-700')
+              }`}
+              style={{
+                color: isPortfolio ? '#ffffff' : (coinDetail?.color || '#818cf8'),
+              }}
+            >
+              {isPortfolio ? <Layers className="w-5 h-5 text-white" /> : <TrendingUp className="w-5 h-5" />}
             </div>
 
             <div>
@@ -377,8 +416,24 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   );
                 })()}
               </div>
-              <p className={`text-xs mt-0.5 flex items-center gap-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                <span>Interaktiver Kurs- &amp; Trade-Verlauf</span>
+              <p className={`text-xs mt-0.5 flex flex-wrap items-center gap-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span>{isPortfolio ? 'Portfolio-Verlauf' : 'Echter Kursverlauf & Trades'}</span>
+                {!isPortfolio && (
+                  <>
+                    <span>&bull;</span>
+                    {isLoadingHistory ? (
+                      <span className="flex items-center gap-1 text-[11px] text-indigo-400">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <span>Lade Marktkurs...</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block animate-pulse" />
+                        <span>Marktkurs</span>
+                      </span>
+                    )}
+                  </>
+                )}
                 <span>&bull;</span>
                 <span className="flex items-center gap-1">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
@@ -475,6 +530,48 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
       {/* 2. Coin Selector Pills Carousel / Wrap */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
+        {availableCoins
+          .slice()
+          .sort((a, b) => {
+            const allocA = assets.find(x => x.symbol.toUpperCase() === a)?.allocationPercentage || 0;
+            const allocB = assets.find(x => x.symbol.toUpperCase() === b)?.allocationPercentage || 0;
+            return allocB - allocA;
+          })
+          .map((sym) => {
+            const isSelected = selectedCoin === sym;
+            const a = assets.find(x => x.symbol.toUpperCase() === sym);
+            const details = getCoinDetails(sym);
+            return (
+              <button
+                key={sym}
+                type="button"
+                onClick={() => handleCoinChange(sym)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border flex items-center space-x-1.5 cursor-pointer ${
+                  isSelected
+                    ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/20'
+                    : isLight
+                      ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
+                      : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
+                }`}
+              >
+                <span 
+                  className="w-2 h-2 rounded-full inline-block flex-shrink-0" 
+                  style={{ backgroundColor: details.color || '#818cf8' }} 
+                />
+                <span>{sym}</span>
+                {a && (
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
+                    isSelected ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-400'
+                  }`}>
+                    {a.allocationPercentage.toFixed(1)}%
+                  </span>
+                )}
+              </button>
+            );
+          })}
+
+        <div className="h-4 w-px bg-slate-700/50 mx-1 flex-shrink-0" />
+
         <button
           type="button"
           onClick={() => handleCoinChange('ALL')}
@@ -489,34 +586,6 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           <Layers className="w-3.5 h-3.5" />
           <span>Gesamt-Portfolio</span>
         </button>
-
-        {availableCoins.map((sym) => {
-          const isSelected = selectedCoin === sym;
-          const a = assets.find(x => x.symbol.toUpperCase() === sym);
-          return (
-            <button
-              key={sym}
-              type="button"
-              onClick={() => handleCoinChange(sym)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border flex items-center space-x-1.5 cursor-pointer ${
-                isSelected
-                  ? 'bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-600/20'
-                  : isLight
-                    ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-                    : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`}
-            >
-              <span>{sym}</span>
-              {a && (
-                <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                  isSelected ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-400'
-                }`}>
-                  {a.allocationPercentage.toFixed(1)}%
-                </span>
-              )}
-            </button>
-          );
-        })}
       </div>
 
       {/* 3. KPI Status Grid for Selected Item */}
