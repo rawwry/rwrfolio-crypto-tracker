@@ -33,6 +33,86 @@ export interface CoinChartPoint {
   isToday?: boolean;
 }
 
+interface TxCoinEffect {
+  type: 'BUY' | 'SELL';
+  amount: number;
+  fiatCostEUR: number;
+  fiatCostUSD: number;
+  priceEUR: number;
+  priceUSD: number;
+}
+
+/**
+ * Accurately extracts the effect of a transaction on a specific crypto coin.
+ * Returns null if the transaction did not involve targetCoin.
+ */
+function getTxEffectOnCoin(tx: Transaction, targetCoin: string, eurUsdRate: number): TxCoinEffect | null {
+  let rec = (tx.receivedCurrency || '').toUpperCase();
+  let spent = (tx.spentCurrency || '').toUpperCase();
+  if (rec === 'MATIC' || rec === 'POLYGON') rec = 'POL';
+  if (spent === 'MATIC' || spent === 'POLYGON') spent = 'POL';
+
+  const isBuy = rec === targetCoin;
+  const isSell = spent === targetCoin;
+
+  if (!isBuy && !isSell) return null;
+
+  const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
+  if (amount <= 0) return null;
+
+  // Calculate fiat value in EUR
+  let fiatCostEUR = 0;
+  if (tx.spentCurrency?.toUpperCase() === 'EUR') {
+    fiatCostEUR = tx.spentAmount || 0;
+  } else if (tx.receivedCurrency?.toUpperCase() === 'EUR') {
+    fiatCostEUR = tx.receivedAmount || 0;
+  } else if (tx.nativeCurrency?.toUpperCase() === 'EUR' && tx.nativeAmount && tx.nativeAmount > 0) {
+    fiatCostEUR = tx.nativeAmount;
+  } else if (tx.pricePerUnitEUR && tx.pricePerUnitEUR > 0 && amount > 0) {
+    fiatCostEUR = tx.pricePerUnitEUR * amount;
+  } else if (tx.nativeAmountUSD && tx.nativeAmountUSD > 0) {
+    fiatCostEUR = tx.nativeAmountUSD / eurUsdRate;
+  } else if (tx.spentCurrency?.toUpperCase() === 'USD') {
+    fiatCostEUR = (tx.spentAmount || 0) / eurUsdRate;
+  } else if (tx.receivedCurrency?.toUpperCase() === 'USD') {
+    fiatCostEUR = (tx.receivedAmount || 0) / eurUsdRate;
+  } else {
+    fiatCostEUR = isBuy ? (tx.spentAmount || 0) : (tx.receivedAmount || 0);
+  }
+
+  // Calculate fiat value in USD
+  let fiatCostUSD = fiatCostEUR * eurUsdRate;
+  if (tx.spentCurrency?.toUpperCase() === 'USD') {
+    fiatCostUSD = tx.spentAmount || 0;
+  } else if (tx.receivedCurrency?.toUpperCase() === 'USD') {
+    fiatCostUSD = tx.receivedAmount || 0;
+  } else if (tx.nativeAmountUSD && tx.nativeAmountUSD > 0) {
+    fiatCostUSD = tx.nativeAmountUSD;
+  }
+
+  let priceEUR = tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0);
+  let priceUSD = tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0);
+
+  if ((!priceEUR || priceEUR <= 0) && amount > 0 && fiatCostEUR > 0) {
+    priceEUR = fiatCostEUR / amount;
+    priceUSD = fiatCostUSD / amount;
+  }
+
+  return {
+    type: isBuy ? 'BUY' : 'SELL',
+    amount,
+    fiatCostEUR,
+    fiatCostUSD,
+    priceEUR,
+    priceUSD,
+  };
+}
+
+interface PriceAnchor {
+  timestamp: number;
+  price: number;
+}
+
 /**
  * Generate rich, high-resolution chart series for a specific coin or total portfolio,
  * with exact Buy and Sell transaction markers positioned at the historical point in time.
@@ -52,22 +132,27 @@ export function generateCoinChartSeries(
   // 1. Gather all available coins from transactions
   const coinsSet = new Set<string>();
   for (const tx of transactions) {
-    if (tx.receivedCurrency && !NON_CRYPTO_SYMBOLS.has(tx.receivedCurrency.toUpperCase())) {
-      coinsSet.add(tx.receivedCurrency.toUpperCase());
-    }
-    if (tx.spentCurrency && !NON_CRYPTO_SYMBOLS.has(tx.spentCurrency.toUpperCase())) {
-      coinsSet.add(tx.spentCurrency.toUpperCase());
-    }
+    let rec = (tx.receivedCurrency || '').toUpperCase();
+    let spent = (tx.spentCurrency || '').toUpperCase();
+    if (rec === 'MATIC' || rec === 'POLYGON') rec = 'POL';
+    if (spent === 'MATIC' || spent === 'POLYGON') spent = 'POL';
+
+    if (rec && !NON_CRYPTO_SYMBOLS.has(rec)) coinsSet.add(rec);
+    if (spent && !NON_CRYPTO_SYMBOLS.has(spent)) coinsSet.add(spent);
   }
   const availableCoins = Array.from(coinsSet).sort();
 
   // 2. Filter relevant transactions
-  const relevantTxs = transactions.filter(tx => {
-    if (isPortfolio) return true;
-    const rec = (tx.receivedCurrency || '').toUpperCase();
-    const spent = (tx.spentCurrency || '').toUpperCase();
-    return rec === targetSymbol || spent === targetSymbol;
-  }).sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  const relevantTxs = transactions
+    .filter(tx => {
+      if (isPortfolio) return true;
+      let rec = (tx.receivedCurrency || '').toUpperCase();
+      let spent = (tx.spentCurrency || '').toUpperCase();
+      if (rec === 'MATIC' || rec === 'POLYGON') rec = 'POL';
+      if (spent === 'MATIC' || spent === 'POLYGON') spent = 'POL';
+      return rec === targetSymbol || spent === targetSymbol;
+    })
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
 
   if (relevantTxs.length === 0 && !isPortfolio) {
     // No transactions for this coin yet: produce a baseline flat point with current price
@@ -133,64 +218,57 @@ export function generateCoinChartSeries(
     const day = (tx.timestamp || '').substring(0, 10);
     if (!day) continue;
 
-    const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === targetSymbol;
-    const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === targetSymbol;
-    if (!isBuy && !isSell) continue;
-
-    const sym = isBuy ? (tx.receivedCurrency || '').toUpperCase() : (tx.spentCurrency || '').toUpperCase();
-    const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
-
-    let price = isUSD
-      ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
-      : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
-
-    let cost = isUSD
-      ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
-      : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
-
-    if ((!price || price <= 0) && amount > 0 && cost > 0) {
-      price = cost / amount;
-    }
-
     const txDate = new Date(tx.timestamp);
     const timeStr = isNaN(txDate.getTime())
       ? ''
       : txDate.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
 
-    const item: ChartTradeItem = {
-      id: tx.id,
-      type: isBuy ? 'BUY' : 'SELL',
-      amount,
-      symbol: sym,
-      price: Math.round(price * 10000) / 10000,
-      totalCost: Math.round(cost * 100) / 100,
-      source: tx.source,
-      timestamp: tx.timestamp,
-      timeStr,
-    };
-
-    if (!txByDay.has(day)) txByDay.set(day, []);
-    txByDay.get(day)!.push(item);
+    if (isPortfolio) {
+      for (const coin of availableCoins) {
+        const effect = getTxEffectOnCoin(tx, coin, eurUsdRate);
+        if (effect && effect.amount > 0) {
+          const item: ChartTradeItem = {
+            id: `${tx.id}_${coin}`,
+            type: effect.type,
+            amount: effect.amount,
+            symbol: coin,
+            price: Math.round((isUSD ? effect.priceUSD : effect.priceEUR) * 10000) / 10000,
+            totalCost: Math.round((isUSD ? effect.fiatCostUSD : effect.fiatCostEUR) * 100) / 100,
+            source: tx.source,
+            timestamp: tx.timestamp,
+            timeStr,
+          };
+          if (!txByDay.has(day)) txByDay.set(day, []);
+          txByDay.get(day)!.push(item);
+        }
+      }
+    } else {
+      const effect = getTxEffectOnCoin(tx, targetSymbol, eurUsdRate);
+      if (effect && effect.amount > 0) {
+        const item: ChartTradeItem = {
+          id: tx.id,
+          type: effect.type,
+          amount: effect.amount,
+          symbol: targetSymbol,
+          price: Math.round((isUSD ? effect.priceUSD : effect.priceEUR) * 10000) / 10000,
+          totalCost: Math.round((isUSD ? effect.fiatCostUSD : effect.fiatCostEUR) * 100) / 100,
+          source: tx.source,
+          timestamp: tx.timestamp,
+          timeStr,
+        };
+        if (!txByDay.has(day)) txByDay.set(day, []);
+        txByDay.get(day)!.push(item);
+      }
+    }
   }
 
-  // 5. Track cumulative balance and execution prices per coin
-  const holdings: Record<string, number> = {};
-  const knownPrices: Record<string, number> = {};
-  let cumulativeInvested = 0;
-
-  // Live prices today for single coin
-  const livePriceToday = isPortfolio
-    ? 0
-    : (isUSD ? getCoinPriceUSD(targetSymbol, customPrices) : getCoinPriceEUR(targetSymbol, customPrices));
-
-  // Determine all days between startDate and today
+  // 5. Determine calendar days list
   const dayList: string[] = [];
   const cur = new Date(startDate);
   cur.setHours(0, 0, 0, 0);
   const end = new Date(now);
   end.setHours(0, 0, 0, 0);
 
-  // If start is in future or today, at least include today
   if (cur.getTime() >= end.getTime()) {
     dayList.push(end.toISOString().substring(0, 10));
   } else {
@@ -200,98 +278,43 @@ export function generateCoinChartSeries(
     }
   }
 
-  // If there are too many days (e.g. > 180), step down sample rate while preserving trade days
   let sampledDays: string[] = dayList;
   if (dayList.length > 180) {
     const step = Math.ceil(dayList.length / 120);
     sampledDays = dayList.filter((d, idx) => {
-      // Always include days with trades and the very last day (today)
       if (txByDay.has(d) || idx === 0 || idx === dayList.length - 1) return true;
       return idx % step === 0;
     });
   }
 
-  // Prior balance before startDate
-  const firstSampledDay = sampledDays[0];
-  for (const tx of relevantTxs) {
-    const day = (tx.timestamp || '').substring(0, 10);
-    if (!day || day >= firstSampledDay) continue;
-
-    const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === targetSymbol;
-    const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === targetSymbol;
-    if (!isBuy && !isSell) continue;
-
-    const sym = isBuy ? (tx.receivedCurrency || '').toUpperCase() : (tx.spentCurrency || '').toUpperCase();
-    if (NON_CRYPTO_SYMBOLS.has(sym)) continue;
-    if (!isPortfolio && sym !== targetSymbol) continue;
-
-    const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
-
-    let price = isUSD
-      ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
-      : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
-
-    let cost = isUSD
-      ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
-      : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
-
-    if ((!price || price <= 0) && amount > 0 && cost > 0) {
-      price = cost / amount;
-    }
-
-    if (isBuy) {
-      holdings[sym] = (holdings[sym] || 0) + amount;
-      cumulativeInvested += cost;
-      if (price > 0) knownPrices[sym] = price;
-    } else if (isSell) {
-      holdings[sym] = Math.max(0, (holdings[sym] || 0) - amount);
-      cumulativeInvested = Math.max(0, cumulativeInvested - cost);
-      if (price > 0) knownPrices[sym] = price;
-    }
-  }
-
-  // 6. Build piecewise price anchors per coin (Trade 1 -> Trade 2 -> ... -> Today Live)
-  // This guarantees smooth, continuous curves without artificial sawtooth dips on trade dates.
-  interface PriceAnchor {
-    timestamp: number;
-    price: number;
-  }
-
+  // 6. Build piecewise price anchors per coin strictly from each coin's OWN transactions
+  // This eliminates cross-contamination between different coins.
   const coinAnchorsMap: Record<string, PriceAnchor[]> = {};
   const todayMidTs = new Date(now.toISOString().substring(0, 10) + 'T12:00:00').getTime();
-
   const allRelevantCoins = isPortfolio ? Array.from(coinsSet) : [targetSymbol];
+
   for (const sym of allRelevantCoins) {
     const live = isUSD ? getCoinPriceUSD(sym, customPrices) : getCoinPriceEUR(sym, customPrices);
     const dayPricesMap = new Map<string, { totalCost: number; totalAmount: number; lastPrice: number }>();
 
-    for (const tx of relevantTxs) {
-      const isBuy = tx.type === 'BUY' || (tx.receivedCurrency || '').toUpperCase() === sym;
-      const isSell = tx.type === 'SELL' || (tx.spentCurrency || '').toUpperCase() === sym;
-      if (!isBuy && !isSell) continue;
-
+    for (const tx of transactions) {
       const day = (tx.timestamp || '').substring(0, 10);
       if (!day) continue;
 
-      const amount = isBuy ? (tx.receivedAmount || 0) : (tx.spentAmount || 0);
-      let price = isUSD
-        ? (tx.pricePerUnitUSD || (tx.pricePerUnitEUR ? tx.pricePerUnitEUR * eurUsdRate : 0))
-        : (tx.pricePerUnitEUR || (tx.pricePerUnitUSD ? tx.pricePerUnitUSD / eurUsdRate : 0));
-      const cost = isUSD
-        ? (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.nativeAmountUSD || tx.spentAmount * eurUsdRate)
-        : (tx.spentCurrency === 'EUR' ? tx.spentAmount : tx.nativeAmount || tx.spentAmount);
+      const effect = getTxEffectOnCoin(tx, sym, eurUsdRate);
+      if (!effect || effect.amount <= 0) continue;
 
-      if ((!price || price <= 0) && amount > 0 && cost > 0) {
-        price = cost / amount;
-      }
-      if (price > 0) {
+      const effPrice = isUSD ? effect.priceUSD : effect.priceEUR;
+      const effCost = isUSD ? effect.fiatCostUSD : effect.fiatCostEUR;
+
+      if (effPrice > 0) {
         if (!dayPricesMap.has(day)) {
-          dayPricesMap.set(day, { totalCost: 0, totalAmount: 0, lastPrice: price });
+          dayPricesMap.set(day, { totalCost: 0, totalAmount: 0, lastPrice: effPrice });
         }
         const entry = dayPricesMap.get(day)!;
-        entry.totalCost += cost;
-        entry.totalAmount += amount;
-        entry.lastPrice = price;
+        entry.totalCost += effCost;
+        entry.totalAmount += effect.amount;
+        entry.lastPrice = effPrice;
       }
     }
 
@@ -312,12 +335,11 @@ export function generateCoinChartSeries(
       anchors.push({ timestamp: todayMidTs, price: effectiveLive });
     }
 
-    // Sort and deduplicate anchors by timestamp
     anchors.sort((a, b) => a.timestamp - b.timestamp);
     const deduped: PriceAnchor[] = [];
     for (const a of anchors) {
       if (deduped.length > 0 && deduped[deduped.length - 1].timestamp === a.timestamp) {
-        deduped[deduped.length - 1] = a; // take the latest for the same timestamp
+        deduped[deduped.length - 1] = a;
       } else {
         deduped.push(a);
       }
@@ -352,6 +374,70 @@ export function generateCoinChartSeries(
     return fallbackPrice;
   }
 
+  // 7. Calculate prior balances and invested capital before the first sampled day
+  const holdings: Record<string, number> = {};
+  const knownPrices: Record<string, number> = {};
+  let cumulativeInvested = 0;
+
+  const firstSampledDay = sampledDays[0];
+  const priorTxs = transactions
+    .filter(t => {
+      const day = (t.timestamp || '').substring(0, 10);
+      return day && day < firstSampledDay;
+    })
+    .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  for (const tx of priorTxs) {
+    if (isPortfolio) {
+      for (const coin of availableCoins) {
+        const effect = getTxEffectOnCoin(tx, coin, eurUsdRate);
+        if (effect) {
+          if (effect.type === 'BUY') {
+            holdings[coin] = (holdings[coin] || 0) + effect.amount;
+          } else {
+            holdings[coin] = Math.max(0, (holdings[coin] || 0) - effect.amount);
+          }
+          const p = isUSD ? effect.priceUSD : effect.priceEUR;
+          if (p > 0) knownPrices[coin] = p;
+        }
+      }
+
+      // Track fiat cash in/out for portfolio cumulative invested
+      let rec = (tx.receivedCurrency || '').toUpperCase();
+      let spent = (tx.spentCurrency || '').toUpperCase();
+      if (rec === 'MATIC' || rec === 'POLYGON') rec = 'POL';
+      if (spent === 'MATIC' || spent === 'POLYGON') spent = 'POL';
+
+      const isFiatSpent = NON_CRYPTO_SYMBOLS.has(spent);
+      const isFiatRec = NON_CRYPTO_SYMBOLS.has(rec);
+      if (isFiatSpent && !isFiatRec) {
+        const cost = isUSD
+          ? (spent === 'USD' ? (tx.spentAmount || 0) : (tx.nativeAmountUSD || (tx.spentAmount || 0) * eurUsdRate))
+          : (spent === 'EUR' ? (tx.spentAmount || 0) : (tx.nativeAmount || (tx.spentAmount || 0)));
+        cumulativeInvested += cost;
+      } else if (isFiatRec && !isFiatSpent) {
+        const proceeds = isUSD
+          ? (rec === 'USD' ? (tx.receivedAmount || 0) : (tx.nativeAmountUSD || (tx.receivedAmount || 0) * eurUsdRate))
+          : (rec === 'EUR' ? (tx.receivedAmount || 0) : (tx.nativeAmount || (tx.receivedAmount || 0)));
+        cumulativeInvested = Math.max(0, cumulativeInvested - proceeds);
+      }
+    } else {
+      const effect = getTxEffectOnCoin(tx, targetSymbol, eurUsdRate);
+      if (effect) {
+        if (effect.type === 'BUY') {
+          holdings[targetSymbol] = (holdings[targetSymbol] || 0) + effect.amount;
+          cumulativeInvested += (isUSD ? effect.fiatCostUSD : effect.fiatCostEUR);
+        } else {
+          holdings[targetSymbol] = Math.max(0, (holdings[targetSymbol] || 0) - effect.amount);
+          cumulativeInvested = Math.max(0, cumulativeInvested - (isUSD ? effect.fiatCostUSD : effect.fiatCostEUR));
+        }
+        const p = isUSD ? effect.priceUSD : effect.priceEUR;
+        if (p > 0) knownPrices[targetSymbol] = p;
+      }
+    }
+  }
+
+  // 8. Generate simulation points across sampled days
   const rawPoints: CoinChartPoint[] = [];
 
   for (let i = 0; i < sampledDays.length; i++) {
@@ -368,12 +454,43 @@ export function generateCoinChartSeries(
 
       if (trade.type === 'BUY') {
         holdings[sym] = (holdings[sym] || 0) + trade.amount;
-        cumulativeInvested += trade.totalCost;
         if (trade.price > 0) knownPrices[sym] = trade.price;
       } else {
         holdings[sym] = Math.max(0, (holdings[sym] || 0) - trade.amount);
-        cumulativeInvested = Math.max(0, cumulativeInvested - trade.totalCost);
         if (trade.price > 0) knownPrices[sym] = trade.price;
+      }
+
+      if (!isPortfolio) {
+        if (trade.type === 'BUY') {
+          cumulativeInvested += trade.totalCost;
+        } else {
+          cumulativeInvested = Math.max(0, cumulativeInvested - trade.totalCost);
+        }
+      }
+    }
+
+    if (isPortfolio) {
+      // Find all raw transactions on this day to accurately track fiat cash in/out
+      const rawTxsOnDay = transactions.filter(t => (t.timestamp || '').substring(0, 10) === day);
+      for (const tx of rawTxsOnDay) {
+        let rec = (tx.receivedCurrency || '').toUpperCase();
+        let spent = (tx.spentCurrency || '').toUpperCase();
+        if (rec === 'MATIC' || rec === 'POLYGON') rec = 'POL';
+        if (spent === 'MATIC' || spent === 'POLYGON') spent = 'POL';
+
+        const isFiatSpent = NON_CRYPTO_SYMBOLS.has(spent);
+        const isFiatRec = NON_CRYPTO_SYMBOLS.has(rec);
+        if (isFiatSpent && !isFiatRec) {
+          const cost = isUSD
+            ? (spent === 'USD' ? (tx.spentAmount || 0) : (tx.nativeAmountUSD || (tx.spentAmount || 0) * eurUsdRate))
+            : (spent === 'EUR' ? (tx.spentAmount || 0) : (tx.nativeAmount || (tx.spentAmount || 0)));
+          cumulativeInvested += cost;
+        } else if (isFiatRec && !isFiatSpent) {
+          const proceeds = isUSD
+            ? (rec === 'USD' ? (tx.receivedAmount || 0) : (tx.nativeAmountUSD || (tx.receivedAmount || 0) * eurUsdRate))
+            : (rec === 'EUR' ? (tx.receivedAmount || 0) : (tx.nativeAmount || (tx.receivedAmount || 0)));
+          cumulativeInvested = Math.max(0, cumulativeInvested - proceeds);
+        }
       }
     }
 

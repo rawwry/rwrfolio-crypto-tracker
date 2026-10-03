@@ -9,14 +9,25 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.18';
+export const APP_VERSION = '0.5.19';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.19',
+    date: '03.10.2026',
+    title: 'Hotfix: Gesamt-Portfolio Chartbewertung & Multi-Coin Isolation',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Berechnung des Gesamt-Portfoliowerts im Zeitverlauf (30T / 90T / 1J) korrigiert: Behebt einen kritischen Zuordnungsfehler, bei dem Kauf-Transaktionen (z. B. Bitcoin zu ~60.000 €) fälschlicherweise als Kurs-Anker auf alle anderen Coins im Portfolio (wie DOGE, CELR, HBAR) übertragen wurden. Dadurch explodierte der Portfoliowert im Chart rechnerisch auf über 600 Millionen Euro und fiel anschließend steil ab (-99.99%). Durch strikte coin-spezifische Isolierung werden Transaktionen jetzt ausschließlich dem tatsächlich gehandelten Asset zugewiesen. Die Portfolio-Entwicklung spiegelt nun exakt den realen Portfoliowert (~5.500 € – 6.600 €) und die korrekte Rendite wider.',
+      },
+    ],
+  },
   {
     version: '0.5.18',
     date: '03.10.2026',
     title: 'Stetige Chart-Interpolation, Matrix-Interaktion, Allokation-Facelift & Color Themes',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',
