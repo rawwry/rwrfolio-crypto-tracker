@@ -2,12 +2,14 @@ import React, { useState, useMemo } from 'react';
 import { 
   AreaChart, 
   Area, 
+  Line,
   XAxis, 
   YAxis, 
   CartesianGrid, 
   Tooltip as RechartsTooltip, 
   ResponsiveContainer,
   ReferenceDot,
+  ReferenceLine,
   Dot
 } from 'recharts';
 import { 
@@ -22,7 +24,16 @@ import {
   ShoppingBag,
   ArrowRightLeft,
   Coins,
-  Loader2
+  Loader2,
+  Crosshair,
+  Target,
+  Award,
+  Activity,
+  X,
+  Sliders,
+  ShieldCheck,
+  Clock,
+  ChevronRight
 } from 'lucide-react';
 import { Transaction, PortfolioCurrency, AssetSummary } from '../types';
 import { generateCoinChartSeries, ChartTimeframe, CoinChartPoint, ChartTradeItem } from '../utils/coinChartData';
@@ -58,12 +69,24 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const [historicalPrices, setHistoricalPrices] = useState<Map<string, number>>(new Map());
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
+  // Interactive Chart Tool overlays
+  const [showDcaLine, setShowDcaLine] = useState(true);
+  const [showTradePins, setShowTradePins] = useState(true);
+  const [showExtrema, setShowExtrema] = useState(false);
+  const [showSma, setShowSma] = useState(false);
+  const [inspectedTrade, setInspectedTrade] = useState<ChartTradeItem | null>(null);
+
   // Sync when parent changes selectedCoinInitial
   React.useEffect(() => {
     if (selectedCoinInitial) {
       setSelectedCoin(selectedCoinInitial);
     }
   }, [selectedCoinInitial]);
+
+  // Reset inspected trade when coin or timeframe changes
+  React.useEffect(() => {
+    setInspectedTrade(null);
+  }, [selectedCoin, timeframe]);
 
   const handleCoinChange = (coin: string) => {
     setSelectedCoin(coin);
@@ -237,23 +260,153 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     return `0 ${currencySymbol}`;
   };
 
-  // Custom Dot renderer that marks BUY and SELL points clearly with glowing rings
+  // DCA average buy price and distance %
+  const avgBuyPrice = useMemo(() => {
+    if (isPortfolio || !assetItem) return 0;
+    return isUSD 
+      ? (assetItem.averageBuyPriceUSD || assetItem.averageBuyPrice || 0)
+      : (assetItem.averageBuyPriceEUR || assetItem.averageBuyPrice || 0);
+  }, [isPortfolio, assetItem, isUSD]);
+
+  const dcaDistancePct = useMemo(() => {
+    if (avgBuyPrice <= 0 || currentPrice <= 0) return 0;
+    return ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100;
+  }, [avgBuyPrice, currentPrice]);
+
+  // 20-period Simple Moving Average calculation
+  const pointsWithSma = useMemo(() => {
+    if (!points || points.length === 0) return [];
+    const windowSize = Math.min(20, Math.max(3, Math.floor(points.length / 4)));
+    return points.map((pt, idx) => {
+      const start = Math.max(0, idx - windowSize + 1);
+      const windowSlice = points.slice(start, idx + 1);
+      const sum = windowSlice.reduce((acc, curr) => acc + ((curr as any)[activeDataKey] || 0), 0);
+      const sma = sum / windowSlice.length;
+      return {
+        ...pt,
+        sma20: Number(sma.toFixed(6))
+      };
+    });
+  }, [points, activeDataKey]);
+
+  // High & Low period extrema
+  const extrema = useMemo(() => {
+    if (!points || points.length === 0) return { maxPoint: null, minPoint: null, maxVal: 0, minVal: 0 };
+    let maxPt = points[0];
+    let minPt = points[0];
+    let maxV = (points[0] as any)[activeDataKey] ?? 0;
+    let minV = (points[0] as any)[activeDataKey] ?? 0;
+
+    for (const pt of points) {
+      const v = (pt as any)[activeDataKey];
+      if (typeof v === 'number' && !isNaN(v)) {
+        if (v > maxV) {
+          maxV = v;
+          maxPt = pt;
+        }
+        if (v < minV) {
+          minV = v;
+          minPt = pt;
+        }
+      }
+    }
+    return { maxPoint: maxPt, minPoint: minPt, maxVal: maxV, minVal: minV };
+  }, [points, activeDataKey]);
+
+  // Custom Dot renderer that marks BUY and SELL points with TradingView-style interactive badges
   const renderCustomDot = (props: any) => {
     const { cx, cy, payload } = props;
-    if (!payload || !payload.trades || payload.trades.length === 0) {
+    if (!showTradePins || !payload || !payload.trades || payload.trades.length === 0) {
       return null;
     }
 
     const hasBuy = payload.hasBuy;
     const hasSell = payload.hasSell;
-    const dotColor = hasBuy && hasSell ? '#f59e0b' : (hasBuy ? '#10b981' : '#f43f5e');
+    const isBoth = hasBuy && hasSell;
+    const pinColor = isBoth ? '#f59e0b' : (hasBuy ? '#10b981' : '#f43f5e');
+
+    const isInspected = inspectedTrade && payload.trades.some((t: any) => t.id === inspectedTrade.id);
+    const buyTrades = payload.trades.filter((t: any) => t.type === 'BUY');
+    const sellTrades = payload.trades.filter((t: any) => t.type === 'SELL');
+
+    let badgeText = '▲ KAUF';
+    if (isBoth) {
+      badgeText = '▲▼ TRADE';
+    } else if (hasBuy) {
+      badgeText = buyTrades.length > 1 ? `▲ ${buyTrades.length}×` : '▲ KAUF';
+    } else if (hasSell) {
+      badgeText = sellTrades.length > 1 ? `▼ ${sellTrades.length}×` : '▼ VERK.';
+    }
+
+    // Place badge below curve if near top border (< 36px) to avoid clipping
+    const badgeBelow = cy < 36;
+    const badgeY = badgeBelow ? cy + 22 : cy - 22;
 
     return (
-      <g key={`dot-${payload.date}-${cx}-${cy}`}>
-        {/* Pulsing outer aura */}
-        <circle cx={cx} cy={cy} r={8} fill={dotColor} fillOpacity={0.25} />
-        {/* Inner solid badge */}
-        <circle cx={cx} cy={cy} r={4.5} fill={dotColor} stroke={isLight ? '#ffffff' : '#0f172a'} strokeWidth={2} />
+      <g 
+        key={`pin-${payload.date}-${cx}-${cy}`} 
+        className="cursor-pointer"
+        onClick={(e) => {
+          e.stopPropagation();
+          setInspectedTrade(payload.trades[0]);
+        }}
+      >
+        {/* Pulsing halo ring on line */}
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={isInspected ? 11 : 7} 
+          fill={pinColor} 
+          fillOpacity={isInspected ? 0.5 : 0.25} 
+        />
+        {/* Anchor point on curve */}
+        <circle 
+          cx={cx} 
+          cy={cy} 
+          r={isInspected ? 5 : 3.5} 
+          fill={pinColor} 
+          stroke={isLight ? '#ffffff' : '#0f172a'} 
+          strokeWidth={1.5} 
+        />
+
+        {/* Drop guideline */}
+        <line 
+          x1={cx} 
+          y1={cy + (badgeBelow ? 4 : -4)} 
+          x2={cx} 
+          y2={badgeY + (badgeBelow ? -10 : 10)} 
+          stroke={pinColor} 
+          strokeDasharray="2 2" 
+          strokeWidth={1.2} 
+          opacity={0.7} 
+        />
+
+        {/* Badge Pin */}
+        <g transform={`translate(${cx}, ${badgeY})`}>
+          <rect
+            x={-25}
+            y={-10}
+            width={50}
+            height={20}
+            rx={6}
+            fill={isInspected ? (hasBuy ? '#065f46' : '#881337') : (isLight ? '#ffffff' : '#090d16')}
+            stroke={isInspected ? '#ffffff' : pinColor}
+            strokeWidth={isInspected ? 2 : 1.2}
+            filter="drop-shadow(0 2px 4px rgba(0,0,0,0.4))"
+          />
+          <text
+            x={0}
+            y={3.5}
+            textAnchor="middle"
+            fill={isInspected ? '#ffffff' : (isLight ? (hasBuy ? '#059669' : '#e11d48') : '#ffffff')}
+            fontSize={9}
+            fontWeight="700"
+            fontFamily="system-ui, -apple-system, sans-serif"
+            letterSpacing="0.2px"
+          >
+            {badgeText}
+          </text>
+        </g>
       </g>
     );
   };
@@ -604,13 +757,20 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
         {/* Metric 2: DCA / Invested */}
         <div>
-          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-            {isPortfolio ? 'Investiertes Kapital' : 'Ø Kaufkurs (DCA)'}
-          </span>
+          <div className="flex items-center justify-between">
+            <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              {isPortfolio ? 'Investiertes Kapital' : 'Ø Kaufkurs (DCA)'}
+            </span>
+            {!isPortfolio && avgBuyPrice > 0 && currentPrice > 0 && (
+              <span className={`text-[10px] font-mono font-bold ${dcaDistancePct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {dcaDistancePct >= 0 ? '+' : ''}{dcaDistancePct.toFixed(1)}%
+              </span>
+            )}
+          </div>
           <span className={`text-sm sm:text-base font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
             {isPortfolio 
               ? formatCurr(currentInvested) 
-              : (assetItem && assetItem.averageBuyPrice ? formatPrice(isUSD ? (assetItem.averageBuyPriceUSD || assetItem.averageBuyPrice) : (assetItem.averageBuyPriceEUR || assetItem.averageBuyPrice)) : '-')}
+              : (avgBuyPrice > 0 ? formatPrice(avgBuyPrice) : '-')}
           </span>
         </div>
 
@@ -643,6 +803,80 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         </div>
       </div>
 
+      {/* 3.5 Interactive Chart Overlays Toolbar */}
+      {!isPortfolio && (
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/80">
+          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
+            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+            <span className="hidden sm:inline">Chart-Overlays:</span>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-1.5 text-xs">
+            {/* 1. Toggle DCA Reference Line (only in Kurs / price mode) */}
+            {metricMode === 'price' && avgBuyPrice > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowDcaLine(!showDcaLine)}
+                className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                  showDcaLine
+                    ? 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
+                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+                title="Durchschnittlicher Kaufkurs als horizontale Referenzlinie einblenden"
+              >
+                <Target className="w-3 h-3" />
+                <span>Ø Kaufkurs ({formatPrice(avgBuyPrice)})</span>
+              </button>
+            )}
+
+            {/* 2. Toggle Trade Pins */}
+            <button
+              type="button"
+              onClick={() => setShowTradePins(!showTradePins)}
+              className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                showTradePins
+                  ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Kauf- und Verkaufs-Badges im Chart ein-/ausblenden"
+            >
+              <ShoppingBag className="w-3 h-3" />
+              <span>Trade-Pins ({allTradesInPeriod.length})</span>
+            </button>
+
+            {/* 3. Toggle Period Extrema (High/Low) */}
+            <button
+              type="button"
+              onClick={() => setShowExtrema(!showExtrema)}
+              className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                showExtrema
+                  ? 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Höchst- und Tiefststand des Zeitraums markieren"
+            >
+              <Activity className="w-3 h-3" />
+              <span>Hoch / Tief</span>
+            </button>
+
+            {/* 4. Toggle SMA Trendline */}
+            <button
+              type="button"
+              onClick={() => setShowSma(!showSma)}
+              className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                showSma
+                  ? 'bg-purple-600/25 border-purple-500 text-purple-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Gleitender Durchschnitt (Trendlinie) einblenden"
+            >
+              <TrendingUp className="w-3 h-3" />
+              <span>Trend (SMA)</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* 4. Chart Canvas */}
       <div className="h-72 sm:h-80 w-full relative">
         {points.length === 0 ? (
@@ -651,7 +885,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={points} margin={{ top: 10, right: 15, left: 5, bottom: 0 }}>
+            <AreaChart data={pointsWithSma} margin={{ top: 26, right: 15, left: 5, bottom: 0 }}>
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={chartThemeColor} stopOpacity={0.35} />
@@ -685,6 +919,75 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
               <RechartsTooltip content={<CustomTooltip />} />
 
+              {/* Horizontal DCA Reference Line */}
+              {showDcaLine && !isPortfolio && metricMode === 'price' && avgBuyPrice > 0 && (
+                <ReferenceLine 
+                  y={avgBuyPrice} 
+                  stroke="#818cf8" 
+                  strokeDasharray="4 4" 
+                  strokeWidth={1.8}
+                  label={{
+                    value: `🎯 Ø ${formatPrice(avgBuyPrice)}`,
+                    fill: isLight ? '#4f46e5' : '#a5b4fc',
+                    fontSize: 10,
+                    position: 'insideTopRight',
+                    fontWeight: 600
+                  }}
+                />
+              )}
+
+              {/* Period Extrema: High Point */}
+              {showExtrema && extrema.maxPoint && (
+                <ReferenceDot
+                  x={extrema.maxPoint.shortLabel}
+                  y={(extrema.maxPoint as any)[activeDataKey]}
+                  r={4}
+                  fill="#10b981"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `▲ Hoch: ${formatPrice(extrema.maxVal)}`,
+                    fill: '#10b981',
+                    fontSize: 9.5,
+                    position: 'top',
+                    fontWeight: 'bold'
+                  }}
+                />
+              )}
+
+              {/* Period Extrema: Low Point */}
+              {showExtrema && extrema.minPoint && (
+                <ReferenceDot
+                  x={extrema.minPoint.shortLabel}
+                  y={(extrema.minPoint as any)[activeDataKey]}
+                  r={4}
+                  fill="#f43f5e"
+                  stroke="#ffffff"
+                  strokeWidth={1.5}
+                  label={{
+                    value: `▼ Tief: ${formatPrice(extrema.minVal)}`,
+                    fill: '#f43f5e',
+                    fontSize: 9.5,
+                    position: 'bottom',
+                    fontWeight: 'bold'
+                  }}
+                />
+              )}
+
+              {/* 20-period Moving Average */}
+              {showSma && (
+                <Line
+                  type="monotone"
+                  dataKey="sma20"
+                  stroke="#a855f7"
+                  strokeWidth={2}
+                  strokeDasharray="3 3"
+                  dot={false}
+                  activeDot={false}
+                  isAnimationActive={false}
+                />
+              )}
+
               <Area 
                 type="monotone" 
                 dataKey={activeDataKey} 
@@ -700,7 +1003,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         )}
       </div>
 
-      {/* 5. Chart Legend & Tooltip Hint */}
+      {/* 5. Chart Legend & Interactive Hint */}
       <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1">
         <div className="flex items-center space-x-3">
           <span className="flex items-center space-x-1.5">
@@ -713,9 +1016,223 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           </span>
         </div>
         <div className="opacity-80">
-          Tipp: Fahre mit der Maus über die Punkte für genaue Trade-Details
+          Tipp: Klicke auf die Pins oder Tranchen für den Steuer- &amp; Performance-Inspektor
         </div>
       </div>
+
+      {/* 6. Tranche Inspector Card (when a trade pin or tranche card is clicked) */}
+      {!isPortfolio && inspectedTrade && (() => {
+        const isBuy = inspectedTrade.type === 'BUY';
+        const tDate = new Date(inspectedTrade.timestamp);
+        const dateStr = !isNaN(tDate.getTime()) 
+          ? tDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' }) 
+          : inspectedTrade.timestamp;
+        
+        const daysHeld = Math.max(0, Math.floor((Date.now() - (!isNaN(tDate.getTime()) ? tDate.getTime() : Date.now())) / (1000 * 60 * 60 * 24)));
+        const isTaxFree = daysHeld >= 365;
+        const daysRemaining = Math.max(0, 365 - daysHeld);
+        const taxProgress = Math.min(100, Math.max(0, (daysHeld / 365) * 100));
+
+        const tradeCurrentVal = isBuy ? (inspectedTrade.amount * currentPrice) : 0;
+        const tradeCost = inspectedTrade.totalCost;
+        const tradePnl = isBuy ? (tradeCurrentVal - tradeCost) : 0;
+        const tradePnlPct = (isBuy && tradeCost > 0) ? (tradePnl / tradeCost) * 100 : 0;
+
+        return (
+          <div className={`p-4 rounded-xl border transition-all space-y-3 font-mono ${
+            isLight 
+              ? 'bg-indigo-50/70 border-indigo-200 text-slate-800' 
+              : 'bg-indigo-950/20 border-indigo-800/60 text-slate-200'
+          }`}>
+            <div className="flex items-center justify-between pb-2 border-b border-indigo-200/50 dark:border-indigo-800/40">
+              <div className="flex items-center gap-2">
+                <span className={`w-3 h-3 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                <span className="font-bold text-xs sm:text-sm font-sans flex items-center gap-1.5 text-indigo-400">
+                  <Crosshair className="w-4 h-4" />
+                  <span>Tranchen-Inspektor: {isBuy ? 'Kauf' : 'Verkauf'} vom {dateStr}</span>
+                </span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 uppercase">
+                  {inspectedTrade.source.replace('_', '.')}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setInspectedTrade(null)}
+                className="p-1 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                title="Inspektor schließen"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              {/* 1. Einstieg */}
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-sans text-slate-400 block">Kauf-Einstieg</span>
+                <span className="font-bold text-slate-100 block">
+                  {isBuy ? '+' : '-'}{inspectedTrade.amount.toLocaleString('de-DE')} {inspectedTrade.symbol}
+                </span>
+                <span className="text-[11px] text-slate-400 block">
+                  à {formatPrice(inspectedTrade.price)} ({formatCurr(tradeCost)})
+                </span>
+              </div>
+
+              {/* 2. Aktueller Wert */}
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-sans text-slate-400 block">Aktueller Wert heute</span>
+                <span className="font-bold text-slate-100 block">
+                  {isBuy ? formatCurr(tradeCurrentVal) : '-'}
+                </span>
+                <span className="text-[11px] text-slate-400 block">
+                  Live-Kurs: {formatPrice(currentPrice)}
+                </span>
+              </div>
+
+              {/* 3. Rendite dieser Tranche */}
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-sans text-slate-400 block">Tranchen-Rendite</span>
+                {isBuy ? (
+                  <>
+                    <span className={`font-bold block ${tradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {tradePnl >= 0 ? '+' : ''}{formatCurr(tradePnl)}
+                    </span>
+                    <span className={`text-[11px] font-bold block ${tradePnlPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {tradePnlPct >= 0 ? '+' : ''}{tradePnlPct.toFixed(2)} %
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-slate-400">-</span>
+                )}
+              </div>
+
+              {/* 4. Deutsche Steuerfrist */}
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-sans text-slate-400 block">Haltefrist (§ 23 EStG)</span>
+                {isBuy ? (
+                  <>
+                    {isTaxFree ? (
+                      <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                        <ShieldCheck className="w-4 h-4 flex-shrink-0" />
+                        <span>Steuerfrei!</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                        <Clock className="w-4 h-4 flex-shrink-0" />
+                        <span>Noch {daysRemaining} Tage</span>
+                      </div>
+                    )}
+                    <span className="text-[10px] text-slate-400 block">
+                      {daysHeld} von 365 Tagen ({taxProgress.toFixed(0)}%)
+                    </span>
+                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                      <div 
+                        className={`h-full rounded-full ${isTaxFree ? 'bg-emerald-400' : 'bg-amber-400'}`} 
+                        style={{ width: `${taxProgress}%` }} 
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-slate-400">-</span>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* 7. Tranches Timeline Ribbon */}
+      {!isPortfolio && allTradesInPeriod.length > 0 && (
+        <div className="space-y-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+          <div className="flex items-center justify-between text-xs">
+            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
+              <ShoppingBag className="w-3.5 h-3.5 text-indigo-400" />
+              <span>Ausgeführte Trades im Diagramm ({allTradesInPeriod.length})</span>
+            </span>
+            <span className="text-[11px] text-slate-400">
+              Klicke auf einen Pin oder eine Karte zur Tranchen-Analyse
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {allTradesInPeriod.map(({ trade }, idx) => {
+              const isBuy = trade.type === 'BUY';
+              const isSelected = inspectedTrade?.id === trade.id;
+              const tradeCurVal = isBuy ? trade.amount * currentPrice : 0;
+              const pnl = isBuy ? tradeCurVal - trade.totalCost : 0;
+              const pnlPct = (isBuy && trade.totalCost > 0) ? (pnl / trade.totalCost) * 100 : 0;
+              
+              const tDate = new Date(trade.timestamp);
+              const dStr = !isNaN(tDate.getTime()) 
+                ? tDate.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' }) 
+                : trade.timestamp.slice(0, 10);
+              const days = Math.floor((Date.now() - (!isNaN(tDate.getTime()) ? tDate.getTime() : Date.now())) / (1000 * 60 * 60 * 24));
+              const taxExempt = days >= 365;
+
+              return (
+                <button
+                  key={trade.id || idx}
+                  type="button"
+                  onClick={() => setInspectedTrade(isSelected ? null : trade)}
+                  className={`p-2.5 rounded-xl border text-left flex-shrink-0 transition-all cursor-pointer font-mono text-xs ${
+                    isSelected
+                      ? 'bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500 text-white'
+                      : isLight
+                        ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800'
+                        : 'bg-slate-950/70 border-slate-800 hover:bg-slate-800/80 text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 text-[11px]">
+                    <span className="flex items-center gap-1 font-bold">
+                      <span className={`w-2 h-2 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span>{isBuy ? 'KAUF' : 'VERKAUF'}</span>
+                      <span className="opacity-60 font-normal">{dStr}</span>
+                    </span>
+                    {isBuy && (
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
+                        taxExempt 
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                      }`}>
+                        {taxExempt ? 'Steuerfrei' : `${days}T`}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="mt-1 font-bold">
+                    {isBuy ? '+' : '-'}{trade.amount.toLocaleString('de-DE')} {trade.symbol}
+                  </div>
+
+                  <div className="flex items-center justify-between gap-2 text-[10px] mt-1 text-slate-400 font-sans">
+                    <span>Kurs: {formatPrice(trade.price)}</span>
+                    {isBuy && (
+                      <span className={`font-mono font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {pnl >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
+                      </span>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* 8. Notice if no trades in active timeframe */}
+      {!isPortfolio && allTradesInPeriod.length === 0 && timeframe !== 'all' && (
+        <div className={`p-3 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
+          isLight ? 'bg-slate-50 border-slate-200 text-slate-600' : 'bg-slate-950/40 border-slate-800 text-slate-400'
+        }`}>
+          <span>Keine Trades im gewählten Zeitraum ({timeframe.toUpperCase()}).</span>
+          <button
+            type="button"
+            onClick={() => setTimeframe('all')}
+            className="text-indigo-400 hover:text-indigo-300 font-semibold cursor-pointer underline underline-offset-2 flex items-center gap-1"
+          >
+            <span>Alle historischen Käufe anzeigen</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
 
     </div>
   );

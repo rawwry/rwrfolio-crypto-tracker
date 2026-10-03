@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.21';
+export const APP_VERSION = '0.5.22';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.22',
+    date: '03.10.2026',
+    title: 'TradingView-Style Trade-Pins, Horizontale DCA-Linie & Interaktiver Tranchen- & Steuer-Inspektor',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'TradingView-Style Trade-Pins: Kauf- und Verkaufszeitpunkte werden im Diagramm nun mit modernen Badges (▲ KAUF / ▼ VERK.), vertikalen Drop-Lines und dezenten Glow-Halos visualisiert. Bei Klick auf einen Pin wird die Tranche direkt im neuen Inspektor analysiert.',
+      },
+      {
+        type: 'feat',
+        text: 'Horizontale DCA-Referenzlinie (Ø Kaufkurs): Blendet den persönlichen durchschnittlichen Kaufkurs als gestrichelte Orientierungslinie mit dynamischer Abstands-Prozentanzeige (+X % zum Einstieg) direkt im Kursverlauf ein.',
+      },
+      {
+        type: 'feat',
+        text: 'Interaktive Chart-Overlays Toolbar: Neue Schnellwahlschalter über dem Diagramm zum bequemen Ein- und Ausblenden von Ø Kaufkurs, Trade-Pins, Perioden-Höchst-/Tiefstständen (Hoch / Tief) sowie einer 20-Perioden Trendlinie (SMA).',
+      },
+      {
+        type: 'feat',
+        text: 'Tranchen- & Steuer-Inspektor (§ 23 EStG): Detaillierte Auswertung jeder einzelnen Kauf-Tranche mit Kaufkurs, aktuellem Gegenwert, Tranchen-Gewinn/Verlust (%) sowie Haltedauer mit Countdown bis zur 1-jährigen deutschen Steuerfreiheit.',
+      },
+      {
+        type: 'ui',
+        text: 'Tranchen-Timeline-Ribbon: Horizontale Klick-Karten unter dem Chart zum schnellen Durchstöbern und Fokussieren einzelner Trades der gewählten Periode.',
+      },
+    ],
+  },
   {
     version: '0.5.21',
     date: '03.10.2026',
     title: 'Echte historische Marktkurse für Coin-Charts & Bereinigung doppelter Coin-Icons',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',
