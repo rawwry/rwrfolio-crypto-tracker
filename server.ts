@@ -45,7 +45,7 @@ async function startServer() {
     res.json({ 
       status: 'ok', 
       app: 'rwrfolio', 
-      version: '0.5.19',
+      version: '0.5.20',
       database: 'sqlite',
       databasePath: resolveDatabasePath(),
       importedCsvPath: resolveImportedCsvPath()

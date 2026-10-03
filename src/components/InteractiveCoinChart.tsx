@@ -96,22 +96,36 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const latestPoint = points.length > 0 ? points[points.length - 1] : null;
   const firstPoint = points.length > 0 ? points[0] : null;
 
-  const currentPrice = isPortfolio ? portfolioTotalVal : (latestPoint ? latestPoint.price : (assetItem?.currentPrice || 0));
+  const currentPrice = isPortfolio 
+    ? portfolioTotalVal 
+    : (assetItem?.currentPrice && assetItem.currentPrice > 0 
+        ? assetItem.currentPrice 
+        : (latestPoint && latestPoint.price > 0 
+            ? latestPoint.price 
+            : (assetItem?.averageBuyPrice || 0)));
   const currentHolding = isPortfolio ? assets.length : (latestPoint ? latestPoint.holdingBalance : (assetItem?.currentBalance || 0));
   const currentValue = isPortfolio ? portfolioTotalVal : (isUSD ? (assetItem?.currentValueUSD ?? assetItem?.currentValue ?? (latestPoint?.holdingValue || 0)) : (assetItem?.currentValueEUR ?? assetItem?.currentValue ?? (latestPoint?.holdingValue || 0)));
   const currentInvested = isPortfolio ? portfolioTotalInvested : (isUSD ? (assetItem?.totalInvestedUSD ?? assetItem?.totalInvested ?? (latestPoint?.investedCapital || 0)) : (assetItem?.totalInvestedEUR ?? assetItem?.totalInvested ?? (latestPoint?.investedCapital || 0)));
   const currentPnl = isPortfolio ? portfolioTotalPnl : (currentValue - currentInvested);
   const currentPnlPct = isPortfolio ? portfolioTotalPnlPct : (currentInvested > 0 ? (currentPnl / currentInvested) * 100 : 0);
 
-  // Period price change
+  // Period price & value changes
   const periodPriceDiff = firstPoint && latestPoint ? latestPoint.price - firstPoint.price : 0;
   const periodPricePct = firstPoint && firstPoint.price > 0 ? (periodPriceDiff / firstPoint.price) * 100 : 0;
   const periodValueDiff = firstPoint && latestPoint ? latestPoint.holdingValue - firstPoint.holdingValue : 0;
   const periodValuePct = firstPoint && firstPoint.holdingValue > 0 ? (periodValueDiff / firstPoint.holdingValue) * 100 : currentPnlPct;
 
-  const isProfit = isPortfolio 
-    ? (timeframe === 'all' ? currentPnl >= 0 : periodValueDiff >= 0)
-    : (metricMode === 'price' ? periodPriceDiff >= 0 : currentPnl >= 0);
+  // Determining loss / profit state
+  // If period change is flat / zero, defer to overall position currentPnl to prevent false positive green signals
+  const isLoss = isPortfolio 
+    ? (timeframe === 'all' ? currentPnl < 0 : (periodValueDiff !== 0 ? periodValueDiff < 0 : currentPnl < 0))
+    : (metricMode === 'price'
+        ? (periodPriceDiff !== 0 ? periodPriceDiff < 0 : currentPnl < 0)
+        : (metricMode === 'pnl' 
+            ? currentPnl < 0 
+            : (periodValueDiff !== 0 ? periodValueDiff < 0 : currentPnl < 0)));
+
+  const isProfit = !isLoss;
 
   // Count trades in series
   const allTradesInPeriod = useMemo(() => {
@@ -137,7 +151,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   };
 
   const formatPrice = (val: number) => {
-    const dec = val < 0.01 ? 6 : (val < 1 ? 4 : (val < 100 ? 2 : 2));
+    const dec = val < 0.0001 ? 8 : (val < 0.01 ? 6 : (val < 1 ? 4 : 2));
     return formatCurr(val, dec);
   };
 
@@ -146,8 +160,48 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     ? (metricMode === 'pnl' ? 'pnl' : 'holdingValue')
     : (metricMode === 'price' ? 'price' : (metricMode === 'pnl' ? 'pnl' : 'holdingValue'));
 
-  const chartThemeColor = isProfit ? '#10b981' : '#f43f5e';
+  const chartThemeColor = isLoss ? '#f43f5e' : '#10b981';
   const gradientId = `chartGrad_${selectedCoin}_${metricMode}_${isProfit ? 'green' : 'red'}`;
+
+  // Dynamic YAxis domain calculation ensuring micro-cent coins or flat periods never collapse to [0, 4]
+  const yDomain = useMemo(() => {
+    if (!points || points.length === 0) return ['auto', 'auto'];
+    const values = points
+      .map(p => (p as any)[activeDataKey])
+      .filter((v): v is number => typeof v === 'number' && !isNaN(v));
+
+    if (values.length === 0) return ['auto', 'auto'];
+
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+
+    if (min === max) {
+      const pad = min !== 0 ? Math.abs(min) * 0.08 : 0.01;
+      const lower = activeDataKey === 'pnl' ? min - pad : Math.max(0, min - pad);
+      return [lower, max + pad];
+    }
+
+    const diff = max - min;
+    const pad = diff * 0.12;
+    const lower = activeDataKey === 'pnl' ? min - pad : Math.max(0, min - pad);
+    const upper = max + pad;
+    return [lower, upper];
+  }, [points, activeDataKey]);
+
+  const formatYAxisTick = (val: number) => {
+    if (typeof val !== 'number' || isNaN(val)) return '';
+    const abs = Math.abs(val);
+    const sign = val < 0 ? '-' : '';
+
+    if (abs >= 1_000_000) return `${sign}${(abs / 1_000_000).toFixed(1)}M ${currencySymbol}`;
+    if (abs >= 1000) return `${sign}${(abs / 1000).toFixed(1)}k ${currencySymbol}`;
+    if (abs >= 100) return `${sign}${abs.toFixed(0)} ${currencySymbol}`;
+    if (abs >= 1) return `${sign}${abs.toFixed(2)} ${currencySymbol}`;
+    if (abs >= 0.01) return `${sign}${abs.toFixed(3)} ${currencySymbol}`;
+    if (abs >= 0.0001) return `${sign}${abs.toFixed(5)} ${currencySymbol}`;
+    if (abs > 0) return `${sign}${abs.toFixed(6)} ${currencySymbol}`;
+    return `0 ${currencySymbol}`;
+  };
 
   // Custom Dot renderer that marks BUY and SELL points clearly with glowing rings
   const renderCustomDot = (props: any) => {
@@ -176,7 +230,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     const data: CoinChartPoint = payload[0].payload;
     if (!data) return null;
 
-    const priceDec = data.price < 1 ? 4 : 2;
+    const priceDec = data.price < 0.0001 ? 8 : (data.price < 0.01 ? 6 : (data.price < 1 ? 4 : 2));
 
     return (
       <div className={`p-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-xs text-xs z-50 transition-all ${
@@ -257,7 +311,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   </div>
 
                   <div className="flex items-center justify-between text-[10px] mt-1 opacity-90 font-mono">
-                    <span>Kurs: {formatCurr(tr.price, tr.price < 1 ? 4 : 2)}</span>
+                    <span>Kurs: {formatPrice(tr.price)}</span>
                     <span>Kosten: {formatCurr(tr.totalCost)}</span>
                   </div>
 
@@ -297,16 +351,31 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 <h3 className={`text-base sm:text-lg font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {isPortfolio ? 'Gesamt-Portfolio Entwicklung' : `${selectedCoin} (${coinDetail?.name || selectedCoin})`}
                 </h3>
-                <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-semibold border ${
-                  isProfit 
-                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
-                    : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
-                }`}>
-                  {isProfit ? '+' : ''}
-                  {isPortfolio 
-                    ? (timeframe === 'all' ? `${currentPnlPct.toFixed(2)} % Rendite` : `${periodValuePct.toFixed(2)} % (${timeframe})`)
-                    : `${periodPricePct.toFixed(2)} % (${timeframe})`}
-                </span>
+                {(() => {
+                  const badgePct = isPortfolio 
+                    ? (timeframe === 'all' ? currentPnlPct : periodValuePct)
+                    : (metricMode === 'price' ? periodPricePct : (metricMode === 'pnl' ? currentPnlPct : periodValuePct));
+
+                  const isBadgePositive = badgePct > 0.001;
+                  const isBadgeNegative = badgePct < -0.001 || (Math.abs(badgePct) <= 0.001 && currentPnl < 0);
+                  const badgeSign = isBadgePositive ? '+' : '';
+
+                  const badgeText = isPortfolio 
+                    ? (timeframe === 'all' ? `${badgeSign}${badgePct.toFixed(2)} % Rendite` : `${badgeSign}${badgePct.toFixed(2)} % (${timeframe})`)
+                    : `${badgeSign}${badgePct.toFixed(2)} % (${timeframe})`;
+
+                  return (
+                    <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full font-semibold border ${
+                      isBadgePositive 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25' 
+                        : (isBadgeNegative
+                            ? 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+                            : 'bg-slate-500/10 text-slate-400 border-slate-500/25')
+                    }`}>
+                      {badgeText}
+                    </span>
+                  );
+                })()}
               </div>
               <p className={`text-xs mt-0.5 flex items-center gap-2 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 <span>Interaktiver Kurs- &amp; Trade-Verlauf</span>
@@ -538,15 +607,11 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               <YAxis 
                 stroke={isLight ? '#94a3b8' : '#64748b'} 
                 fontSize={11}
-                width={65}
+                width={72}
                 tickLine={false}
                 axisLine={false}
-                domain={['auto', 'auto']}
-                tickFormatter={(val) => {
-                  if (val >= 1000) return `${(val / 1000).toFixed(1)}k ${currencySymbol}`;
-                  if (val >= 1) return `${val.toFixed(0)} ${currencySymbol}`;
-                  return `${val.toFixed(2)} ${currencySymbol}`;
-                }}
+                domain={yDomain}
+                tickFormatter={formatYAxisTick}
               />
 
               <RechartsTooltip content={<CustomTooltip />} />

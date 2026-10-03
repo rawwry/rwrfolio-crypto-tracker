@@ -232,7 +232,7 @@ export function generateCoinChartSeries(
             type: effect.type,
             amount: effect.amount,
             symbol: coin,
-            price: Math.round((isUSD ? effect.priceUSD : effect.priceEUR) * 10000) / 10000,
+            price: Number((isUSD ? effect.priceUSD : effect.priceEUR).toFixed(8)),
             totalCost: Math.round((isUSD ? effect.fiatCostUSD : effect.fiatCostEUR) * 100) / 100,
             source: tx.source,
             timestamp: tx.timestamp,
@@ -250,7 +250,7 @@ export function generateCoinChartSeries(
           type: effect.type,
           amount: effect.amount,
           symbol: targetSymbol,
-          price: Math.round((isUSD ? effect.priceUSD : effect.priceEUR) * 10000) / 10000,
+          price: Number((isUSD ? effect.priceUSD : effect.priceEUR).toFixed(8)),
           totalCost: Math.round((isUSD ? effect.fiatCostUSD : effect.fiatCostEUR) * 100) / 100,
           source: tx.source,
           timestamp: tx.timestamp,
@@ -521,6 +521,10 @@ export function generateCoinChartSeries(
         dayPrice = getInterpolatedCoinPrice(targetSymbol, dayTs, fallback);
       }
 
+      if (dayPrice <= 0 && fallback > 0) {
+        dayPrice = fallback;
+      }
+
       holdingVal = balance * dayPrice;
     }
 
@@ -543,9 +547,9 @@ export function generateCoinChartSeries(
       formattedDate: isLast ? 'Heute (Live)' : formattedDate,
       shortLabel,
       timestamp: isNaN(d.getTime()) ? now.getTime() : d.getTime(),
-      price: Math.round(dayPrice * 100) / 100,
-      holdingBalance: Math.round(balance * 10000) / 10000,
-      holdingValue: Math.round(holdingVal * 100) / 100,
+      price: isPortfolio ? Math.round(dayPrice * 100) / 100 : Number(dayPrice.toFixed(8)),
+      holdingBalance: Number(balance.toFixed(8)),
+      holdingValue: holdingVal > 0 && holdingVal < 0.01 ? Number(holdingVal.toFixed(6)) : Math.round(holdingVal * 100) / 100,
       investedCapital: Math.round(cumulativeInvested * 100) / 100,
       pnl: Math.round(pnl * 100) / 100,
       pnlPercentage: Math.round(pnlPercentage * 100) / 100,

@@ -40,6 +40,10 @@ export const KNOWN_COINS: Record<string, CoinInfo> = {
   DOGE: { id: 'dogecoin', name: 'Dogecoin', symbol: 'DOGE', defaultPriceEUR: 0.084, defaultPriceUSD: 0.097, color: '#c2a633' },
   SHIB: { id: 'shiba-inu', name: 'Shiba Inu', symbol: 'SHIB', defaultPriceEUR: 0.000015, defaultPriceUSD: 0.000017, color: '#ffa409' },
   ATOM: { id: 'cosmos', name: 'Cosmos', symbol: 'ATOM', defaultPriceEUR: 4.50, defaultPriceUSD: 5.20, color: '#2e3148' },
+  CELR: { id: 'celer-network', name: 'Celer Network', symbol: 'CELR', defaultPriceEUR: 0.002778, defaultPriceUSD: 0.00322, color: '#0052cc' },
+  ONDO: { id: 'ondo-finance', name: 'Ondo Finance', symbol: 'ONDO', defaultPriceEUR: 0.25, defaultPriceUSD: 0.29, color: '#1a56db' },
+  PEPE: { id: 'pepe', name: 'Pepe', symbol: 'PEPE', defaultPriceEUR: 0.000008, defaultPriceUSD: 0.0000093, color: '#44a444' },
+  FLOKI: { id: 'floki', name: 'FLOKI', symbol: 'FLOKI', defaultPriceEUR: 0.00013, defaultPriceUSD: 0.00015, color: '#e58e26' },
   USDT: { id: 'tether', name: 'Tether USD', symbol: 'USDT', defaultPriceEUR: 0.863, defaultPriceUSD: 1.00, color: '#26a17b' },
   USDC: { id: 'usd-coin', name: 'USD Coin', symbol: 'USDC', defaultPriceEUR: 0.863, defaultPriceUSD: 1.00, color: '#2775ca' },
 };

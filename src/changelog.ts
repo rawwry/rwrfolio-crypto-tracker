@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.19';
+export const APP_VERSION = '0.5.20';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.20',
+    date: '03.10.2026',
+    title: 'Präzisions-Fix für Micro-Cent Altcoins & Verlust-Anzeige im Coin-Chart',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Kurs- und Bestandsskalierung bei Micro-Cent-Coins behoben: Bisher wurden Kurse in den Chart-Datenpunkten pauschal auf 2 Nachkommastellen gerundet, wodurch Coins mit Stückpreisen unter 0,005 € (wie CELR mit ~0,0028 €, SHIB oder PEPE) rechnerisch als 0,000000 € erfasst wurden. Chart-Datenpunkte und Trades erfassen Kurse und Bestände nun mit bis zu 8 Dezimalstellen.',
+      },
+      {
+        type: 'fix',
+        text: 'Dynamische Y-Achsen-Skalierung im Chart: Recharts bricht bei Sub-Cent-Kursen oder flachen Kursverläufen nicht mehr in die Standard-Ganzzahlscheibe [0 €..4 €] ein. Ein dynamischer Padding-Algorithmus und flexibler Tick-Formatter zentrieren die Kurve und zeigen exakte Sub-Cent-Werte an.',
+      },
+      {
+        type: 'fix',
+        text: 'Verlust- und Profit-Signalgebung korrigiert: Bei unverändertem Kursverlauf (0,00 % im gewählten Zeitraum) orientiert sich die Chart-Farbe und das Badge am Gesamtergebnis der Position (P&L). Verlustpositionen werden nicht mehr irreführend in grün (+0.00 %) dargestellt, sondern mit roter Chartlinie (#f43f5e) und rotem Status-Badge.',
+      },
+      {
+        type: 'feat',
+        text: 'Asset-Katalog erweitert: CELR (Celer Network), ONDO (Ondo Finance), PEPE und FLOKI zu KNOWN_COINS hinzugefügt mit automatischer Live-Kurs-Abfrage.',
+      },
+    ],
+  },
   {
     version: '0.5.19',
     date: '03.10.2026',
     title: 'Hotfix: Gesamt-Portfolio Chartbewertung & Multi-Coin Isolation',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',
