@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.24';
+export const APP_VERSION = '0.5.25';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.25',
+    date: '04.10.2026',
+    title: 'Fest verankertes Chart-HUD, Bollinger Bänder, ATH-Linie, RSI (14) & Matrix-Layoutfix',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Fest verankertes Live-Inspektions-HUD: Die Punkt- und Trade-Inspektion folgt nicht mehr dem Mauszeiger und verdeckt niemals die Chartkurve oder Pins. Ein fest positioniertes Ribbon über der Zeichenfläche aktualisiert Datum, Kurs, Depotwert, P&L, Einstiegsabstand und Trades in Echtzeit.',
+      },
+      {
+        type: 'feat',
+        text: 'Bollinger Bänder (20, 2σ): Neues zuschaltbares technisches Chart-Overlay visualisiert den Volatilitäts-Korridor und identifiziert überkaufte sowie überverkaufte Akkumulations- und Kaufzonen (Dip).',
+      },
+      {
+        type: 'feat',
+        text: 'Allzeithoch (ATH) Referenzlinie: Horizontale Orientierungslinie am Rekordstand des Coins mit automatischer Anzeige des aktuellen prozentualen Rabattabstands zum Zyklushoch.',
+      },
+      {
+        type: 'feat',
+        text: 'Synchronisierter RSI (14) Momentum-Oszillator: Zuschaltbares Mini-Panel unter dem Chart mit Visualisierung von überverkauften DCA-Akkumulationszonen (≤ 30) und überkauften Zonen (≥ 70).',
+      },
+      {
+        type: 'fix',
+        text: 'Layout-Shift in der Performance-Matrix behoben: Beim Wechseln des Beobachtungszeitraums in der Coin-Performance-Matrix bleibt die Zeile mit den Buttons vollkommen stabil ohne Umbruch oder Zeilensprünge.',
+      },
+    ],
+  },
   {
     version: '0.5.24',
     date: '04.10.2026',
     title: 'Multi-Timeframe Performance-Matrix, Tooltip-Glide-Fix & Home Assistant Add-on Dokumentation',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

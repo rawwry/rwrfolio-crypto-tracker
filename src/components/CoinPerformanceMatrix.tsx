@@ -174,16 +174,27 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                 {assets.length} Assets
               </span>
             </div>
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              {matrixTimeframe === 'all' 
-                ? 'Rendite-Vergleich nach DCA, Live-Kurs & P&L' 
-                : `Performance-Ansicht für Zeitraum: ${activeTfObj.tooltip}`} &bull; <span className="text-indigo-400 font-medium">Zeile anklicken</span>, um Chart zu wechseln
+            <p className={`text-xs mt-0.5 flex flex-wrap items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <span>
+                {matrixTimeframe === 'all' 
+                  ? 'Rendite-Vergleich nach DCA, Live-Kurs & P&L' 
+                  : `Performance: ${activeTfObj.tooltip}`}
+              </span>
+              <span>&bull;</span>
+              {loadingPeriod ? (
+                <span className="inline-flex items-center gap-1 text-[11px] text-indigo-400 font-medium">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>Aktualisiere {activeTfLabel}...</span>
+                </span>
+              ) : (
+                <span className="text-indigo-400 font-medium">Zeile anklicken für Chart</span>
+              )}
             </p>
           </div>
         </div>
 
-        {/* Timeframe Switcher & Summary Pills */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Timeframe Switcher & Summary Pills (Fixed-layout, zero layout shift) */}
+        <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
           {/* Multi-Timeframe Switcher Pills */}
           <div className={`flex items-center p-1 rounded-xl border ${
             isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/80 border-slate-800'
@@ -195,7 +206,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   key={tf.value}
                   onClick={() => setMatrixTimeframe(tf.value)}
                   title={tf.tooltip}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all text-center min-w-[36px] ${
                     isActive
                       ? 'bg-indigo-600 text-white shadow-sm'
                       : (isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60')
@@ -206,13 +217,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               );
             })}
           </div>
-
-          {loadingPeriod && (
-            <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              <span className="text-[11px]">Berechne {activeTfLabel}...</span>
-            </div>
-          )}
 
           {/* Quick Summary Pill */}
           <div className="flex items-center space-x-1.5 text-xs font-mono">

@@ -4,6 +4,26 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.25] - 04.10.2026
+
+### ✨ Neue Features & Indikatoren
+- **Fest im Diagrammbereich verankertes Live-HUD (Verdeckungs- & Schwebefix)**:
+  - Die Punkt- und Trade-Inspektion folgt nicht mehr dem Mauszeiger als störendes Popup, sondern ist als festes Ribbon direkt über der Zeichenfläche verankert.
+  - Im Ruhezustand wird der aktuelle Live-Stand dargestellt; bei Mausbewegung aktualisiert sich die Anzeige verzögerungsfrei auf den jeweiligen Punkt (Datum, Kurs, Depotwert, P&L, Abstand zum Ø Kaufkurs und ausgeführte Käufe/Verkäufe).
+  - Volle Sicht auf die Marktkurve und Trade-Pins ohne jegliche Verdeckung von Bedienelementen. Der separate Cursor-Popup Schalter wurde überflüssig und entfernt.
+- **Bollinger Bänder (20, 2σ)**:
+  - Neues technisches Chart-Overlay visualisiert den dynamischen Volatilitäts-Korridor und identifiziert überkaufte sowie überverkaufte Zonen (DCA Dip-Kaufgelegenheiten).
+- **Allzeithoch (ATH) Referenzlinie**:
+  - Horizontale Orientierungslinie am Zyklus- bzw. Periodenhöchststand mit automatischer Echtzeit-Berechnung des Rabattabstands (`-X % vom ATH`).
+- **Synchronisierter RSI (14) Momentum-Oszillator**:
+  - Zuschaltbares Mini-Panel unter dem Chart mit automatischer Markierung von überverkauften Akkumulationszonen (&le; 30) und überhitzten Zonen (&ge; 70).
+
+### 🐛 Bugfixes & Layout
+- **Layout-Shift in der Performance-Matrix behoben**:
+  - Beim Wechseln des Beobachtungszeitraums in der Coin-Performance-Matrix bleibt die Zeile mit den Zeitfenster-Buttons vollkommen stabil. Der Ladehinweis wurde in den Untertitel verlegt, wodurch jeglicher Umbruch oder Versatz eliminiert wird.
+
+---
+
 ## [0.5.24] - 04.10.2026
 
 ### ✨ Neue Features & Verbesserungen

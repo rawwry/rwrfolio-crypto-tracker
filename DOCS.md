@@ -14,8 +14,7 @@
   - Echte historische Marktkurven für Bitcoin, Ethereum, Solana, Polkadot, Hedera, Akash und alle weiteren Portfolio-Assets.
   - **Trade-Pins:** Kaufzeitpunkte (▲ KAUF) und Verkäufe (▼ VERK.) direkt auf der Kurslinie mit Glow-Effekten und vertikalen Orientierungslinien.
   - **Horizontale DCA-Referenzlinie:** Zeigt deinen persönlichen durchschnittlichen Kaufpreis mit prozentualem Abstand zum aktuellen Kurs.
-  - **Tranchen- & Steuer-Inspektor:** Klick auf einen Trade-Pin öffnet die Detailanalyse mit Haltedauer-Countdown bis zur 1-jährigen Steuerfreiheit.
-  - **Live-Hover-Inspektion & Cursor-Popup-Schalter:** Präzise Werterfassung ohne Verdeckung von Bedienelementen.
+  - **Fest verankertes Live-HUD & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart; zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
 - **⚡ Multi-Timeframe Performance-Matrix:**
   - Schneller Wechsel zwischen **24h (Tag)**, **7T (Woche)**, **30T (Monat)**, **90T (3 Monate)**, **1J (Jahr)** und **Gesamt (All-Time DCA)**.
   - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.

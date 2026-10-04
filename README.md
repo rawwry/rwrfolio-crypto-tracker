@@ -1,7 +1,7 @@
 # rwrfolio – Krypto Portfolio & DCA Tracker für Home Assistant OS
 
 [![Home Assistant Add-on](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/Version-0.5.24-emerald.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.5.25-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 **rwrfolio** ist ein privater, lokaler Krypto-Portfolio- und DCA-Tracker für Home Assistant OS mit persistenter SQLite-Datenbank, echten Live-Marktkursen, interaktiven TradingView-Style Charts, Multi-Timeframe Performance-Matrix und offiziellem Steuerbericht (§ 23 EStG).
@@ -12,7 +12,8 @@
 
 - **🔒 100 % Privat & Lokal:** Läuft vollständig auf deinem Home Assistant Server – keine Datenweitergabe an Dritte.
 - **📈 Echte Live-Marktkurse:** Direkte Einbindung von Binance & Kraken Public APIs (ohne API-Keys).
-- **📊 Interaktive Charts & Trade-Pins:** Visualisierung von Einstiegs- und Ausstiegskursen (▲ KAUF / ▼ VERK.), horizontaler DCA-Linie, SMA und Tranchen-Inspektor.
+- **📊 Interaktive Charts & Trade-Pins:** Visualisierung von Einstiegs- und Ausstiegskursen (▲ KAUF / ▼ VERK.), horizontaler DCA-Linie, SMA 20 Trend, Bollinger Bändern, ATH-Abstand und synchronisiertem RSI (14) Momentum-Oszillator.
+- **🎯 Fest verankertes Live-HUD:** Verdeckungsfreie Punkt- und Trade-Inspektion direkt über der Kurve (kein störend schwebendes Popup).
 - **⚡ Multi-Timeframe Performance-Matrix:** Umschalten zwischen 24h, 7T, 30T, 90T, 1J und Gesamt mit relativer Kursrendite (%) und absolutem Vermögenszuwachs (€ / $).
 - **📥 Smart Auto-Detect Import:** Drag & Drop für Kraken Pro (CSV & PDF) sowie Crypto.com (CSV) mit Duplikatserkennung.
 - **📑 BMF-Steuerbericht (§ 23 EStG):** 4-seitiger PDF-Steuerbericht mit FIFO-Haltefristen, Freigrenzen und ungekürzten Buchungsbelegen (Anhänge B & C).

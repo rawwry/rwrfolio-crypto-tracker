@@ -34,7 +34,8 @@ import {
   ShieldCheck,
   Clock,
   ChevronRight,
-  MessageSquare
+  MessageSquare,
+  LineChart as LineChartIcon
 } from 'lucide-react';
 import { Transaction, PortfolioCurrency, AssetSummary } from '../types';
 import { generateCoinChartSeries, ChartTimeframe, CoinChartPoint, ChartTradeItem } from '../utils/coinChartData';
@@ -70,12 +71,14 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const [historicalPrices, setHistoricalPrices] = useState<Map<string, number>>(new Map());
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // Interactive Chart Tool overlays
+  // Interactive Chart Tool overlays & Technical Indicators
   const [showDcaLine, setShowDcaLine] = useState(true);
   const [showTradePins, setShowTradePins] = useState(true);
   const [showExtrema, setShowExtrema] = useState(false);
   const [showSma, setShowSma] = useState(false);
-  const [showCursorPopup, setShowCursorPopup] = useState(false);
+  const [showBollinger, setShowBollinger] = useState(false);
+  const [showAth, setShowAth] = useState(false);
+  const [showRsi, setShowRsi] = useState(false);
   const [hoveredPoint, setHoveredPoint] = useState<CoinChartPoint | null>(null);
   const [inspectedTrade, setInspectedTrade] = useState<ChartTradeItem | null>(null);
 
@@ -277,21 +280,83 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     return ((currentPrice - avgBuyPrice) / avgBuyPrice) * 100;
   }, [avgBuyPrice, currentPrice]);
 
-  // 20-period Simple Moving Average calculation
-  const pointsWithSma = useMemo(() => {
-    if (!points || points.length === 0) return [];
-    const windowSize = Math.min(20, Math.max(3, Math.floor(points.length / 4)));
-    return points.map((pt, idx) => {
-      const start = Math.max(0, idx - windowSize + 1);
+  // Technical Indicators: SMA 20, Bollinger Bands (20, 2σ), RSI 14 & All-Time-High (ATH)
+  const { pointsWithIndicators, periodAth } = useMemo(() => {
+    if (!points || points.length === 0) {
+      return { 
+        pointsWithIndicators: [] as (CoinChartPoint & { sma20?: number; bbUpper?: number; bbLower?: number; rsi14?: number })[], 
+        periodAth: { maxPoint: null as CoinChartPoint | null, maxVal: 0, distancePct: 0 } 
+      };
+    }
+
+    const smaWindow = Math.min(20, Math.max(3, Math.floor(points.length / 4)));
+    const rsiWindow = Math.min(14, Math.max(3, Math.floor(points.length / 4)));
+
+    let maxPt = points[0];
+    let maxVal = (points[0] as any)[activeDataKey] ?? 0;
+
+    const enriched = points.map((pt, idx) => {
+      const v = (pt as any)[activeDataKey] ?? 0;
+      if (typeof v === 'number' && !isNaN(v) && v > maxVal) {
+        maxVal = v;
+        maxPt = pt;
+      }
+
+      // 1. SMA 20
+      const start = Math.max(0, idx - smaWindow + 1);
       const windowSlice = points.slice(start, idx + 1);
       const sum = windowSlice.reduce((acc, curr) => acc + ((curr as any)[activeDataKey] || 0), 0);
       const sma = sum / windowSlice.length;
+
+      // 2. Bollinger Bands (20, 2σ)
+      const variance = windowSlice.reduce((acc, curr) => {
+        const diff = ((curr as any)[activeDataKey] || 0) - sma;
+        return acc + (diff * diff);
+      }, 0) / windowSlice.length;
+      const stdDev = Math.sqrt(variance);
+      const bbUpper = sma + 2 * stdDev;
+      const bbLower = Math.max(0, sma - 2 * stdDev);
+
+      // 3. RSI 14 (Momentum Oscillator)
+      let gains = 0;
+      let losses = 0;
+      let count = 0;
+      for (let i = Math.max(1, idx - rsiWindow + 1); i <= idx; i++) {
+        const prevP = (points[i - 1] as any)[activeDataKey] || 0;
+        const curP = (points[i] as any)[activeDataKey] || 0;
+        const diff = curP - prevP;
+        if (diff > 0) gains += diff;
+        else losses += Math.abs(diff);
+        count++;
+      }
+      let rsi = 50;
+      if (count > 0) {
+        const avgGain = gains / count;
+        const avgLoss = losses / count;
+        if (avgLoss === 0) {
+          rsi = 100;
+        } else {
+          const rs = avgGain / avgLoss;
+          rsi = 100 - (100 / (1 + rs));
+        }
+      }
+
       return {
         ...pt,
-        sma20: Number(sma.toFixed(6))
+        sma20: Number(sma.toFixed(6)),
+        bbUpper: Number(bbUpper.toFixed(6)),
+        bbLower: Number(bbLower.toFixed(6)),
+        rsi14: Number(rsi.toFixed(1)),
       };
     });
-  }, [points, activeDataKey]);
+
+    const distancePct = maxVal > 0 && currentPrice > 0 ? ((currentPrice - maxVal) / maxVal) * 100 : 0;
+
+    return {
+      pointsWithIndicators: enriched,
+      periodAth: { maxPoint: maxPt, maxVal, distancePct }
+    };
+  }, [points, activeDataKey, currentPrice]);
 
   // High & Low period extrema
   const extrema = useMemo(() => {
@@ -415,108 +480,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     );
   };
 
-  // Custom Rich Interactive Tooltip
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload || !payload.length) return null;
-    const data: CoinChartPoint = payload[0].payload;
-    if (!data) return null;
 
-    const priceDec = data.price < 0.0001 ? 8 : (data.price < 0.01 ? 6 : (data.price < 1 ? 4 : 2));
-
-    return (
-      <div className={`p-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-xs text-xs z-50 transition-none ${
-        isLight 
-          ? 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/50' 
-          : 'bg-slate-900/95 border-slate-700/80 text-white shadow-black/80'
-      }`}>
-        {/* Header: Date */}
-        <div className="flex items-center justify-between gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800">
-          <span className="font-semibold text-slate-300 font-mono flex items-center gap-1">
-            <Calendar className="w-3 h-3 text-indigo-400" />
-            {data.formattedDate}
-          </span>
-          {data.isToday && (
-            <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-              Live
-            </span>
-          )}
-        </div>
-
-        {/* Core Metric Values */}
-        <div className="py-2 space-y-1 font-mono">
-          {!isPortfolio && (
-            <div className="flex items-center justify-between gap-3">
-              <span className="text-slate-400 font-sans">Kurs:</span>
-              <span className="font-bold text-slate-100">{formatCurr(data.price, priceDec)}</span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-400 font-sans">
-              {isPortfolio ? 'Portfoliowert:' : 'Bestandswert:'}
-            </span>
-            <span className="font-bold text-slate-100">{formatCurr(data.holdingValue)}</span>
-          </div>
-
-          {!isPortfolio && data.holdingBalance > 0 && (
-            <div className="flex items-center justify-between gap-3 text-[11px]">
-              <span className="text-slate-400 font-sans">Bestand:</span>
-              <span className="text-slate-300">{data.holdingBalance.toLocaleString('de-DE')} {selectedCoin}</span>
-            </div>
-          )}
-
-          <div className="flex items-center justify-between gap-3">
-            <span className="text-slate-400 font-sans">Gewinn / Verlust:</span>
-            <span className={`font-bold ${data.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {data.pnl >= 0 ? '+' : ''}{formatCurr(data.pnl)} ({data.pnl >= 0 ? '+' : ''}{data.pnlPercentage.toFixed(2)} %)
-            </span>
-          </div>
-        </div>
-
-        {/* Embedded Trades on this date */}
-        {data.trades && data.trades.length > 0 && (
-          <div className="mt-2 pt-2 border-t border-slate-700/60 space-y-1.5">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-amber-400 flex items-center gap-1">
-              <ShoppingBag className="w-3 h-3" />
-              <span>{data.trades.length} Trade{data.trades.length !== 1 ? 's' : ''} ausgeführt:</span>
-            </div>
-
-            {data.trades.map((tr, idx) => {
-              const isBuy = tr.type === 'BUY';
-              return (
-                <div 
-                  key={tr.id || idx} 
-                  className={`p-2 rounded-lg border text-[11px] ${
-                    isBuy 
-                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' 
-                      : 'bg-rose-500/10 border-rose-500/30 text-rose-200'
-                  }`}
-                >
-                  <div className="flex items-center justify-between font-bold">
-                    <span className="flex items-center gap-1">
-                      <span className={`w-2 h-2 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                      <span>{isBuy ? 'KAUF' : 'VERKAUF'}</span>
-                      {tr.timeStr && <span className="opacity-75 font-normal text-[10px]">({tr.timeStr})</span>}
-                    </span>
-                    <span className="font-mono">{isBuy ? '+' : '-'}{tr.amount.toLocaleString('de-DE')} {tr.symbol}</span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-[10px] mt-1 opacity-90 font-mono">
-                    <span>Kurs: {formatPrice(tr.price)}</span>
-                    <span>Kosten: {formatCurr(tr.totalCost)}</span>
-                  </div>
-
-                  <div className="text-[9px] mt-0.5 opacity-75 capitalize">
-                    Börse: {tr.source.replace('_', '.')}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <div className={`p-4 sm:p-6 rounded-2xl border shadow-xl transition-all space-y-5 ${
@@ -872,71 +836,156 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   ? 'bg-purple-600/25 border-purple-500 text-purple-300 shadow-sm'
                   : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
-              title="Gleitender Durchschnitt (Trendlinie) einblenden"
+              title="Gleitender Durchschnitt SMA (20-Perioden Trendlinie) einblenden"
             >
-              <TrendingUp className="w-3 h-3" />
-              <span>Trend (SMA)</span>
+              <TrendingUp className="w-3 h-3 text-purple-400" />
+              <span>Trend (SMA 20)</span>
             </button>
 
-            {/* 5. Toggle Floating Cursor-Popup */}
+            {/* 5. Toggle Bollinger Bands */}
             <button
               type="button"
-              onClick={() => setShowCursorPopup(!showCursorPopup)}
+              onClick={() => setShowBollinger(!showBollinger)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
-                showCursorPopup
-                  ? 'bg-blue-600/25 border-blue-500 text-blue-300 shadow-sm'
+                showBollinger
+                  ? 'bg-cyan-600/25 border-cyan-500 text-cyan-300 shadow-sm'
                   : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
-              title="Schwebendes Popup-Fenster an der Maus ein- oder ausblenden (verhindert das Verdecken der Kurve)"
+              title="Bollinger Bänder (20, 2σ Volatilitäts-Korridor) einblenden – visualisiert Überkauft/Überverkauft-Zonen"
             >
-              <MessageSquare className="w-3 h-3" />
-              <span>Cursor-Popup</span>
+              <Activity className="w-3 h-3 text-cyan-400" />
+              <span>Bollinger Bänder</span>
+            </button>
+
+            {/* 6. Toggle ATH / All-Time-High Reference Line */}
+            {metricMode === 'price' && periodAth && periodAth.maxVal > 0 && (
+              <button
+                type="button"
+                onClick={() => setShowAth(!showAth)}
+                className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                  showAth
+                    ? 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
+                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                }`}
+                title="Allzeithoch / Höchststand als Referenzlinie mit prozentualem Rabattabstand einblenden"
+              >
+                <Award className="w-3 h-3 text-amber-400" />
+                <span>ATH ({periodAth.distancePct.toFixed(1)}%)</span>
+              </button>
+            )}
+
+            {/* 7. Toggle RSI (14) Momentum Oscillator */}
+            <button
+              type="button"
+              onClick={() => setShowRsi(!showRsi)}
+              className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                showRsi
+                  ? 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="RSI 14 (Relative Strength Index) Oszillator einblenden – signalisiert Akkumulations- & Dip-Zonen (<30)"
+            >
+              <LineChartIcon className="w-3 h-3 text-indigo-400" />
+              <span>RSI (14)</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* 3.6 Live Hover Inspection Bar (Active when hovering on chart curve) */}
-      {hoveredPoint && (
-        <div className={`px-3 py-2 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs font-mono shadow-sm ${
-          isLight ? 'bg-indigo-50/90 border-indigo-200 text-slate-900' : 'bg-indigo-950/40 border-indigo-800/60 text-slate-100'
-        }`}>
-          <div className="flex items-center gap-2">
-            <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-            <span className="font-bold text-indigo-400 font-sans">{hoveredPoint.formattedDate}</span>
-            {hoveredPoint.isToday && (
-              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                Live
-              </span>
-            )}
-          </div>
+      {/* 3.6 Anchored Live Inspection HUD Card (Fest im Diagrammbereich verankert, keine Verdeckung der Kurve) */}
+      {(() => {
+        const displayPoint: CoinChartPoint | null = hoveredPoint || (points.length > 0 ? points[points.length - 1] : null);
+        const isLive = !hoveredPoint;
 
-          <div className="flex flex-wrap items-center gap-3 text-xs">
-            {!isPortfolio && (
-              <div>
-                <span className="text-slate-400 font-sans text-[11px] mr-1">Kurs:</span>
-                <span className="font-bold">{formatPrice(hoveredPoint.price)}</span>
+        return (
+          <div className={`px-3.5 py-2.5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs font-mono shadow-sm transition-all min-h-[46px] ${
+            isLight 
+              ? 'bg-slate-100/90 border-slate-200 text-slate-800' 
+              : (hoveredPoint ? 'bg-indigo-950/40 border-indigo-700/60 text-slate-100' : 'bg-slate-950/70 border-slate-800/80 text-slate-200')
+          }`}>
+            {/* Left: Date / Status / Trades */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+                <span className="font-bold text-xs font-sans text-indigo-400">
+                  {displayPoint ? displayPoint.formattedDate : 'Live'}
+                </span>
+              </div>
+
+              {displayPoint?.isToday || isLive ? (
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <span>Live-Stand</span>
+                </span>
+              ) : (
+                <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans">
+                  Inspektion
+                </span>
+              )}
+
+              {displayPoint?.trades && displayPoint.trades.length > 0 ? (
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {displayPoint.trades.map((tr) => (
+                    <span 
+                      key={tr.id}
+                      onClick={() => setInspectedTrade(tr)}
+                      title="Klick für Tranchen-Details (§ 23 EStG)"
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 ${
+                        tr.type === 'BUY'
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                          : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                      }`}
+                    >
+                      <ShoppingBag className="w-2.5 h-2.5" />
+                      <span>
+                        {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}
+                      </span>
+                      <span className="opacity-75 uppercase text-[9px] font-normal">({tr.source.replace('_', '.')})</span>
+                    </span>
+                  ))}
+                </div>
+              ) : isLive && !isPortfolio ? (
+                <span className="text-[10px] text-slate-400 hidden lg:inline font-sans">
+                  💡 Bewege die Maus über die Kurve zur Punkt-Inspektion einzelner Tage
+                </span>
+              ) : null}
+            </div>
+
+            {/* Right: Key metrics */}
+            {displayPoint && (
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                {!isPortfolio && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-400 font-sans text-[11px]">Kurs:</span>
+                    <span className="font-bold text-slate-100">{formatPrice(displayPoint.price)}</span>
+                  </div>
+                )}
+
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-400 font-sans text-[11px]">{isPortfolio ? 'Portfolio:' : 'Wert:'}</span>
+                  <span className="font-bold text-slate-100">{formatCurr(displayPoint.holdingValue)}</span>
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <span className="text-slate-400 font-sans text-[11px]">P&amp;L:</span>
+                  <span className={`font-bold ${displayPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {displayPoint.pnl >= 0 ? '+' : ''}{formatCurr(displayPoint.pnl)} ({displayPoint.pnl >= 0 ? '+' : ''}{displayPoint.pnlPercentage.toFixed(2)} %)
+                  </span>
+                </div>
+
+                {!isPortfolio && avgBuyPrice > 0 && metricMode === 'price' && (
+                  <div className="hidden sm:flex items-center gap-1 text-[11px]">
+                    <span className="text-slate-400 font-sans">Ø Einstieg:</span>
+                    <span className={`font-semibold ${((displayPoint.price - avgBuyPrice) / avgBuyPrice) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {((displayPoint.price - avgBuyPrice) / avgBuyPrice) >= 0 ? '+' : ''}{(((displayPoint.price - avgBuyPrice) / avgBuyPrice) * 100).toFixed(1)} %
+                    </span>
+                  </div>
+                )}
               </div>
             )}
-            <div>
-              <span className="text-slate-400 font-sans text-[11px] mr-1">{isPortfolio ? 'Portfolio:' : 'Wert:'}</span>
-              <span className="font-bold">{formatCurr(hoveredPoint.holdingValue)}</span>
-            </div>
-            <div>
-              <span className="text-slate-400 font-sans text-[11px] mr-1">P&amp;L:</span>
-              <span className={`font-bold ${hoveredPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                {hoveredPoint.pnl >= 0 ? '+' : ''}{formatCurr(hoveredPoint.pnl)} ({hoveredPoint.pnl >= 0 ? '+' : ''}{hoveredPoint.pnlPercentage.toFixed(2)} %)
-              </span>
-            </div>
-            {hoveredPoint.trades && hoveredPoint.trades.length > 0 && (
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
-                <ShoppingBag className="w-3 h-3" />
-                <span>{hoveredPoint.trades.length} Trade{hoveredPoint.trades.length !== 1 ? 's' : ''} ausgeführt</span>
-              </span>
-            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 4. Chart Canvas */}
       <div className="h-72 sm:h-80 w-full relative">
@@ -947,7 +996,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart 
-              data={pointsWithSma} 
+              data={pointsWithIndicators} 
               margin={{ top: 26, right: 15, left: 5, bottom: 0 }}
               onMouseMove={(state: any) => {
                 if (state && state.activePayload && state.activePayload.length) {
@@ -987,12 +1036,13 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 tickFormatter={formatYAxisTick}
               />
 
+              {/* Cursor crosshair line (no floating popup following mouse, HUD card updates above) */}
               <RechartsTooltip 
-                content={showCursorPopup ? <CustomTooltip /> : () => null}
+                content={() => null}
                 isAnimationActive={false}
                 animationDuration={0}
                 cursor={{ stroke: '#818cf8', strokeWidth: 1.5, strokeDasharray: '3 3' }}
-                wrapperStyle={{ pointerEvents: 'none', zIndex: 50 }}
+                wrapperStyle={{ pointerEvents: 'none', display: 'none' }}
               />
 
               {/* Horizontal DCA Reference Line */}
@@ -1050,7 +1100,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 />
               )}
 
-              {/* 20-period Moving Average */}
+              {/* 20-period Moving Average (SMA) */}
               {showSma && (
                 <Line
                   type="monotone"
@@ -1061,6 +1111,49 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   dot={false}
                   activeDot={false}
                   isAnimationActive={false}
+                />
+              )}
+
+              {/* Bollinger Bands (20, 2σ Volatilitäts-Korridor) */}
+              {showBollinger && (
+                <>
+                  <Line
+                    type="monotone"
+                    dataKey="bbUpper"
+                    stroke="#06b6d4"
+                    strokeWidth={1.3}
+                    strokeDasharray="2 2"
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="bbLower"
+                    stroke="#06b6d4"
+                    strokeWidth={1.3}
+                    strokeDasharray="2 2"
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                  />
+                </>
+              )}
+
+              {/* All-Time-High (ATH) Reference Line */}
+              {showAth && periodAth && periodAth.maxVal > 0 && (
+                <ReferenceLine 
+                  y={periodAth.maxVal} 
+                  stroke="#f59e0b" 
+                  strokeDasharray="4 4" 
+                  strokeWidth={1.6}
+                  label={{
+                    value: `🏆 Hoch: ${formatPrice(periodAth.maxVal)} (${periodAth.distancePct.toFixed(1)}%)`,
+                    fill: '#f59e0b',
+                    fontSize: 10,
+                    position: 'insideTopLeft',
+                    fontWeight: 600
+                  }}
                 />
               )}
 
@@ -1079,20 +1172,115 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         )}
       </div>
 
+      {/* 4.5 Synchronized RSI (14) Momentum Oscillator Panel */}
+      {showRsi && points.length > 0 && (() => {
+        const displayPoint: CoinChartPoint | null = hoveredPoint || points[points.length - 1];
+        const rsiVal = (displayPoint as any)?.rsi14 ?? 50;
+        const isOversold = rsiVal <= 30;
+        const isOverbought = rsiVal >= 70;
+
+        return (
+          <div className={`p-3 rounded-xl border space-y-1.5 transition-all ${
+            isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/70 border-slate-800'
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+              <div className="flex items-center gap-2">
+                <span className="font-bold text-indigo-400 font-sans flex items-center gap-1">
+                  <LineChartIcon className="w-3.5 h-3.5" />
+                  <span>RSI (14) Momentum:</span>
+                </span>
+                <span className="font-bold text-slate-100">{rsiVal.toFixed(1)}</span>
+                {isOversold ? (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    Überverkauft (Akkumulations-Zone)
+                  </span>
+                ) : isOverbought ? (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30">
+                    Überkauft (Hitze-Zone)
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.2 rounded text-[10px] text-slate-400 bg-slate-800 border border-slate-700">
+                    Neutral
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-400 flex items-center gap-3">
+                <span className="text-emerald-400 font-semibold">&le; 30: Überverkauft / Dip</span>
+                <span className="text-rose-400 font-semibold">&ge; 70: Überkauft</span>
+              </div>
+            </div>
+
+            <div className="h-16 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart 
+                  data={pointsWithIndicators}
+                  margin={{ top: 4, right: 15, left: 5, bottom: 0 }}
+                  onMouseMove={(state: any) => {
+                    if (state && state.activePayload && state.activePayload.length) {
+                      setHoveredPoint(state.activePayload[0].payload);
+                    }
+                  }}
+                  onMouseLeave={() => setHoveredPoint(null)}
+                >
+                  <CartesianGrid strokeDasharray="2 2" stroke={isLight ? '#e2e8f0' : '#1e293b'} vertical={false} />
+                  <YAxis domain={[0, 100]} ticks={[30, 70]} width={25} stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
+                  <ReferenceLine y={70} stroke="#f43f5e" strokeDasharray="3 3" strokeWidth={1} />
+                  <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 3" strokeWidth={1} />
+                  <Area 
+                    type="monotone" 
+                    dataKey="rsi14" 
+                    stroke="#818cf8" 
+                    strokeWidth={1.8} 
+                    fill="#818cf8" 
+                    fillOpacity={0.15} 
+                    dot={false}
+                    isAnimationActive={false}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        );
+      })()}
+
       {/* 5. Chart Legend & Interactive Hint */}
-      <div className="flex flex-wrap items-center justify-between text-[11px] text-slate-400 pt-1">
-        <div className="flex items-center space-x-3">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-400 pt-1">
+        <div className="flex flex-wrap items-center gap-3">
           <span className="flex items-center space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block shadow-sm" />
-            <span className="text-slate-300 font-medium">Kauf-Zeitpunkt (Buy)</span>
+            <span className="text-slate-300 font-medium">Kauf (Buy)</span>
           </span>
           <span className="flex items-center space-x-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-400 inline-block shadow-sm" />
-            <span className="text-slate-300 font-medium">Verkauf-Zeitpunkt (Sell)</span>
+            <span className="text-slate-300 font-medium">Verkauf (Sell)</span>
           </span>
+          {showDcaLine && avgBuyPrice > 0 && metricMode === 'price' && (
+            <span className="flex items-center space-x-1.5">
+              <span className="w-3 h-0.5 border-t border-dashed border-indigo-400 inline-block" />
+              <span className="text-indigo-400 font-medium">Ø Einstieg ({formatPrice(avgBuyPrice)})</span>
+            </span>
+          )}
+          {showSma && (
+            <span className="flex items-center space-x-1.5">
+              <span className="w-3 h-0.5 border-t border-dashed border-purple-400 inline-block" />
+              <span className="text-purple-400 font-medium">SMA 20 Trend</span>
+            </span>
+          )}
+          {showBollinger && (
+            <span className="flex items-center space-x-1.5">
+              <span className="w-3 h-0.5 border-t border-dashed border-cyan-400 inline-block" />
+              <span className="text-cyan-400 font-medium">Bollinger Bänder (20, 2σ)</span>
+            </span>
+          )}
+          {showAth && periodAth && periodAth.maxVal > 0 && (
+            <span className="flex items-center space-x-1.5">
+              <span className="w-3 h-0.5 border-t border-dashed border-amber-400 inline-block" />
+              <span className="text-amber-400 font-medium">ATH ({formatPrice(periodAth.maxVal)})</span>
+            </span>
+          )}
         </div>
         <div className="opacity-80">
-          Tipp: Klicke auf die Pins oder Tranchen für den Steuer- &amp; Performance-Inspektor
+          Tipp: Klicke auf die Pins oder Tranchen für den Steuer- &amp; Performance-Inspektor (§ 23 EStG)
         </div>
       </div>
 
