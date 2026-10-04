@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.25';
+export const APP_VERSION = '0.5.26';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.26',
+    date: '04.10.2026',
+    title: 'Vollbildmodus (Fullscreen), zuverlässige Live-Hover-Inspektion & Beseitigung von Auswahlrahmen',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Interaktiver Vollbildmodus (Fullscreen): Neuer Vollbild-Schalter in der Kopfzeile und Toolbar verwandelt das Chart auf Knopfdruck in eine immersive TradingView-Pro Ansicht mit erweiterter Zeichenfläche, Tastatur-Shortcut (Escape zum Verlassen) und vollständigem Erhalt aller aktiven Indikatoren.',
+      },
+      {
+        type: 'fix',
+        text: 'Zuverlässige Live-Hover-Inspektion wiederhergestellt: Daten zu Datum, Marktkurs, Portfoliowert, Rendite (P&L) und Trades werden beim Führen der Maus über die Kurve verzögerungsfrei im fest verankerten HUD sowie der Statusleiste aktualisiert.',
+      },
+      {
+        type: 'fix',
+        text: 'Blaue Fokus-Auswahlrahmen beim Klick eliminiert: Browser-spezifische Fokusumrandungen (Focus Rings) beim Anklicken der Recharts SVG-Zeichenfläche wurden systemweit und container-übergreifend vollständig unterdrückt.',
+      },
+    ],
+  },
   {
     version: '0.5.25',
     date: '04.10.2026',
     title: 'Fest verankertes Chart-HUD, Bollinger Bänder, ATH-Linie, RSI (14) & Matrix-Layoutfix',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

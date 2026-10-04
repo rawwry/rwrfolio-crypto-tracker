@@ -56,3 +56,17 @@ html[data-color-theme="amber"] .bg-slate-950\/80 {
   background-color: #191107 !important;
   border-color: #3b280e !important;
 }
+
+/* Prevent focus outlines / selection frames on Recharts and SVG charts */
+.recharts-wrapper,
+.recharts-wrapper *,
+.recharts-surface,
+.recharts-surface *,
+.recharts-responsive-container,
+.recharts-responsive-container * {
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+  -webkit-focus-ring-color: transparent !important;
+}
+

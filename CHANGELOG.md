@@ -4,6 +4,23 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.26] - 04.10.2026
+
+### ✨ Neue Features
+- **Interaktiver Vollbildmodus (Fullscreen)**:
+  - Neuer Vollbild-Schalter `[ ⛶ Vollbild ]` in der Kopfzeile und der Chart-Toolbar.
+  - Ermöglicht maximale Übersicht im Stil professioneller TradingView Pro Ansichten mit erweiterter Zeichenflächenhöhe (`58vh`).
+  - Schnelles Schließen jederzeit über den Button `[ ✕ Vollbild beenden ]` oder per Tastatur mit der `Escape`-Taste.
+  - Nahtloser Erhalt aller eingestellten Indikatoren (SMA, Bollinger Bänder, ATH, RSI) und Zeitfenster ohne Reload.
+
+### 🐛 Bugfixes & Verbesserungen
+- **Zuverlässige Live-Hover-Inspektion wiederhergestellt**:
+  - Die Datenaktualisierung beim Bewegen der Maus über die Kurve wurde wiederhergestellt. Sowohl das kopfseitig verankerte Live-HUD als auch die integrierte Statusleiste aktualisieren Datum, Kurs, Depotwert, P&L, Einstiegsabstand und Trades synchron in Echtzeit.
+- **Blaue Fokus-Auswahlrahmen beim Klick eliminiert**:
+  - Unerwünschte Browser-Auswahlrahmen und blaue Fokusringe beim Anklicken der Recharts SVG-Zeichenfläche wurden im gesamten Chartbereich vollständig entfernt.
+
+---
+
 ## [0.5.25] - 04.10.2026
 
 ### ✨ Neue Features & Indikatoren

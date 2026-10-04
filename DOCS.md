@@ -12,6 +12,7 @@
   - Sekundengenaue Aktualisierung von Preisen, Allokationen, unrealisierten Gewinnen/Verlusten (UP&L) und DCA-Durchschnittspreisen.
 - **📊 Interaktive TradingView-Style Charts:**
   - Echte historische Marktkurven für Bitcoin, Ethereum, Solana, Polkadot, Hedera, Akash und alle weiteren Portfolio-Assets.
+  - **Vollbildmodus (Fullscreen):** Großformatige TradingView-Pro Ansicht per Knopfdruck (`[ ⛶ Vollbild ]` oder Tastatur-Shortcut `Esc`) mit erweiterter Zeichenfläche (`58vh`).
   - **Trade-Pins:** Kaufzeitpunkte (▲ KAUF) und Verkäufe (▼ VERK.) direkt auf der Kurslinie mit Glow-Effekten und vertikalen Orientierungslinien.
   - **Horizontale DCA-Referenzlinie:** Zeigt deinen persönlichen durchschnittlichen Kaufpreis mit prozentualem Abstand zum aktuellen Kurs.
   - **Fest verankertes Live-HUD & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart; zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
