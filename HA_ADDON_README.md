@@ -1,32 +1,39 @@
-# rwrfolio - Home Assistant OS Add-on
+# rwrfolio – Home Assistant OS Add-on
 
-Krypto Portfolio- und DCA-Tracker mit **persistenter SQLite-Datenbank** und Live-Kursen für Home Assistant OS.
+Privater Krypto Portfolio- und DCA-Tracker mit **persistenter SQLite-Datenbank**, Live-Marktkursen, interaktiven TradingView-Style Charts und § 23 EStG Steuerbericht für Home Assistant OS.
 
 ---
 
 ## 🚀 Installation in Home Assistant OS
 
-Du kannst diese App direkt als **lokales Add-on** in Home Assistant OS installieren:
+Du kannst diese App direkt über das GitHub-Repository im Home Assistant Add-on Store oder als lokales Add-on installieren:
 
-1. **Dateien kopieren:**
-   - Erstelle auf deinem Home Assistant (z. B. per Samba Share oder SSH & Web Terminal) einen Ordner unter:
-     `/addons/local/rwrfolio`
-   - Kopiere alle Dateien dieses Repositories in diesen Ordner.
+### Methode 1: Über Add-on Store (Empfohlen)
+1. In Home Assistant zu **Einstellungen > Add-ons > Add-on Store** navigieren.
+2. Oben rechts auf das Drei-Punkte-Menü `⋮ > Repositories` klicken.
+3. Repository hinzufügen:
+   ```text
+   https://github.com/rawwry/rwrfolio-crypto-tracker
+   ```
+4. Nach Neuladen **rwrfolio** anklicken, **Installieren** und starten.
 
-2. **Add-on im Home Assistant Store laden:**
-   - Öffne in Home Assistant **Einstellungen > Add-ons > Add-on Store**.
-   - Klicke oben rechts auf das Drei-Punkte-Menü `⋮` und wähle **Neu laden**.
-   - Das Add-on **rwrfolio** erscheint nun unter der Kategorie *Lokal*.
-
-3. **Installieren & Starten:**
-   - Klicke auf **rwrfolio** und auf **Installieren**.
-   - Aktiviere die Optionen **Beim Systemstart starten** und **In Seitenleiste anzeigen (Ingress)**.
-   - Klicke auf **Starten** und anschließend auf **Benutzeroberfläche öffnen**.
+### Methode 2: Als lokales Add-on
+1. Repository in das Verzeichnis `/addons/local/rwrfolio` auf deinem Home Assistant kopieren.
+2. Im Add-on Store auf `⋮ > Neu laden` klicken.
+3. **rwrfolio** unter *Lokal* auswählen und installieren.
 
 ---
 
-## 💾 Persistente SQLite-Datenbank
+## 💾 Persistente Speicherung & Samba-Share
 
-- Die SQLite-Datenbank wird standardmäßig unter `/config/rwrfolio.db` abgelegt.
-- Dadurch bleibt dein Portfolio bei Add-on-Updates, Container-Neustarts oder Home Assistant-Backups dauerhaft und sicher erhalten!
-- Über die Weboberfläche kannst du jederzeit auch zusätzliche CSV- und JSON-Sicherungen herunterladen.
+- **SQLite-Datenbank:** `/share/rwrfolio/db/rwrfolio.db`
+- **Importierte Belege:** `/share/rwrfolio/imported/`
+- Deine Daten bleiben bei Updates, Neustarts und Home Assistant System-Backups dauerhaft erhalten.
+- Direkter Zugriff im lokalen Netzwerk via Samba: `\\homeassistant\share\rwrfolio\`.
+
+---
+
+## 📖 Dokumentation & Changelog
+
+- Vollständige Feature-Dokumentation: [DOCS.md](DOCS.md)
+- Ausführlicher Versionsverlauf: [CHANGELOG.md](CHANGELOG.md)

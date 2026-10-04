@@ -33,7 +33,8 @@ import {
   Sliders,
   ShieldCheck,
   Clock,
-  ChevronRight
+  ChevronRight,
+  MessageSquare
 } from 'lucide-react';
 import { Transaction, PortfolioCurrency, AssetSummary } from '../types';
 import { generateCoinChartSeries, ChartTimeframe, CoinChartPoint, ChartTradeItem } from '../utils/coinChartData';
@@ -74,6 +75,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
   const [showTradePins, setShowTradePins] = useState(true);
   const [showExtrema, setShowExtrema] = useState(false);
   const [showSma, setShowSma] = useState(false);
+  const [showCursorPopup, setShowCursorPopup] = useState(false);
+  const [hoveredPoint, setHoveredPoint] = useState<CoinChartPoint | null>(null);
   const [inspectedTrade, setInspectedTrade] = useState<ChartTradeItem | null>(null);
 
   // Sync when parent changes selectedCoinInitial
@@ -83,9 +86,10 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     }
   }, [selectedCoinInitial]);
 
-  // Reset inspected trade when coin or timeframe changes
+  // Reset inspected trade and hovered point when coin or timeframe changes
   React.useEffect(() => {
     setInspectedTrade(null);
+    setHoveredPoint(null);
   }, [selectedCoin, timeframe]);
 
   const handleCoinChange = (coin: string) => {
@@ -420,7 +424,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     const priceDec = data.price < 0.0001 ? 8 : (data.price < 0.01 ? 6 : (data.price < 1 ? 4 : 2));
 
     return (
-      <div className={`p-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-xs text-xs z-50 transition-all ${
+      <div className={`p-3.5 rounded-xl border shadow-2xl backdrop-blur-md max-w-xs text-xs z-50 transition-none ${
         isLight 
           ? 'bg-white/95 border-slate-200 text-slate-900 shadow-slate-300/50' 
           : 'bg-slate-900/95 border-slate-700/80 text-white shadow-black/80'
@@ -873,6 +877,63 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               <TrendingUp className="w-3 h-3" />
               <span>Trend (SMA)</span>
             </button>
+
+            {/* 5. Toggle Floating Cursor-Popup */}
+            <button
+              type="button"
+              onClick={() => setShowCursorPopup(!showCursorPopup)}
+              className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
+                showCursorPopup
+                  ? 'bg-blue-600/25 border-blue-500 text-blue-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Schwebendes Popup-Fenster an der Maus ein- oder ausblenden (verhindert das Verdecken der Kurve)"
+            >
+              <MessageSquare className="w-3 h-3" />
+              <span>Cursor-Popup</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 3.6 Live Hover Inspection Bar (Active when hovering on chart curve) */}
+      {hoveredPoint && (
+        <div className={`px-3 py-2 rounded-xl border flex flex-wrap items-center justify-between gap-2 text-xs font-mono shadow-sm ${
+          isLight ? 'bg-indigo-50/90 border-indigo-200 text-slate-900' : 'bg-indigo-950/40 border-indigo-800/60 text-slate-100'
+        }`}>
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+            <span className="font-bold text-indigo-400 font-sans">{hoveredPoint.formattedDate}</span>
+            {hoveredPoint.isToday && (
+              <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Live
+              </span>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-xs">
+            {!isPortfolio && (
+              <div>
+                <span className="text-slate-400 font-sans text-[11px] mr-1">Kurs:</span>
+                <span className="font-bold">{formatPrice(hoveredPoint.price)}</span>
+              </div>
+            )}
+            <div>
+              <span className="text-slate-400 font-sans text-[11px] mr-1">{isPortfolio ? 'Portfolio:' : 'Wert:'}</span>
+              <span className="font-bold">{formatCurr(hoveredPoint.holdingValue)}</span>
+            </div>
+            <div>
+              <span className="text-slate-400 font-sans text-[11px] mr-1">P&amp;L:</span>
+              <span className={`font-bold ${hoveredPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {hoveredPoint.pnl >= 0 ? '+' : ''}{formatCurr(hoveredPoint.pnl)} ({hoveredPoint.pnl >= 0 ? '+' : ''}{hoveredPoint.pnlPercentage.toFixed(2)} %)
+              </span>
+            </div>
+            {hoveredPoint.trades && hoveredPoint.trades.length > 0 && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center gap-1">
+                <ShoppingBag className="w-3 h-3" />
+                <span>{hoveredPoint.trades.length} Trade{hoveredPoint.trades.length !== 1 ? 's' : ''} ausgeführt</span>
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -885,7 +946,16 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={pointsWithSma} margin={{ top: 26, right: 15, left: 5, bottom: 0 }}>
+            <AreaChart 
+              data={pointsWithSma} 
+              margin={{ top: 26, right: 15, left: 5, bottom: 0 }}
+              onMouseMove={(state: any) => {
+                if (state && state.activePayload && state.activePayload.length) {
+                  setHoveredPoint(state.activePayload[0].payload);
+                }
+              }}
+              onMouseLeave={() => setHoveredPoint(null)}
+            >
               <defs>
                 <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor={chartThemeColor} stopOpacity={0.35} />
@@ -917,7 +987,13 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 tickFormatter={formatYAxisTick}
               />
 
-              <RechartsTooltip content={<CustomTooltip />} />
+              <RechartsTooltip 
+                content={showCursorPopup ? <CustomTooltip /> : () => null}
+                isAnimationActive={false}
+                animationDuration={0}
+                cursor={{ stroke: '#818cf8', strokeWidth: 1.5, strokeDasharray: '3 3' }}
+                wrapperStyle={{ pointerEvents: 'none', zIndex: 50 }}
+              />
 
               {/* Horizontal DCA Reference Line */}
               {showDcaLine && !isPortfolio && metricMode === 'price' && avgBuyPrice > 0 && (

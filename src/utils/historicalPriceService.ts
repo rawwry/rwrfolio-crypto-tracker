@@ -181,3 +181,71 @@ export async function fetchHistoricalMarketPrices(
 
   return resultMap;
 }
+
+export interface AssetPeriodChange {
+  priceChangePct: number;
+  priceChangeFiat: number;
+  valueChangeFiat: number;
+}
+
+/**
+ * Fetch period return for an asset (24h, 7d, 30d, 90d, 1y).
+ * Computes priceChangePct, priceChangeFiat and valueChangeFiat on the holding balance.
+ */
+export async function fetchAssetPeriodChange(
+  symbol: string,
+  timeframe: ChartTimeframe,
+  currentPrice: number,
+  balance: number,
+  eurUsdRate: number = getLiveEurUsdRate()
+): Promise<AssetPeriodChange | null> {
+  if (timeframe === 'all' || !symbol || symbol === 'ALL') return null;
+
+  // 1. Fast 24h ticker optimization via Binance & Kraken
+  if (timeframe === '24h') {
+    try {
+      const sym = symbol.toUpperCase() === 'MATIC' || symbol.toUpperCase() === 'POLYGON' ? 'POL' : symbol.toUpperCase();
+      const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`);
+      if (res.ok) {
+        const data = await res.json();
+        const pct = parseFloat(data.priceChangePercent);
+        if (!isNaN(pct)) {
+          const priceChange = (pct / 100) * currentPrice;
+          const valueChange = priceChange * balance;
+          return {
+            priceChangePct: pct,
+            priceChangeFiat: priceChange,
+            valueChangeFiat: valueChange,
+          };
+        }
+      }
+    } catch {
+      // Fall back to historical series
+    }
+  }
+
+  // 2. Multi-day timeframe using historical market candles
+  try {
+    const history = await fetchHistoricalMarketPrices(symbol, timeframe, eurUsdRate);
+    if (!history || history.size < 2) return null;
+
+    const prices = Array.from(history.values());
+    const startPrice = prices[0];
+    const endPrice = prices[prices.length - 1] || currentPrice;
+
+    if (startPrice <= 0) return null;
+
+    const priceChangePct = ((endPrice - startPrice) / startPrice) * 100;
+    const priceChangeFiat = (priceChangePct / 100) * currentPrice;
+    const valueChangeFiat = priceChangeFiat * balance;
+
+    return {
+      priceChangePct,
+      priceChangeFiat,
+      valueChangeFiat,
+    };
+  } catch (err) {
+    console.warn(`[HistoricalPrices] Error calculating period return for ${symbol}:`, err);
+    return null;
+  }
+}

@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.23';
+export const APP_VERSION = '0.5.24';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.24',
+    date: '04.10.2026',
+    title: 'Multi-Timeframe Performance-Matrix, Tooltip-Glide-Fix & Home Assistant Add-on Dokumentation',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Multi-Timeframe Umschalter in Coin-Performance Matrix: Neue intuitive Zeitfenster-Auswahl (24h, 7T, 30T, 90T, 1J und Gesamt) zur Analyse relativer Kursrenditen (%) und absoluter Depotwert-Veränderungen (€/$) je Coin inklusive dynamischer Sortierung.',
+      },
+      {
+        type: 'fix',
+        text: 'Tooltip-Glide & Verdeckungs-Glitch behoben: Das Hereinfliegen des Popups von der linken Bildschirmkante wurde dauerhaft eliminiert. Eine feste Live-Inspektionsleiste über dem Chart visualisiert Kurse, P&L und Trades verzögerungsfrei, ohne die Kurve oder Trade-Pins zu verdecken.',
+      },
+      {
+        type: 'feat',
+        text: 'Cursor-Popup Schalter ([💬 Cursor-Popup]): Neuer Toolbar-Button über dem interaktiven Chart zum optionalen Aktivieren oder Deaktivieren des schwebenden Maus-Popups für maximale Übersicht.',
+      },
+      {
+        type: 'feat',
+        text: 'Home Assistant Add-on Dokumentation & Changelog: Vollständige Integration von DOCS.md und CHANGELOG.md im Repository-Root zur automatischen Bereitstellung in der Home Assistant Supervisor Dokumentations- und Versionsverwaltung.',
+      },
+    ],
+  },
   {
     version: '0.5.23',
     date: '04.10.2026',
     title: 'Einzeilige Bestandsanzeige in der Coin-Übersicht',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

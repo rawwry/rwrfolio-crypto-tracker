@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -7,11 +7,14 @@ import {
   Coins, 
   LineChart as LineChartIcon,
   Percent,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Clock,
+  Loader2
 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { AssetSummary, PortfolioCurrency } from '../types';
-import { getCoinDetails } from '../utils/priceService';
+import { getCoinDetails, getLiveEurUsdRate } from '../utils/priceService';
+import { ChartTimeframe } from '../utils/coinChartData';
+import { fetchAssetPeriodChange, AssetPeriodChange } from '../utils/historicalPriceService';
 
 interface CoinPerformanceMatrixProps {
   assets: AssetSummary[];
@@ -20,6 +23,15 @@ interface CoinPerformanceMatrixProps {
   onSelectCoinForChart: (symbol: string) => void;
   activeChartCoin?: string;
 }
+
+const TIMEFRAMES: { label: string; value: ChartTimeframe; tooltip: string }[] = [
+  { label: '24h', value: '24h', tooltip: 'Letzte 24 Stunden (Tag)' },
+  { label: '7T', value: '7d', tooltip: 'Letzte 7 Tage (Woche)' },
+  { label: '30T', value: '30d', tooltip: 'Letzte 30 Tage (1 Monat)' },
+  { label: '90T', value: '90d', tooltip: 'Letzte 90 Tage (3 Monate)' },
+  { label: '1J', value: '1y', tooltip: 'Letztes Jahr (12 Monate)' },
+  { label: 'Gesamt', value: 'all', tooltip: 'Gesamte Historie (DCA All-Time)' },
+];
 
 export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
   assets,
@@ -30,8 +42,55 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
 }) => {
   const isLight = theme === 'light';
   const isUSD = currency === 'USD';
+  const [matrixTimeframe, setMatrixTimeframe] = useState<ChartTimeframe>('all');
+  const [periodChanges, setPeriodChanges] = useState<Record<string, AssetPeriodChange>>({});
+  const [loadingPeriod, setLoadingPeriod] = useState<boolean>(false);
   const [sortField, setSortField] = useState<'pnlPct' | 'value' | 'invested' | 'name'>('value');
   const [sortAsc, setSortAsc] = useState(false);
+
+  // Fetch period changes when a specific timeframe is selected
+  useEffect(() => {
+    if (matrixTimeframe === 'all') return;
+    let isMounted = true;
+    setLoadingPeriod(true);
+
+    const fetchAllChanges = async () => {
+      const rate = getLiveEurUsdRate();
+      const results: Record<string, AssetPeriodChange> = {};
+
+      await Promise.allSettled(
+        assets.map(async (asset) => {
+          const activePrice = isUSD 
+            ? (asset.currentPriceUSD || asset.currentPrice) 
+            : (asset.currentPriceEUR || asset.currentPrice);
+          const res = await fetchAssetPeriodChange(
+            asset.symbol,
+            matrixTimeframe,
+            activePrice,
+            asset.currentBalance,
+            rate
+          );
+          if (res) {
+            results[asset.symbol] = res;
+          }
+        })
+      );
+
+      if (isMounted) {
+        setPeriodChanges(results);
+        setLoadingPeriod(false);
+      }
+    };
+
+    fetchAllChanges();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [matrixTimeframe, assets, isUSD]);
+
+  const activeTfObj = TIMEFRAMES.find(t => t.value === matrixTimeframe) || TIMEFRAMES[5];
+  const activeTfLabel = activeTfObj.label;
 
   const formatCurr = (val: number, decimals: number = 2) => {
     return new Intl.NumberFormat(isUSD ? 'en-US' : 'de-DE', {
@@ -43,7 +102,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
   };
 
   const formatPrice = (val: number) => {
-    const dec = val < 0.01 ? 6 : (val < 1 ? 4 : (val < 100 ? 3 : 2));
+    const dec = Math.abs(val) < 0.01 ? 6 : (Math.abs(val) < 1 ? 4 : (Math.abs(val) < 100 ? 3 : 2));
     return formatCurr(val, dec);
   };
 
@@ -56,8 +115,13 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
         const res = a.symbol.localeCompare(b.symbol);
         return sortAsc ? res : -res;
       } else if (sortField === 'pnlPct') {
-        valA = a.pnlPercentage;
-        valB = b.pnlPercentage;
+        if (matrixTimeframe === 'all') {
+          valA = a.pnlPercentage;
+          valB = b.pnlPercentage;
+        } else {
+          valA = periodChanges[a.symbol]?.priceChangePct ?? 0;
+          valB = periodChanges[b.symbol]?.priceChangePct ?? 0;
+        }
       } else if (sortField === 'invested') {
         valA = isUSD ? (a.totalInvestedUSD ?? a.totalInvested) : (a.totalInvestedEUR ?? a.totalInvested);
         valB = isUSD ? (b.totalInvestedUSD ?? b.totalInvested) : (b.totalInvestedEUR ?? b.totalInvested);
@@ -68,7 +132,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
 
       return sortAsc ? valA - valB : valB - valA;
     });
-  }, [assets, sortField, sortAsc, isUSD]);
+  }, [assets, sortField, sortAsc, isUSD, matrixTimeframe, periodChanges]);
 
   const toggleSort = (field: 'pnlPct' | 'value' | 'invested' | 'name') => {
     if (sortField === field) {
@@ -79,7 +143,13 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
     }
   };
 
-  const profitableCount = assets.filter(a => (isUSD ? (a.pnlUSD ?? a.pnl) : (a.pnlEUR ?? a.pnl)) >= 0).length;
+  const profitableCount = useMemo(() => {
+    if (matrixTimeframe === 'all') {
+      return assets.filter(a => (isUSD ? (a.pnlUSD ?? a.pnl) : (a.pnlEUR ?? a.pnl)) >= 0).length;
+    }
+    return assets.filter(a => (periodChanges[a.symbol]?.priceChangePct ?? 0) >= 0).length;
+  }, [assets, matrixTimeframe, periodChanges, isUSD]);
+
   const losingCount = assets.length - profitableCount;
 
   return (
@@ -87,8 +157,8 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800/80'
     }`}>
       
-      {/* 1. Header with Stats & Sort Buttons */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      {/* 1. Header with Stats & Multi-Timeframe Switcher */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center flex-shrink-0">
             <Coins className="w-5 h-5" />
@@ -105,13 +175,46 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               </span>
             </div>
             <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Rendite-Vergleich nach DCA, Live-Kurs &amp; P&amp;L &bull; <span className="text-indigo-400 font-medium">Zeile oder Kachel anklicken</span>, um den interaktiven Chart oben zu laden
+              {matrixTimeframe === 'all' 
+                ? 'Rendite-Vergleich nach DCA, Live-Kurs & P&L' 
+                : `Performance-Ansicht für Zeitraum: ${activeTfObj.tooltip}`} &bull; <span className="text-indigo-400 font-medium">Zeile anklicken</span>, um Chart zu wechseln
             </p>
           </div>
         </div>
 
-        {/* Quick Summary Pill & Sort Filter */}
-        <div className="flex items-center space-x-2 self-start sm:self-auto">
+        {/* Timeframe Switcher & Summary Pills */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Multi-Timeframe Switcher Pills */}
+          <div className={`flex items-center p-1 rounded-xl border ${
+            isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/80 border-slate-800'
+          }`}>
+            {TIMEFRAMES.map(tf => {
+              const isActive = matrixTimeframe === tf.value;
+              return (
+                <button
+                  key={tf.value}
+                  onClick={() => setMatrixTimeframe(tf.value)}
+                  title={tf.tooltip}
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition-all ${
+                    isActive
+                      ? 'bg-indigo-600 text-white shadow-sm'
+                      : (isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-white' : 'text-slate-400 hover:text-white hover:bg-slate-800/60')
+                  }`}
+                >
+                  {tf.label}
+                </button>
+              );
+            })}
+          </div>
+
+          {loadingPeriod && (
+            <div className="flex items-center gap-1.5 text-xs text-indigo-400 font-medium">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span className="text-[11px]">Berechne {activeTfLabel}...</span>
+            </div>
+          )}
+
+          {/* Quick Summary Pill */}
           <div className="flex items-center space-x-1.5 text-xs font-mono">
             <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
               {profitableCount} im Plus
@@ -149,12 +252,16 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               >
                 Aktueller Wert {sortField === 'value' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
-              <th className="py-3 px-3 font-semibold text-right">Ø Kaufkurs / Live</th>
+              <th className="py-3 px-3 font-semibold text-right">
+                {matrixTimeframe === 'all' ? 'Ø Kaufkurs / Live' : 'Live-Kurs'}
+              </th>
               <th 
                 onClick={() => toggleSort('pnlPct')}
                 className="py-3 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
               >
-                Gewinn / Rendite {sortField === 'pnlPct' ? (sortAsc ? '↑' : '↓') : ''}
+                {matrixTimeframe === 'all' 
+                  ? 'Gesamt P&L / Rendite' 
+                  : `${activeTfLabel} Rendite & Wert`} {sortField === 'pnlPct' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
             </tr>
           </thead>
@@ -168,6 +275,10 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               const activePnl = isUSD ? (asset.pnlUSD ?? asset.pnl) : (asset.pnlEUR ?? asset.pnl);
               const isProfit = activePnl >= 0;
               const isSelected = activeChartCoin === asset.symbol;
+
+              // Period data for timeframes other than 'all'
+              const periodChange = periodChanges[asset.symbol];
+              const isPeriodProfit = periodChange ? periodChange.priceChangePct >= 0 : isProfit;
 
               return (
                 <tr 
@@ -236,20 +347,47 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                     <div className="text-slate-200 font-semibold">
                       {formatPrice(activePrice)}
                     </div>
-                    <div className="text-[10px] text-slate-400 font-sans">
-                      Ø {formatPrice(activeAvgBuy)}
-                    </div>
+                    {matrixTimeframe === 'all' && (
+                      <div className="text-[10px] text-slate-400 font-sans">
+                        Ø {formatPrice(activeAvgBuy)}
+                      </div>
+                    )}
                   </td>
 
-                  {/* Return / P&L */}
+                  {/* Return / P&L (Relative and Absolute) */}
                   <td className="py-3 px-3 text-right">
-                    <div className={`font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isProfit ? '+' : ''}{formatCurr(activePnl)}
-                    </div>
-                    <div className={`text-[10px] inline-flex items-center gap-0.5 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {isProfit ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                      <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %</span>
-                    </div>
+                    {matrixTimeframe === 'all' ? (
+                      <>
+                        <div className={`font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {isProfit ? '+' : ''}{formatCurr(activePnl)}
+                        </div>
+                        <div className={`text-[10px] inline-flex items-center gap-0.5 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          {isProfit ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                          <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {loadingPeriod && !periodChange ? (
+                          <div className="text-[11px] text-slate-500 animate-pulse font-sans">wird geladen...</div>
+                        ) : (
+                          <>
+                            <div className={`font-bold ${isPeriodProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {isPeriodProfit ? '+' : ''}{formatCurr(periodChange?.valueChangeFiat ?? 0)}
+                            </div>
+                            <div className={`text-[10px] inline-flex items-center gap-0.5 ${isPeriodProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                              {isPeriodProfit ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                              <span>{isPeriodProfit ? '+' : ''}{(periodChange?.priceChangePct ?? 0).toFixed(2)} %</span>
+                            </div>
+                            {periodChange && (
+                              <div className="text-[9px] text-slate-500 font-sans">
+                                Kurs: {periodChange.priceChangeFiat >= 0 ? '+' : ''}{formatPrice(periodChange.priceChangeFiat)}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </>
+                    )}
                   </td>
                 </tr>
               );
@@ -269,6 +407,13 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
           const activePnl = isUSD ? (asset.pnlUSD ?? asset.pnl) : (asset.pnlEUR ?? asset.pnl);
           const isProfit = activePnl >= 0;
           const isSelected = activeChartCoin === asset.symbol;
+
+          // Period data for timeframes other than 'all'
+          const periodChange = periodChanges[asset.symbol];
+          const isPeriodProfit = periodChange ? periodChange.priceChangePct >= 0 : isProfit;
+          const cardPct = matrixTimeframe === 'all' ? asset.pnlPercentage : (periodChange?.priceChangePct ?? 0);
+          const cardVal = matrixTimeframe === 'all' ? activePnl : (periodChange?.valueChangeFiat ?? 0);
+          const isCardProfit = matrixTimeframe === 'all' ? isProfit : isPeriodProfit;
 
           return (
             <div 
@@ -299,9 +444,9 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   </div>
                 </div>
                 <div className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold ${
-                  isProfit ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
+                  isCardProfit ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
                 }`}>
-                  {isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %
+                  {isCardProfit ? '+' : ''}{cardPct.toFixed(2)} % {matrixTimeframe !== 'all' && `(${activeTfLabel})`}
                 </div>
               </div>
 
@@ -311,9 +456,11 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   <span className="font-bold text-white">{formatCurr(activeValue)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">Gewinn/Verlust</span>
-                  <span className={`font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {isProfit ? '+' : ''}{formatCurr(activePnl)}
+                  <span className="text-[10px] text-slate-400 block font-sans">
+                    {matrixTimeframe === 'all' ? 'Gewinn/Verlust' : `${activeTfLabel} Veränderung`}
+                  </span>
+                  <span className={`font-bold ${isCardProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {isCardProfit ? '+' : ''}{formatCurr(cardVal)}
                   </span>
                 </div>
                 <div>
@@ -321,8 +468,12 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   <span className="text-slate-200">{formatPrice(activePrice)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">Ø Kaufkurs</span>
-                  <span className="text-slate-300">{formatPrice(activeAvgBuy)}</span>
+                  <span className="text-[10px] text-slate-400 block font-sans">
+                    {matrixTimeframe === 'all' ? 'Ø Kaufkurs' : 'Investiert'}
+                  </span>
+                  <span className="text-slate-300">
+                    {matrixTimeframe === 'all' ? formatPrice(activeAvgBuy) : formatCurr(activeInvested)}
+                  </span>
                 </div>
               </div>
 
