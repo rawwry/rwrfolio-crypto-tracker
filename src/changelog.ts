@@ -9,14 +9,25 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.22';
+export const APP_VERSION = '0.5.23';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.23',
+    date: '04.10.2026',
+    title: 'Einzeilige Bestandsanzeige in der Coin-Übersicht',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Spalte Bestand bereinigt: In der Coin-Tabelle unter „Coins“ wurde die zweite Zeile mit dem Währungscode entfernt. Der Coin-Bestand wird nun sauber und platzsparend als einzeilige Zahl dargestellt.',
+      },
+    ],
+  },
   {
     version: '0.5.22',
     date: '03.10.2026',
     title: 'TradingView-Style Trade-Pins, Horizontale DCA-Linie & Interaktiver Tranchen- & Steuer-Inspektor',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

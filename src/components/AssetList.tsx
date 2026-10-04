@@ -380,8 +380,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                   <td className={`py-2.5 px-2 lg:px-3 text-right font-mono font-medium text-xs sm:text-sm align-middle whitespace-nowrap ${
                     isLight ? 'text-slate-900' : 'text-slate-100'
                   }`}>
-                    <div>{formatCoinAmount(asset.currentBalance)}</div>
-                    <div className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.symbol}</div>
+                    {formatCoinAmount(asset.currentBalance)}
                   </td>
 
                   {/* Avg Buy Price / DCA (text-right) */}
