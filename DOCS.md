@@ -15,11 +15,12 @@
   - **Vollbildmodus (Fullscreen):** Großformatige TradingView-Pro Ansicht per Knopfdruck (`[ ⛶ Vollbild ]` oder Tastatur-Shortcut `Esc`) mit erweiterter Zeichenfläche (`58vh`).
   - **Trade-Pins:** Kaufzeitpunkte (▲ KAUF) und Verkäufe (▼ VERK.) direkt auf der Kurslinie mit Glow-Effekten und vertikalen Orientierungslinien.
   - **Horizontale DCA-Referenzlinie:** Zeigt deinen persönlichen durchschnittlichen Kaufpreis mit prozentualem Abstand zum aktuellen Kurs.
-  - **100% pixel-stabiles Live-HUD, Clean Canvas & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart mit rigiden Spalten und `font-mono tabular-nums` (kein Springen oder Jitter beim Hovern über Trades); linienfreier TradingView-Canvas ohne störende horizontale Gitterstriche; zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
-- **🥧 Neugestaltete Coin-Allokation & Gewichtung:**
+  - **100% pixel-stabiles Live-HUD, Clean Canvas & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart mit rigiden Spalten und `font-mono tabular-nums` (kein Springen oder Jitter beim Hovern über Trades); linienfreier TradingView-Canvas ohne störende horizontale Gitterstriche (sowohl im Hauptchart als auch im Portfolio-Verlaufsdiagramm); zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
+- **🥧 Neugestaltete Coin-Allokation & Gewichtung (Dauerhaft ausgeklappt & sprungfrei):**
   - Kompakter, horizontaler **Horizon-Allokationsstreifen** mit Farbsegmentierung nach Coin-Markenfarben und interaktiver Segmentfokussierung (spart über 200px vertikalen Platz gegenüber alten Kreisdiagrammen).
   - **4-KPI-Konzentrationsleiste:** Top 1 Dominanz, Top 3 Konzentrationsgrad (*Fokussiert* vs. *Ausgewogen*), stärkster Alpha-Werttreiber vs. Kapital sowie Gesamtportfolio-Rendite.
-  - **Hochdichte Allokations-Tabelle mit Allokations-Pills:** Extrem schlanke, einzeilige Tabelle je Coin mit Rang, Asset, klaren Allokations-Pill-Badges (ohne graue Balkenspuren), Marktwert, Cost Basis, P&L und Allokations-Drift. Standardmäßig mit Top-6-Kompaktansicht und 1-Klick-Ausklappen für alle weiteren Bestände (spart über 65 % vertikale Höhe).
+  - **Hochdichte, 100 % sprungfreie Allokations-Tabelle:** Extrem schlanke, einzeilige Tabelle je Coin mit Rang, Asset, klaren Allokations-Pill-Badges (ohne graue Balkenspuren), Marktwert, Cost Basis, P&L und Allokations-Drift. Rigides `table-fixed`-Raster ohne Schriftstärken-Mutationen auf Hover verhindert jegliches Breitenwackeln. Startet standardmäßig stets vollständig ausgeklappt für maximalen Überblick.
+- **☀️ Light-Theme Kontrast-Perfektion:** Sämtliche Komponenten, Metriken, Sortierknöpfe und Badges wurden auf optimale Lesbarkeit im Hellen Modus nach WCAG-Standards angepasst.
 - **⚡ Multi-Timeframe Performance-Matrix:**
   - Schneller Wechsel zwischen **24h (Tag)**, **7T (Woche)**, **30T (Monat)**, **90T (3 Monate)**, **1J (Jahr)** und **Gesamt (All-Time DCA)**.
   - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.

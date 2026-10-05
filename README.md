@@ -1,7 +1,7 @@
 # rwrfolio – Krypto Portfolio & DCA Tracker für Home Assistant OS
 
 [![Home Assistant Add-on](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/Version-0.5.31-emerald.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.5.32-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 **rwrfolio** ist ein privater, lokaler Krypto-Portfolio- und DCA-Tracker für Home Assistant OS mit persistenter SQLite-Datenbank, echten Live-Marktkursen, interaktiven TradingView-Style Charts, Multi-Timeframe Performance-Matrix und offiziellem Steuerbericht (§ 23 EStG).
@@ -12,10 +12,11 @@
 
 - **🔒 100 % Privat & Lokal:** Läuft vollständig auf deinem Home Assistant Server – keine Datenweitergabe an Dritte.
 - **🖥️ Fullwidth-Widescreen-Layout:** Flüssiges 1920px Widescreen-Layout als neuer Standard mit Umschaltmöglichkeit auf Kompakt (Boxed).
+- **☀️ Perfektioniertes Light Theme:** Kristallklarer WCAG-Kontrast für alle Kennzahlen, Charts, Toolbars und Badges im Hellen Modus – keine schwer lesbaren weißen Texte oder unsichtbaren Hover-Effekte mehr.
 - **📈 Echte Live-Marktkurse:** Direkte Einbindung von Binance & Kraken Public APIs (ohne API-Keys).
 - **📊 Interaktive Charts & Vollbildmodus:** Großformatige TradingView Pro Ansicht per Knopfdruck (`[ ⛶ Vollbild ]`), Einstiegs- und Ausstiegskurse (▲ KAUF / ▼ VERK.), horizontale DCA-Linie, SMA 20 Trend, Bollinger Bänder, ATH-Abstand und synchronisierter RSI (14) Momentum-Oszillator.
-- **🎯 100% pixel-stabiles Live-HUD & Clean Canvas:** Fest verankerte, sprungfreie Punkt- und Trade-Inspektion direkt über der Kurve mit rigiden Spalten und `tabular-nums`. Linienfreier Chart-Hintergrund ohne störendes horizontales Gitternetz für maximale Kursfokussierung.
-- **🥧 Neugestaltete Coin-Allokation:** Platzsparender Horizon-Streifen mit 4-KPI-Konzentrationsleiste, modernen Allokations-Pill-Badges (ohne graue Balkenlinien) und hochdichter Einzeiler-Tabelle (Markt vs. Cost Basis Drift).
+- **🎯 100% pixel-stabiles Live-HUD & Clean Canvas:** Fest verankerte, sprungfreie Punkt- und Trade-Inspektion direkt über der Kurve mit rigiden Spalten und `tabular-nums`. Linienfreier Chart-Hintergrund im Haupt- und Verlaufsdiagramm ohne störende Gitternetze für maximale Kursfokussierung.
+- **🥧 Neugestaltete Coin-Allokation (dauerhaft ausgeklappt & sprungfrei):** Platzsparender Horizon-Streifen mit 4-KPI-Konzentrationsleiste, modernen Allokations-Pill-Badges und hochdichter, 100 % sprungfreier `table-fixed`-Tabelle (Markt vs. Cost Basis Drift) – standardmäßig stets vollständig expandiert.
 - **⚡ Multi-Timeframe Performance-Matrix:** Umschalten zwischen 24h, 7T, 30T, 90T, 1J und Gesamt mit relativer Kursrendite (%) und absolutem Vermögenszuwachs (€ / $).
 - **📥 Smart Auto-Detect Import:** Drag & Drop für Kraken Pro (CSV & PDF-Statements), **Kraken E-Mail Kaufbelege** (PDF & Text), **Crypto.com App** (CSV) sowie **Crypto.com E-Mail Kaufbelege** (PDF & Text) mit intelligenter Multi-Source Duplikatserkennung.
 - **📑 BMF-Steuerbericht (§ 23 EStG):** 4-seitiger PDF-Steuerbericht mit FIFO-Haltefristen, Freigrenzen und ungekürzten Buchungsbelegen (Anhänge B & C).

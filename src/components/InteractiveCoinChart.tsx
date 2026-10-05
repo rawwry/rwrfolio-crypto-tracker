@@ -624,7 +624,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           {/* Metric mode switcher */}
           {!isPortfolio && (
             <div className={`p-1 rounded-xl border flex items-center text-xs font-semibold ${
-              isLight ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-300'
+              isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
             }`}>
               <button
                 type="button"
@@ -632,7 +632,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   metricMode === 'price'
                     ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'hover:text-white'
+                    : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 Kurs
@@ -643,7 +643,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   metricMode === 'value'
                     ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'hover:text-white'
+                    : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 Wert
@@ -654,7 +654,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                   metricMode === 'pnl'
                     ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                    : 'hover:text-white'
+                    : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                 }`}
               >
                 P&amp;L
@@ -664,7 +664,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
           {/* Timeframe selector */}
           <div className={`p-1 rounded-xl border flex items-center text-xs font-semibold ${
-            isLight ? 'bg-slate-100 border-slate-200 text-slate-600' : 'bg-slate-950 border-slate-800 text-slate-300'
+            isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-slate-950 border-slate-800 text-slate-300'
           }`}>
             {(['24h', '7d', '30d', '90d', '1y', 'all'] as ChartTimeframe[]).map((tf) => {
               const labelMap: Record<ChartTimeframe, string> = {
@@ -683,7 +683,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   className={`px-2.5 py-1 rounded-lg transition-all cursor-pointer ${
                     timeframe === tf
                       ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                      : 'hover:text-white'
+                      : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
                   }`}
                 >
                   {labelMap[tf]}
@@ -712,7 +712,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               </>
             ) : (
               <>
-                <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+                <Maximize2 className={`w-3.5 h-3.5 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
                 <span className="hidden sm:inline">Vollbild</span>
               </>
             )}
@@ -753,7 +753,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 <span>{sym}</span>
                 {a && (
                   <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
-                    isSelected ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-800 text-slate-400'
+                    isSelected 
+                      ? 'bg-indigo-800 text-indigo-100' 
+                      : (isLight ? 'bg-slate-200 text-slate-700 font-semibold' : 'bg-slate-800 text-slate-400')
                   }`}>
                     {a.allocationPercentage.toFixed(1)}%
                   </span>
@@ -762,7 +764,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
             );
           })}
 
-        <div className="h-4 w-px bg-slate-700/50 mx-1 flex-shrink-0" />
+        <div className={`h-4 w-px mx-1 flex-shrink-0 ${isLight ? 'bg-slate-300' : 'bg-slate-700/50'}`} />
 
         <button
           type="button"
@@ -797,11 +799,15 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         {/* Metric 2: DCA / Invested */}
         <div>
           <div className="flex items-center justify-between">
-            <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
               {isPortfolio ? 'Investiertes Kapital' : 'Ø Kaufkurs (DCA)'}
             </span>
             {!isPortfolio && avgBuyPrice > 0 && currentPrice > 0 && (
-              <span className={`text-[10px] font-mono font-bold ${dcaDistancePct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+              <span className={`text-[10px] font-mono font-bold ${
+                dcaDistancePct >= 0 
+                  ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                  : (isLight ? 'text-rose-700' : 'text-rose-400')
+              }`}>
                 {dcaDistancePct >= 0 ? '+' : ''}{dcaDistancePct.toFixed(1)}%
               </span>
             )}
@@ -815,26 +821,30 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
         {/* Metric 3: Profit / Loss */}
         <div>
-          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
             Gewinn / Verlust (P&amp;L)
           </span>
-          <span className={`text-sm sm:text-base font-bold ${currentPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+          <span className={`text-sm sm:text-base font-bold ${
+            currentPnl >= 0 
+              ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+              : (isLight ? 'text-rose-700' : 'text-rose-400')
+          }`}>
             {currentPnl >= 0 ? '+' : ''}{formatCurr(currentPnl)}
           </span>
         </div>
 
         {/* Metric 4: Trade count */}
         <div>
-          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
             Trades auf der Kurve
           </span>
           <span className={`text-sm sm:text-base font-semibold flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-            <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block" />
+            <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
             <span>{buyCount} Kauf</span>
             {sellCount > 0 && (
               <>
                 <span className="opacity-50">/</span>
-                <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
+                <span className="w-2 h-2 rounded-full bg-rose-500 inline-block" />
                 <span>{sellCount} Verk.</span>
               </>
             )}
@@ -845,8 +855,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
       {/* 3.5 Interactive Chart Overlays Toolbar */}
       {!isPortfolio && (
         <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
-          <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
-            <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+          <div className={`flex items-center gap-1.5 text-xs font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+            <Sliders className={`w-3.5 h-3.5 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
             <span className="hidden sm:inline">Chart-Overlays:</span>
           </div>
 
@@ -858,8 +868,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 onClick={() => setShowDcaLine(!showDcaLine)}
                 className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                   showDcaLine
-                    ? 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
-                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? isLight ? 'bg-indigo-100 border-indigo-400 text-indigo-800 shadow-sm' : 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
+                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
                 title="Durchschnittlicher Kaufkurs als horizontale Referenzlinie einblenden"
               >
@@ -874,8 +884,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               onClick={() => setShowTradePins(!showTradePins)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 showTradePins
-                  ? 'bg-emerald-600/25 border-emerald-500 text-emerald-300 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? isLight ? 'bg-emerald-100 border-emerald-400 text-emerald-800 shadow-sm' : 'bg-emerald-600/25 border-emerald-500 text-emerald-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title="Kauf- und Verkaufs-Badges im Chart ein-/ausblenden"
             >
@@ -889,8 +899,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               onClick={() => setShowExtrema(!showExtrema)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 showExtrema
-                  ? 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? isLight ? 'bg-amber-100 border-amber-400 text-amber-800 shadow-sm' : 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title="Höchst- und Tiefststand des Zeitraums markieren"
             >
@@ -904,12 +914,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               onClick={() => setShowSma(!showSma)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 showSma
-                  ? 'bg-purple-600/25 border-purple-500 text-purple-300 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? isLight ? 'bg-purple-100 border-purple-400 text-purple-800 shadow-sm' : 'bg-purple-600/25 border-purple-500 text-purple-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title="Gleitender Durchschnitt SMA (20-Perioden Trendlinie) einblenden"
             >
-              <TrendingUp className="w-3 h-3 text-purple-400" />
+              <TrendingUp className="w-3 h-3 text-purple-500" />
               <span>Trend (SMA 20)</span>
             </button>
 
@@ -919,12 +929,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               onClick={() => setShowBollinger(!showBollinger)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 showBollinger
-                  ? 'bg-cyan-600/25 border-cyan-500 text-cyan-300 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? isLight ? 'bg-cyan-100 border-cyan-400 text-cyan-800 shadow-sm' : 'bg-cyan-600/25 border-cyan-500 text-cyan-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title="Bollinger Bänder (20, 2σ Volatilitäts-Korridor) einblenden – visualisiert Überkauft/Überverkauft-Zonen"
             >
-              <Activity className="w-3 h-3 text-cyan-400" />
+              <Activity className="w-3 h-3 text-cyan-500" />
               <span>Bollinger Bänder</span>
             </button>
 
@@ -935,12 +945,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 onClick={() => setShowAth(!showAth)}
                 className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                   showAth
-                    ? 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
-                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                    ? isLight ? 'bg-amber-100 border-amber-400 text-amber-800 shadow-sm' : 'bg-amber-600/25 border-amber-500 text-amber-300 shadow-sm'
+                    : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                 }`}
                 title="Allzeithoch / Höchststand als Referenzlinie mit prozentualem Rabattabstand einblenden"
               >
-                <Award className="w-3 h-3 text-amber-400" />
+                <Award className="w-3 h-3 text-amber-500" />
                 <span>ATH ({periodAth.distancePct.toFixed(1)}%)</span>
               </button>
             )}
@@ -951,12 +961,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               onClick={() => setShowRsi(!showRsi)}
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 showRsi
-                  ? 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  ? isLight ? 'bg-indigo-100 border-indigo-400 text-indigo-800 shadow-sm' : 'bg-indigo-600/25 border-indigo-500 text-indigo-300 shadow-sm'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title="RSI 14 (Relative Strength Index) Oszillator einblenden – signalisiert Akkumulations- & Dip-Zonen (<30)"
             >
-              <LineChartIcon className="w-3 h-3 text-indigo-400" />
+              <LineChartIcon className={`w-3 h-3 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
               <span>RSI (14)</span>
             </button>
 
@@ -967,11 +977,11 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               className={`px-2.5 py-1 rounded-lg border flex items-center gap-1.5 transition-all cursor-pointer text-[11px] font-semibold ${
                 isFullscreen
                   ? 'bg-indigo-600 text-white border-indigo-500 shadow-sm'
-                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-500 hover:text-slate-800' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
+                  : isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
               }`}
               title={isFullscreen ? "Vollbildmodus beenden (Esc)" : "Chart im Vollbildmodus öffnen"}
             >
-              {isFullscreen ? <Minimize2 className="w-3 h-3 text-white" /> : <Maximize2 className="w-3 h-3 text-indigo-400" />}
+              {isFullscreen ? <Minimize2 className="w-3 h-3 text-white" /> : <Maximize2 className={`w-3 h-3 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />}
               <span>{isFullscreen ? 'Vollbild beenden' : 'Vollbild'}</span>
             </button>
           </div>
@@ -995,27 +1005,35 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
             {/* Left Slot: Date, Live/Inspektion Badge & Fixed Trade Slot */}
             <div className="flex items-center gap-2.5 shrink-0 h-full">
               {/* Date */}
-              <div className="w-24 shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs text-indigo-400">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <div className={`w-24 shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
+                <Calendar className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`} />
                 <span className="truncate">{displayPoint ? displayPoint.formattedDate : 'Live'}</span>
               </div>
 
               {/* Status Badge with fixed sizing */}
               <div className="w-20 shrink-0 flex items-center">
                 {displayPoint?.isToday || isLive ? (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${
+                    isLight 
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300' 
+                      : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                  }`}>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                     <span>Live</span>
                   </span>
                 ) : (
-                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans">
+                  <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold border font-sans ${
+                    isLight 
+                      ? 'bg-indigo-100 text-indigo-800 border-indigo-300' 
+                      : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+                  }`}>
                     Inspektion
                   </span>
                 )}
               </div>
 
               {/* Fixed Separator */}
-              <div className="w-px h-4 bg-slate-700/40 shrink-0" />
+              <div className={`w-px h-4 shrink-0 ${isLight ? 'bg-slate-300' : 'bg-slate-700/40'}`} />
 
               {/* Reserved Trade Slot (Fixed width to completely prevent jitter) */}
               <div className="w-64 sm:w-80 shrink-0 h-7 flex items-center overflow-hidden">
@@ -1028,8 +1046,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                         title="Klick für Tranchen-Details (§ 23 EStG)"
                         className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 shrink-0 ${
                           tr.type === 'BUY'
-                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40')
+                            : (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-500/20 text-rose-300 border-rose-500/40')
                         }`}
                       >
                         <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
@@ -1041,7 +1059,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                     ))}
                   </div>
                 ) : (
-                  <div className="flex items-center text-[11px] text-slate-500/80 font-sans truncate">
+                  <div className={`flex items-center text-[11px] font-sans truncate ${isLight ? 'text-slate-500' : 'text-slate-500/80'}`}>
                     {isLive && !isPortfolio ? (
                       <span>💡 Bewege die Maus über die Kurve zur Punkt-Inspektion</span>
                     ) : (
@@ -1058,7 +1076,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 {/* Metric 1: Kurs */}
                 {!isPortfolio && (
                   <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
-                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Kurs:</span>
+                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Kurs:</span>
                     <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                       {formatPrice(displayPoint.price)}
                     </span>
@@ -1067,7 +1085,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
                 {/* Metric 2: Wert / Portfolio */}
                 <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
-                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {isPortfolio ? 'Portf.:' : 'Wert:'}
                   </span>
                   <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
@@ -1077,8 +1095,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
                 {/* Metric 3: P&L */}
                 <div className="w-40 sm:w-48 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
-                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>P&amp;L:</span>
-                  <span className={`font-bold tabular-nums truncate ${displayPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>P&amp;L:</span>
+                  <span className={`font-bold tabular-nums truncate ${
+                    displayPoint.pnl >= 0 
+                      ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                      : (isLight ? 'text-rose-700' : 'text-rose-400')
+                  }`}>
                     {displayPoint.pnl >= 0 ? '+' : ''}{formatCurr(displayPoint.pnl)} ({displayPoint.pnl >= 0 ? '+' : ''}{displayPoint.pnlPercentage.toFixed(2)} %)
                   </span>
                 </div>
@@ -1086,13 +1108,17 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 {/* Metric 4: Ø Einstieg */}
                 {!isPortfolio && (
                   <div className="w-24 sm:w-28 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
-                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Ø:</span>
+                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Ø:</span>
                     {distBuy !== null ? (
-                      <span className={`font-semibold tabular-nums truncate ${distBuy >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className={`font-semibold tabular-nums truncate ${
+                        distBuy >= 0 
+                          ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                          : (isLight ? 'text-rose-700' : 'text-rose-400')
+                      }`}>
                         {distBuy >= 0 ? '+' : ''}{distBuy.toFixed(1)} %
                       </span>
                     ) : (
-                      <span className="text-slate-500 font-mono text-[11px]">-</span>
+                      <span className={`${isLight ? 'text-slate-400' : 'text-slate-500'} font-mono text-[11px]`}>-</span>
                     )}
                   </div>
                 )}
@@ -1440,21 +1466,23 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               ? 'bg-indigo-50/70 border-indigo-200 text-slate-800' 
               : 'bg-indigo-950/20 border-indigo-800/60 text-slate-200'
           }`}>
-            <div className="flex items-center justify-between pb-2 border-b border-indigo-200/50 dark:border-indigo-800/40">
+            <div className={`flex items-center justify-between pb-2 border-b ${isLight ? 'border-indigo-200' : 'border-indigo-800/40'}`}>
               <div className="flex items-center gap-2">
-                <span className={`w-3 h-3 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                <span className="font-bold text-xs sm:text-sm font-sans flex items-center gap-1.5 text-indigo-400">
+                <span className={`w-3 h-3 rounded-full ${isBuy ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                <span className={`font-bold text-xs sm:text-sm font-sans flex items-center gap-1.5 ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
                   <Crosshair className="w-4 h-4" />
                   <span>Tranchen-Inspektor: {isBuy ? 'Kauf' : 'Verkauf'} vom {dateStr}</span>
                 </span>
-                <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 uppercase">
+                <span className={`text-[10px] px-2 py-0.5 rounded-full uppercase ${isLight ? 'bg-slate-200 text-slate-700 font-semibold' : 'bg-slate-800 text-slate-300'}`}>
                   {inspectedTrade.source.replace('_', '.')}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={() => setInspectedTrade(null)}
-                className="p-1 rounded-lg hover:bg-slate-800/50 text-slate-400 hover:text-white transition-colors cursor-pointer"
+                className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                  isLight ? 'hover:bg-indigo-100 text-slate-500 hover:text-slate-900' : 'hover:bg-slate-800/50 text-slate-400 hover:text-white'
+                }`}
                 title="Inspektor schließen"
               >
                 <X className="w-4 h-4" />
@@ -1464,71 +1492,71 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
               {/* 1. Einstieg */}
               <div className="space-y-0.5">
-                <span className="text-[10px] font-sans text-slate-400 block">Kauf-Einstieg</span>
-                <span className="font-bold text-slate-100 block">
+                <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Kauf-Einstieg</span>
+                <span className={`font-bold block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                   {isBuy ? '+' : '-'}{inspectedTrade.amount.toLocaleString('de-DE')} {inspectedTrade.symbol}
                 </span>
-                <span className="text-[11px] text-slate-400 block">
+                <span className={`text-[11px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   à {formatPrice(inspectedTrade.price)} ({formatCurr(tradeCost)})
                 </span>
               </div>
 
               {/* 2. Aktueller Wert */}
               <div className="space-y-0.5">
-                <span className="text-[10px] font-sans text-slate-400 block">Aktueller Wert heute</span>
-                <span className="font-bold text-slate-100 block">
+                <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Aktueller Wert heute</span>
+                <span className={`font-bold block ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                   {isBuy ? formatCurr(tradeCurrentVal) : '-'}
                 </span>
-                <span className="text-[11px] text-slate-400 block">
+                <span className={`text-[11px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   Live-Kurs: {formatPrice(currentPrice)}
                 </span>
               </div>
 
               {/* 3. Rendite dieser Tranche */}
               <div className="space-y-0.5">
-                <span className="text-[10px] font-sans text-slate-400 block">Tranchen-Rendite</span>
+                <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Tranchen-Rendite</span>
                 {isBuy ? (
                   <>
-                    <span className={`font-bold block ${tradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`font-bold block ${tradePnl >= 0 ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                       {tradePnl >= 0 ? '+' : ''}{formatCurr(tradePnl)}
                     </span>
-                    <span className={`text-[11px] font-bold block ${tradePnlPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    <span className={`text-[11px] font-bold block ${tradePnlPct >= 0 ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                       {tradePnlPct >= 0 ? '+' : ''}{tradePnlPct.toFixed(2)} %
                     </span>
                   </>
                 ) : (
-                  <span className="text-slate-400">-</span>
+                  <span className={`${isLight ? 'text-slate-500' : 'text-slate-400'}`}>-</span>
                 )}
               </div>
 
               {/* 4. Deutsche Steuerfrist */}
               <div className="space-y-0.5">
-                <span className="text-[10px] font-sans text-slate-400 block">Haltefrist (§ 23 EStG)</span>
+                <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Haltefrist (§ 23 EStG)</span>
                 {isBuy ? (
                   <>
                     {isTaxFree ? (
-                      <div className="flex items-center gap-1.5 text-emerald-400 font-bold text-xs">
+                      <div className={`flex items-center gap-1.5 font-bold text-xs ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                         <ShieldCheck className="w-4 h-4 flex-shrink-0" />
                         <span>Steuerfrei!</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-amber-400 font-bold text-xs">
+                      <div className={`flex items-center gap-1.5 font-bold text-xs ${isLight ? 'text-amber-700' : 'text-amber-400'}`}>
                         <Clock className="w-4 h-4 flex-shrink-0" />
                         <span>Noch {daysRemaining} Tage</span>
                       </div>
                     )}
-                    <span className="text-[10px] text-slate-400 block">
+                    <span className={`text-[10px] block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                       {daysHeld} von 365 Tagen ({taxProgress.toFixed(0)}%)
                     </span>
-                    <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mt-1">
+                    <div className={`w-full h-1.5 rounded-full overflow-hidden mt-1 ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}>
                       <div 
-                        className={`h-full rounded-full ${isTaxFree ? 'bg-emerald-400' : 'bg-amber-400'}`} 
+                        className={`h-full rounded-full ${isTaxFree ? 'bg-emerald-500' : 'bg-amber-500'}`} 
                         style={{ width: `${taxProgress}%` }} 
                       />
                     </div>
                   </>
                 ) : (
-                  <span className="text-slate-400">-</span>
+                  <span className={`${isLight ? 'text-slate-500' : 'text-slate-400'}`}>-</span>
                 )}
               </div>
             </div>
@@ -1540,11 +1568,11 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
       {!isPortfolio && allTradesInPeriod.length > 0 && (
         <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-              <ShoppingBag className="w-3.5 h-3.5 text-indigo-400" />
+            <span className={`font-semibold flex items-center gap-1.5 ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>
+              <ShoppingBag className={`w-3.5 h-3.5 ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`} />
               <span>Ausgeführte Trades im Diagramm ({allTradesInPeriod.length})</span>
             </span>
-            <span className="text-[11px] text-slate-400">
+            <span className={`text-[11px] ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
               Klicke auf einen Pin oder eine Karte zur Tranchen-Analyse
             </span>
           </div>
@@ -1571,7 +1599,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                   onClick={() => setInspectedTrade(isSelected ? null : trade)}
                   className={`p-2.5 rounded-xl border text-left flex-shrink-0 transition-all cursor-pointer font-mono text-xs ${
                     isSelected
-                      ? 'bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500 text-white'
+                      ? (isLight 
+                          ? 'bg-indigo-100 border-indigo-500 shadow-md ring-1 ring-indigo-500 text-indigo-950 font-bold' 
+                          : 'bg-indigo-600/25 border-indigo-500 shadow-md ring-1 ring-indigo-500 text-white')
                       : isLight
                         ? 'bg-slate-50 border-slate-200 hover:bg-slate-100 text-slate-800'
                         : 'bg-slate-950/70 border-slate-800 hover:bg-slate-800/80 text-slate-200'
@@ -1579,15 +1609,15 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 >
                   <div className="flex items-center justify-between gap-3 text-[11px]">
                     <span className="flex items-center gap-1 font-bold">
-                      <span className={`w-2 h-2 rounded-full ${isBuy ? 'bg-emerald-400' : 'bg-rose-400'}`} />
+                      <span className={`w-2 h-2 rounded-full ${isBuy ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                       <span>{isBuy ? 'KAUF' : 'VERKAUF'}</span>
                       <span className="opacity-60 font-normal">{dStr}</span>
                     </span>
                     {isBuy && (
                       <span className={`px-1.5 py-0.2 rounded text-[9px] font-bold ${
                         taxExempt 
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
-                          : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          ? (isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30')
+                          : (isLight ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30')
                       }`}>
                         {taxExempt ? 'Steuerfrei' : `${days}T`}
                       </span>
@@ -1598,10 +1628,14 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                     {isBuy ? '+' : '-'}{trade.amount.toLocaleString('de-DE')} {trade.symbol}
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 text-[10px] mt-1 text-slate-400 font-sans">
+                  <div className={`flex items-center justify-between gap-2 text-[10px] mt-1 font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     <span>Kurs: {formatPrice(trade.price)}</span>
                     {isBuy && (
-                      <span className={`font-mono font-bold ${pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <span className={`font-mono font-bold ${
+                        pnl >= 0 
+                          ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                          : (isLight ? 'text-rose-700' : 'text-rose-400')
+                      }`}>
                         {pnl >= 0 ? '+' : ''}{pnlPct.toFixed(1)}%
                       </span>
                     )}

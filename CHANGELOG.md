@@ -4,6 +4,27 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.32] - 05.10.2026
+
+### 🎨 Design & Kontrast
+- **Umfassendes Light-Theme Kontrast-Overhaul**:
+  - Sämtliche Komponenten wurden auf perfekte Lesbarkeit im Hellen Modus (Light Theme) nach WCAG-Standards optimiert.
+  - Beseitigung aller schwer lesbaren weißen Texte auf hellem Hintergrund (z. B. in der Coin-Performance-Matrix und im Live-HUD des Charts) sowie Ausmerzung von unsichtbarem Text bei Hover-Effekten (`hover:text-white`).
+  - Neue, hochkontrastierende Farbklassen für Hell-Modus: Kräftiges Dunkelschiefer (`text-slate-900`, `text-slate-800`), tiefes Indigo (`text-indigo-700`) und sattes Smaragdgrün/Rosenrot (`text-emerald-700` / `text-rose-700`) für P&L- und Rendite-Ziffern.
+  - Vollständige Überarbeitung des Fear & Greed Index Widgets, des Portfoliowert-Verlaufsdiagramms und aller Toolbar-Buttons für das Light Theme.
+
+### 🥧 Coin-Allokation & Layout-Stabilität
+- **Standardmäßig dauerhaft ausgeklappt**: Die Allokations-Tabelle startet nun immer vollständig expandiert (`isExpanded = true`), sodass alle Coin-Positionen unmittelbar ohne Klick sichtbar sind.
+- **Bereinigte Kopfzeile**: Die redundante Pill-Plakette `(x Positionen)` neben der Überschrift wurde entfernt für ein aufgeräumtes Erscheinungsbild.
+- **100 % sprungfreies Tabellen-Layout**:
+  - Vollständige Behebung von Breiten- und Zeilensprüngen beim Bewegen der Maus über die Allokations-Tabelle.
+  - Umstellung auf ein striktes `table-fixed`-Layout mit fest definierten Breitenklassen je Spalte (`w-9 sm:w-11`, `w-auto`, `w-24 sm:w-28`, `w-32 sm:w-36`).
+  - Beseitigung dynamischer Schriftstärken-Änderungen (`font-semibold`) auf Zeilen-Hover, wodurch die Spaltenbreiten bei jeder Interaktion auf den Pixel exakt stabil bleiben.
+- **Linienfreies Verlaufsdiagramm**:
+  - Entfernung störender horizontaler Gitterlinien im Portfoliowert-Verlauf (`PortfolioValueTimelineChart`) für ein einheitlich klares, freies Kurvenerlebnis im modernen TradingView-Stil.
+
+---
+
 ## [0.5.31] - 05.10.2026
 
 ### 🎨 Design & Ästhetik

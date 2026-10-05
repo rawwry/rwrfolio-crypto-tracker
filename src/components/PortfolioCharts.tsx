@@ -29,7 +29,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
   const isUSD = currency === 'USD';
   const [mode, setMode] = useState<AllocationMode>('value');
   const [activeCoinSymbol, setActiveCoinSymbol] = useState<string | null>(null);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(true);
 
   // Compute portfolio totals
   const totalValue = useMemo(() => {
@@ -120,17 +120,12 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     <div className={`p-4 sm:p-5 rounded-2xl border shadow-xl transition-all space-y-3.5 ${
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
     }`}>
-      {/* 1. Header with Mode Toggle & Position Badge */}
+      {/* 1. Header with Mode Toggle */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
           <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <Layers className="w-4 h-4 text-indigo-500" />
             <span>Coin-Allokation &amp; Gewichtung</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
-            }`}>
-              {items.length} Positionen
-            </span>
           </h3>
           <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             {mode === 'value' 
@@ -149,7 +144,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition-all cursor-pointer ${
               mode === 'value'
                 ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                : 'hover:text-white'
+                : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
             <Wallet className="w-3.5 h-3.5" />
@@ -161,7 +156,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             className={`px-3 py-1.5 rounded-lg flex items-center space-x-1.5 transition-all cursor-pointer ${
               mode === 'invested'
                 ? 'bg-indigo-600 text-white shadow-sm font-bold'
-                : 'hover:text-white'
+                : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70' : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
             <DollarSign className="w-3.5 h-3.5" />
@@ -212,26 +207,30 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                 <div className="flex items-center gap-2 animate-fadeIn truncate">
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: activeCoin.color }} />
                   <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{activeCoin.symbol}</span>
-                  <span className="text-slate-400 font-sans truncate">({activeCoin.fullName})</span>
-                  <span className="text-indigo-400 font-bold">
+                  <span className={`font-sans truncate ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>({activeCoin.fullName})</span>
+                  <span className={`font-bold ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
                     {activeCoin.displayPercentage.toFixed(1)} %
                   </span>
-                  <span className="text-slate-500 hidden sm:inline">&bull;</span>
+                  <span className={`${isLight ? 'text-slate-400' : 'text-slate-500'} hidden sm:inline`}>&bull;</span>
                   <span className={`font-semibold hidden sm:inline ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                     Wert: {formatCurrency(activeCoin.currentValue)}
                   </span>
-                  <span className={`text-[11px] hidden md:inline ${activeCoin.shiftPercentage >= 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  <span className={`text-[11px] hidden md:inline font-bold ${
+                    activeCoin.shiftPercentage >= 0 
+                      ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                      : (isLight ? 'text-slate-600' : 'text-slate-400')
+                  }`}>
                     (Drift: {activeCoin.shiftPercentage >= 0 ? '+' : ''}{activeCoin.shiftPercentage.toFixed(1)}%)
                   </span>
                 </div>
               ) : (
-                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-sans truncate">
+                <div className={`flex items-center gap-2 text-[11px] font-sans truncate ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   <span>💡 Tipp: Fahre über ein Segment oder eine Zeile zur Detailanalyse</span>
                 </div>
               )}
 
-              <div className="text-[11px] text-slate-400 font-sans ml-auto shrink-0">
-                <span>Gesamt: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{formatCurrency(mode === 'value' ? totalValue : totalInvested)}</strong></span>
+              <div className={`text-[11px] font-sans ml-auto shrink-0 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <span>Gesamt: <strong className={isLight ? 'text-slate-900 font-bold' : 'text-white'}>{formatCurrency(mode === 'value' ? totalValue : totalInvested)}</strong></span>
               </div>
             </div>
           </div>
@@ -243,7 +242,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             }`}>
               {/* Insight 1: Top 1 Dominanz */}
               <div>
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-[10px] block font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   Top 1 Dominanz ({insights.top1.symbol})
                 </span>
                 <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
@@ -253,17 +252,17 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
 
               {/* Insight 2: Top 3 Konzentration */}
               <div>
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-[10px] block font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   Top 3 Konzentration
                 </span>
                 <div className="flex items-center space-x-1.5">
                   <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     {insights.top3Share.toFixed(1)} %
                   </span>
-                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-medium ${
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-semibold ${
                     insights.isConcentrated 
-                      ? 'bg-amber-500/15 text-amber-400' 
-                      : 'bg-emerald-500/15 text-emerald-400'
+                      ? (isLight ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-amber-500/15 text-amber-400')
+                      : (isLight ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400')
                   }`}>
                     {insights.isConcentrated ? 'Fokussiert' : 'Ausgewogen'}
                   </span>
@@ -272,18 +271,20 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
 
               {/* Insight 3: Alpha / Stärkster Werttreiber vs. Kapital */}
               <div>
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-[10px] block font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   Top Alpha-Treiber vs. Kapital
                 </span>
                 {insights.topGrower ? (
-                  <span className="text-xs sm:text-sm font-bold font-mono text-emerald-400 flex items-center gap-1 truncate">
+                  <span className={`text-xs sm:text-sm font-bold font-mono flex items-center gap-1 truncate ${
+                    isLight ? 'text-emerald-700' : 'text-emerald-400'
+                  }`}>
                     <span>{insights.topGrower.symbol}</span>
-                    <span className="text-[10px] font-normal text-emerald-300">
+                    <span className={`text-[10px] font-semibold ${isLight ? 'text-emerald-800' : 'text-emerald-300'}`}>
                       (+{insights.topGrower.shiftPercentage.toFixed(1)}% Drift)
                     </span>
                   </span>
                 ) : (
-                  <span className={`text-xs ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                  <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                     Ausgeglichen
                   </span>
                 )}
@@ -291,12 +292,16 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
 
               {/* Insight 4: Gesamtrendite / P&L Gesamt */}
               <div>
-                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-[10px] block font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                   Gesamt P&amp;L Rendite
                 </span>
-                <span className={`text-xs sm:text-sm font-bold font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`text-xs sm:text-sm font-bold font-mono ${
+                  totalPnl >= 0 
+                    ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                    : (isLight ? 'text-rose-700' : 'text-rose-400')
+                }`}>
                   {totalPnl >= 0 ? '+' : ''}{totalPnlPct.toFixed(1)} %
-                  <span className="text-[10px] ml-1 font-normal opacity-80 hidden md:inline">
+                  <span className="text-[10px] ml-1 font-semibold opacity-90 hidden md:inline">
                     ({totalPnl >= 0 ? '+' : ''}{formatCurrency(totalPnl)})
                   </span>
                 </span>
@@ -304,23 +309,23 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             </div>
           )}
 
-          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, ohne störende horizontale Linien) */}
+          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, 100% sprungfrei & ohne Trennlinien) */}
           <div className={`rounded-xl border overflow-hidden ${
             isLight ? 'bg-white border-slate-200' : 'bg-slate-950/40 border-slate-800/80'
           }`}>
             <div className="overflow-x-auto scrollbar-none">
-              <table className="w-full text-left text-xs border-collapse font-mono">
+              <table className="w-full text-left text-xs border-collapse font-mono table-fixed">
                 <thead>
                   <tr className={`text-[10px] sm:text-[11px] font-sans font-semibold uppercase tracking-wider ${
-                    isLight ? 'bg-slate-100/90 text-slate-500' : 'bg-slate-900/80 text-slate-400'
+                    isLight ? 'bg-slate-100/90 text-slate-700 border-b border-slate-200' : 'bg-slate-900/80 text-slate-400'
                   }`}>
-                    <th className="py-2.5 px-2.5 text-center w-8 sm:w-10">#</th>
-                    <th className="py-2.5 px-2.5">Asset</th>
-                    <th className="py-2.5 px-2.5 min-w-[120px]">Gewichtung</th>
-                    <th className="py-2.5 px-2.5 text-right">Marktwert</th>
-                    <th className="py-2.5 px-2.5 text-right hidden sm:table-cell">Cost Basis</th>
-                    <th className="py-2.5 px-2.5 text-right">P&amp;L Rendite</th>
-                    <th className="py-2.5 px-2.5 text-right hidden md:table-cell">Allokations-Drift</th>
+                    <th className="py-2.5 px-2.5 text-center w-9 sm:w-11">#</th>
+                    <th className="py-2.5 px-2.5 w-auto">Asset</th>
+                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-left">Gewichtung</th>
+                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right">Marktwert</th>
+                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right hidden sm:table-cell">Cost Basis</th>
+                    <th className="py-2.5 px-2.5 w-32 sm:w-36 text-right">P&amp;L Rendite</th>
+                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right hidden md:table-cell">Allokations-Drift</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
@@ -336,31 +341,31 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                         onMouseEnter={() => setActiveCoinSymbol(item.symbol)}
                         onMouseLeave={() => setActiveCoinSymbol(null)}
                         onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
-                        className={`transition-colors cursor-pointer ${
+                        className={`transition-colors cursor-pointer select-none ${
                           isSelected
-                            ? (isLight ? 'bg-indigo-50/90 font-semibold' : 'bg-indigo-950/50 font-semibold')
+                            ? (isLight ? 'bg-indigo-50/90' : 'bg-indigo-950/50')
                             : (isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60')
                         }`}
                       >
                         {/* Rank */}
                         <td className={`py-2 px-2.5 text-center font-mono text-[11px] ${
-                          isLight ? 'text-slate-400' : 'text-slate-500'
+                          isLight ? 'text-slate-500' : 'text-slate-500'
                         }`}>
                           #{index + 1}
                         </td>
 
                         {/* Asset: Color, Symbol, FullName */}
-                        <td className="py-2 px-2.5">
-                          <div className="flex items-center space-x-2">
+                        <td className="py-2 px-2.5 overflow-hidden">
+                          <div className="flex items-center space-x-2 truncate">
                             <span 
                               className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" 
                               style={{ backgroundColor: item.color }} 
                             />
-                            <span className={`font-bold font-mono text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                            <span className={`font-bold font-mono text-xs shrink-0 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                               {item.symbol}
                             </span>
                             <span className={`text-[11px] font-sans truncate hidden lg:inline ${
-                              isLight ? 'text-slate-500' : 'text-slate-400'
+                              isLight ? 'text-slate-600' : 'text-slate-400'
                             }`}>
                               {item.fullName}
                             </span>
@@ -381,23 +386,23 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
 
                         {/* Current Value */}
                         <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums">
-                          <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                          <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                             {formatCurrency(item.currentValue)}
                           </span>
                         </td>
 
                         {/* Cost Basis (Invested) */}
                         <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums hidden sm:table-cell">
-                          <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                          <span className={`font-medium ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
                             {formatCurrency(item.totalInvested)}
                           </span>
                         </td>
 
                         {/* P&L */}
                         <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums">
-                          <span className={`font-semibold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <span className={`font-bold ${isProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                             {isProfit ? '+' : ''}{item.pnlPercentage.toFixed(1)} %
-                            <span className="text-[10px] ml-1 opacity-75 font-normal hidden lg:inline">
+                            <span className="text-[10px] ml-1 opacity-80 font-normal hidden lg:inline">
                               ({isProfit ? '+' : ''}{formatCurrency(item.pnl)})
                             </span>
                           </span>
@@ -406,19 +411,19 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                         {/* Drift */}
                         <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums hidden md:table-cell">
                           {isPositiveShift && (
-                            <span className="text-[10px] font-bold text-emerald-400 inline-flex items-center gap-0.5" title="Marktanteil übersteigt Investitionsanteil (Alpha / Übergewichtet)">
+                            <span className={`text-[10px] font-bold inline-flex items-center gap-0.5 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`} title="Marktanteil übersteigt Investitionsanteil (Alpha / Übergewichtet)">
                               <ArrowUpRight className="w-3 h-3" />
                               <span>+{item.shiftPercentage.toFixed(1)}%</span>
                             </span>
                           )}
                           {isNegativeShift && (
-                            <span className="text-[10px] text-slate-400 inline-flex items-center gap-0.5" title="Marktanteil unter Investitionsanteil (Untergewichtet)">
+                            <span className={`text-[10px] inline-flex items-center gap-0.5 ${isLight ? 'text-slate-600 font-medium' : 'text-slate-400'}`} title="Marktanteil unter Investitionsanteil (Untergewichtet)">
                               <ArrowDownRight className="w-3 h-3" />
                               <span>{item.shiftPercentage.toFixed(1)}%</span>
                             </span>
                           )}
                           {!isPositiveShift && !isNegativeShift && (
-                            <span className="text-[10px] text-slate-500">Parität</span>
+                            <span className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Parität</span>
                           )}
                         </td>
                       </tr>
@@ -436,7 +441,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsExpanded(!isExpanded)}
-                  className="font-semibold text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1.5 transition-colors cursor-pointer text-[11px]"
+                  className={`font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer text-[11px] ${
+                    isLight ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-indigo-300'
+                  }`}
                 >
                   {isExpanded ? (
                     <>

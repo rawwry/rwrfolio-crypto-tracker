@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.31';
+export const APP_VERSION = '0.5.32';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.32',
+    date: '05.10.2026',
+    title: 'Light-Theme Kontrast-Overhaul & 100 % sprungfreie, dauerhaft ausgeklappte Allokations-Tabelle',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Umfassendes Light-Theme Kontrast-Overhaul: Beseitigung aller schwer lesbaren weißen Texte auf hellem Grund sowie unsichtbarer Hover-Zustände (hover:text-white). Alle Kennzahlen, Labels, Sortier-Header und Pillen in Performance-Matrix, Diagrammen, Allokation und Fear & Greed Index verfügen nun über kristallklare Kontraste nach WCAG-Standards.',
+      },
+      {
+        type: 'ui',
+        text: 'Allokations-Tabelle dauerhaft ausgeklappt: Die Coin-Allokation startet nun standardmäßig vollständig expandiert, sodass alle Positionen sofort ohne zusätzlichen Klick einsehbar sind. Die redundante Pill-Plakette "(x Positionen)" neben der Überschrift wurde entfernt.',
+      },
+      {
+        type: 'fix',
+        text: '100 % sprungfreies Tabellen-Layout: Durch Umstellung auf rigid definierte table-fixed Spaltenbreiten und Beseitigung von Schriftstärken-Sprüngen beim Zeilen-Hover bleibt die gesamte Allokations-Tabelle bei allen Mausbewegungen und Coin-Interaktionen absolut pixel-stabil.',
+      },
+      {
+        type: 'ui',
+        text: 'Linienfreies Verlaufsdiagramm: Auch im Portfoliowert-Verlaufsdiagramm wurden die horizontalen Gitternetzlinien entfernt, um ein einheitlich klares, freies Kurvenbild wie im Hauptchart zu bieten.',
+      },
+    ],
+  },
   {
     version: '0.5.31',
     date: '05.10.2026',
     title: 'Entfernung horizontaler Linien & Modernisierung durch elegante Allokations-Pills',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

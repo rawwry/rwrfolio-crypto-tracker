@@ -182,12 +182,12 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               </span>
               <span>&bull;</span>
               {loadingPeriod ? (
-                <span className="inline-flex items-center gap-1 text-[11px] text-indigo-400 font-medium">
+                <span className={`inline-flex items-center gap-1 text-[11px] font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
                   <Loader2 className="w-3 h-3 animate-spin" />
                   <span>Aktualisiere {activeTfLabel}...</span>
                 </span>
               ) : (
-                <span className="text-indigo-400 font-medium">Zeile anklicken für Chart</span>
+                <span className={`font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>Zeile anklicken für Chart</span>
               )}
             </p>
           </div>
@@ -220,11 +220,15 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
 
           {/* Quick Summary Pill */}
           <div className="flex items-center space-x-1.5 text-xs font-mono">
-            <span className="px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/20">
+            <span className={`px-2 py-1 rounded-lg font-semibold border ${
+              isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+            }`}>
               {profitableCount} im Plus
             </span>
             {losingCount > 0 && (
-              <span className="px-2 py-1 rounded-lg bg-rose-500/10 text-rose-400 font-semibold border border-rose-500/20">
+              <span className={`px-2 py-1 rounded-lg font-semibold border ${
+                isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
+              }`}>
                 {losingCount} im Minus
               </span>
             )}
@@ -236,23 +240,23 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className={`text-[11px] font-sans uppercase tracking-wider ${isLight ? 'text-slate-500 bg-slate-100/80' : 'text-slate-400 bg-slate-900/60'}`}>
+            <tr className={`text-[11px] font-sans uppercase tracking-wider ${isLight ? 'text-slate-700 bg-slate-100/90 border-b border-slate-200' : 'text-slate-400 bg-slate-900/60'}`}>
               <th 
                 onClick={() => toggleSort('name')}
-                className="py-2.5 px-3 font-semibold cursor-pointer hover:text-white transition-colors"
+                className={`py-2.5 px-3 font-semibold cursor-pointer transition-colors ${isLight ? 'hover:text-slate-900' : 'hover:text-white'}`}
               >
                 Coin / Asset {sortField === 'name' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
               <th className="py-2.5 px-3 font-semibold text-center">Allokation</th>
               <th 
                 onClick={() => toggleSort('invested')}
-                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className={`py-2.5 px-3 font-semibold text-right cursor-pointer transition-colors ${isLight ? 'hover:text-slate-900' : 'hover:text-white'}`}
               >
                 Investiert {sortField === 'invested' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
               <th 
                 onClick={() => toggleSort('value')}
-                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className={`py-2.5 px-3 font-semibold text-right cursor-pointer transition-colors ${isLight ? 'hover:text-slate-900' : 'hover:text-white'}`}
               >
                 Aktueller Wert {sortField === 'value' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
@@ -261,7 +265,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               </th>
               <th 
                 onClick={() => toggleSort('pnlPct')}
-                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className={`py-2.5 px-3 font-semibold text-right cursor-pointer transition-colors ${isLight ? 'hover:text-slate-900' : 'hover:text-white'}`}
               >
                 {matrixTimeframe === 'all' 
                   ? 'Gesamt P&L / Rendite' 
@@ -303,18 +307,20 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                         style={{ backgroundColor: details.color || '#6366f1' }}
                       />
                       <div>
-                        <div className="font-bold text-sm font-sans text-white flex items-center gap-1.5">
+                        <div className={`font-bold text-sm font-sans flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                           <span>{asset.symbol}</span>
-                          <span className="text-[11px] font-normal text-slate-400 font-sans">
+                          <span className={`text-[11px] font-normal font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                             {details.name}
                           </span>
                           {isSelected && (
-                            <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans font-medium">
+                            <span className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-medium ${
+                              isLight ? 'bg-indigo-100 text-indigo-700' : 'bg-indigo-500/20 text-indigo-300'
+                            }`}>
                               Chart aktiv
                             </span>
                           )}
                         </div>
-                        <div className="text-[11px] text-slate-400">
+                        <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                           {asset.currentBalance.toLocaleString('de-DE', { maximumFractionDigits: 4 })} {asset.symbol}
                         </div>
                       </div>
@@ -334,22 +340,22 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   </td>
 
                   {/* Invested */}
-                  <td className="py-3 px-3 text-right text-slate-300 font-semibold">
+                  <td className={`py-3 px-3 text-right font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                     {formatCurr(activeInvested)}
                   </td>
 
                   {/* Current Value */}
-                  <td className="py-3 px-3 text-right font-bold text-white">
+                  <td className={`py-3 px-3 text-right font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     {formatCurr(activeValue)}
                   </td>
 
                   {/* Prices: DCA vs Live */}
                   <td className="py-3 px-3 text-right">
-                    <div className="text-slate-200 font-semibold">
+                    <div className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
                       {formatPrice(activePrice)}
                     </div>
                     {matrixTimeframe === 'all' && (
-                      <div className="text-[10px] text-slate-400 font-sans">
+                      <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                         Ø {formatPrice(activeAvgBuy)}
                       </div>
                     )}
@@ -359,10 +365,10 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   <td className="py-3 px-3 text-right">
                     {matrixTimeframe === 'all' ? (
                       <>
-                        <div className={`font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`font-bold ${isProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                           {isProfit ? '+' : ''}{formatCurr(activePnl)}
                         </div>
-                        <div className={`text-[10px] inline-flex items-center gap-0.5 ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        <div className={`text-[10px] inline-flex items-center gap-0.5 ${isProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                           {isProfit ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                           <span>{isProfit ? '+' : ''}{asset.pnlPercentage.toFixed(2)} %</span>
                         </div>
@@ -370,18 +376,18 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                     ) : (
                       <>
                         {loadingPeriod && !periodChange ? (
-                          <div className="text-[11px] text-slate-500 animate-pulse font-sans">wird geladen...</div>
+                          <div className={`text-[11px] animate-pulse font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>wird geladen...</div>
                         ) : (
                           <>
-                            <div className={`font-bold ${isPeriodProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <div className={`font-bold ${isPeriodProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                               {isPeriodProfit ? '+' : ''}{formatCurr(periodChange?.valueChangeFiat ?? 0)}
                             </div>
-                            <div className={`text-[10px] inline-flex items-center gap-0.5 ${isPeriodProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            <div className={`text-[10px] inline-flex items-center gap-0.5 ${isPeriodProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                               {isPeriodProfit ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                               <span>{isPeriodProfit ? '+' : ''}{(periodChange?.priceChangePct ?? 0).toFixed(2)} %</span>
                             </div>
                             {periodChange && (
-                              <div className="text-[9px] text-slate-500 font-sans">
+                              <div className={`text-[9px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                                 Kurs: {periodChange.priceChangeFiat >= 0 ? '+' : ''}{formatPrice(periodChange.priceChangeFiat)}
                               </div>
                             )}
@@ -433,19 +439,23 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                     style={{ backgroundColor: details.color || '#6366f1' }}
                   />
                   <div>
-                    <div className="font-bold text-sm text-white flex items-center gap-1.5">
+                    <div className={`font-bold text-sm flex items-center gap-1.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       <span>{asset.symbol}</span>
                       {isSelected && (
-                        <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 font-sans font-medium">
+                        <span className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-medium ${
+                          isLight ? 'bg-indigo-100 text-indigo-700' : 'bg-indigo-500/20 text-indigo-300'
+                        }`}>
                           Chart aktiv
                         </span>
                       )}
                     </div>
-                    <span className="text-[11px] text-slate-400">{details.name}</span>
+                    <span className={`text-[11px] ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{details.name}</span>
                   </div>
                 </div>
                 <div className={`px-2 py-0.5 rounded-lg text-xs font-mono font-bold ${
-                  isCardProfit ? 'bg-emerald-500/15 text-emerald-400' : 'bg-rose-500/15 text-rose-400'
+                  isCardProfit 
+                    ? (isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400') 
+                    : (isLight ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-rose-500/15 text-rose-400')
                 }`}>
                   {isCardProfit ? '+' : ''}{cardPct.toFixed(2)} % {matrixTimeframe !== 'all' && `(${activeTfLabel})`}
                 </div>
@@ -453,34 +463,36 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
 
               <div className="grid grid-cols-2 gap-2 text-xs font-mono py-1">
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">Wert</span>
-                  <span className="font-bold text-white">{formatCurr(activeValue)}</span>
+                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Wert</span>
+                  <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{formatCurr(activeValue)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">
+                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {matrixTimeframe === 'all' ? 'Gewinn/Verlust' : `${activeTfLabel} Veränderung`}
                   </span>
-                  <span className={`font-bold ${isCardProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  <span className={`font-bold ${isCardProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
                     {isCardProfit ? '+' : ''}{formatCurr(cardVal)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">Live-Kurs</span>
-                  <span className="text-slate-200">{formatPrice(activePrice)}</span>
+                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Live-Kurs</span>
+                  <span className={isLight ? 'text-slate-800 font-medium' : 'text-slate-200'}>{formatPrice(activePrice)}</span>
                 </div>
                 <div>
-                  <span className="text-[10px] text-slate-400 block font-sans">
+                  <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {matrixTimeframe === 'all' ? 'Ø Kaufkurs' : 'Investiert'}
                   </span>
-                  <span className="text-slate-300">
+                  <span className={isLight ? 'text-slate-700 font-medium' : 'text-slate-300'}>
                     {matrixTimeframe === 'all' ? formatPrice(activeAvgBuy) : formatCurr(activeInvested)}
                   </span>
                 </div>
               </div>
 
-              <div className="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <div className={`mt-2.5 pt-2 border-t flex items-center justify-between text-[11px] font-mono ${
+                isLight ? 'border-slate-200 text-slate-600' : 'border-slate-800/60 text-slate-400'
+              }`}>
                 <span>Allokation: {asset.allocationPercentage.toFixed(1)} %</span>
-                <span className="text-[10px] text-slate-500 font-sans">
+                <span className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
                   {asset.currentBalance.toLocaleString('de-DE', { maximumFractionDigits: 4 })} {asset.symbol}
                 </span>
               </div>

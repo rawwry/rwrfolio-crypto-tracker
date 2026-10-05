@@ -57,33 +57,33 @@ export const FearAndGreedWidget: React.FC<FearAndGreedWidgetProps> = ({ theme = 
 
   // Sentiment classification and market advice in German
   let label = 'Neutral';
-  let badgeColor = 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
+  let badgeColor = isLight ? 'bg-yellow-50 text-yellow-800 border-yellow-200' : 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30';
   let gaugeColor = '#eab308';
   let sentimentTip = 'Regelmäßige Zukäufe beibehalten.';
 
   if (value <= 24) {
     label = 'Extreme Angst';
-    badgeColor = 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+    badgeColor = isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-500/15 text-rose-400 border-rose-500/30';
     gaugeColor = '#f43f5e';
     sentimentTip = 'Historisch oft günstige Kaufgelegenheit.';
   } else if (value <= 44) {
     label = 'Angst';
-    badgeColor = 'bg-amber-500/15 text-amber-400 border-amber-500/30';
+    badgeColor = isLight ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-amber-500/15 text-amber-400 border-amber-500/30';
     gaugeColor = '#f59e0b';
     sentimentTip = 'Markt ist vorsichtig, gute Nachkaufkurse.';
   } else if (value <= 55) {
     label = 'Neutral';
-    badgeColor = 'bg-slate-500/15 text-slate-300 border-slate-500/30';
+    badgeColor = isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-500/15 text-slate-300 border-slate-500/30';
     gaugeColor = '#94a3b8';
     sentimentTip = 'Markt ruhig, bewährte Strategie fortführen.';
   } else if (value <= 75) {
     label = 'Gier';
-    badgeColor = 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+    badgeColor = isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
     gaugeColor = '#10b981';
     sentimentTip = 'Bullisches Momentum, diszipliniert investieren.';
   } else {
     label = 'Extreme Gier';
-    badgeColor = 'bg-green-500/15 text-green-400 border-green-500/30';
+    badgeColor = isLight ? 'bg-green-50 text-green-700 border-green-200' : 'bg-green-500/15 text-green-400 border-green-500/30';
     gaugeColor = '#22c55e';
     sentimentTip = 'Große Euphorie, Vorsicht bei FOMO-Käufen.';
   }
@@ -95,7 +95,9 @@ export const FearAndGreedWidget: React.FC<FearAndGreedWidgetProps> = ({ theme = 
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
+          <div className={`w-8 h-8 rounded-xl flex items-center justify-center ${
+            isLight ? 'bg-amber-50 border border-amber-200 text-amber-600' : 'bg-amber-500/10 border border-amber-500/20 text-amber-400'
+          }`}>
             <Compass className="w-4 h-4" />
           </div>
           <div>
@@ -128,7 +130,7 @@ export const FearAndGreedWidget: React.FC<FearAndGreedWidgetProps> = ({ theme = 
         </div>
 
         {/* Multi-segment sentiment gradient bar */}
-        <div className="relative w-full h-2 rounded-full overflow-hidden bg-slate-800">
+        <div className={`relative w-full h-2 rounded-full overflow-hidden ${isLight ? 'bg-slate-200' : 'bg-slate-800'}`}>
           <div 
             className="w-full h-full rounded-full transition-all duration-700"
             style={{
