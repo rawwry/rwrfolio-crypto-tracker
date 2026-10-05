@@ -4,6 +4,17 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.31] - 05.10.2026
+
+### 🎨 Design & Ästhetik
+- **Entfernung horizontaler Linien & Modernisierung durch Allokations-Pills**:
+  - Vollständige Beseitigung der unästhetischen grauen Fortschritts- und Trennlinien in den Allokations-Spalten (in der Tabelle unter Coin-Allokation, in der Coin-Performance-Matrix und der Asset-Übersicht).
+  - Ersetzt durch hochwertige, kompakte Allokations-Pills mit Coin-spezifischem Farbpunkt und klarer Prozentangabe ohne störende Balkenspuren.
+  - **Linienfreier Chart-Hintergrund**: Die horizontalen Gitternetzlinien (`CartesianGrid`) im Hauptchart und im RSI-Oszillator wurden vollständig entfernt – die Kurskurve und Trade-Pins stehen nun im Stil moderner TradingView- und Apple-Stocks-Layouts völlig frei und ungestört im Raum.
+  - **Rahmenlose, atmende Tabellen**: Beseitigung harter horizontaler Trennstriche (`divide-y`) zugunsten flüssiger, abgerundeter Zeilenhervorhebungen beim Überfahren mit der Maus.
+
+---
+
 ## [0.5.30] - 05.10.2026
 
 ### 🎨 Optimierungen & Platzersparnis

@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.30';
+export const APP_VERSION = '0.5.31';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.31',
+    date: '05.10.2026',
+    title: 'Entfernung horizontaler Linien & Modernisierung durch elegante Allokations-Pills',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Beseitigung störender horizontaler Linien: Die unästhetischen grauen Fortschritts- und Trennlinien in den Allokations-Spalten (unter Coin-Allokation sowie in der Performance-Matrix und Asset-Tabelle) wurden durch stilvolle, kompakte Allokations-Badges mit Coin-Farbpunkt und Ziffernanzeige ersetzt.',
+      },
+      {
+        type: 'ui',
+        text: 'Reines, linienfreies Chart-Design: Die horizontalen Gitternetzlinien (CartesianGrid) im Diagrammbereich und im RSI-Oszillator wurden vollständig entfernt. Die Kurslinie und Trade-Pins stehen nun im Stil moderner TradingView- und Apple-Stocks-Layouts völlig frei und ungestört im Raum.',
+      },
+      {
+        type: 'ui',
+        text: 'Rahmenlose, atmende Tabellen: Sowohl die Allokations-Tabelle als auch die Performance-Matrix verzichten auf harte horizontale Trennstriche (divide-y). Zeilen heben sich stattdessen beim Überfahren mit sanften, abgerundeten Schwebe-Effekten hervor.',
+      },
+    ],
+  },
   {
     version: '0.5.30',
     date: '05.10.2026',
     title: 'Hochdichte Allokations-Tabelle (Ersatz der Kacheln durch schlanke Einzeiler)',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

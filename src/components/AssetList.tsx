@@ -438,22 +438,14 @@ export const AssetList: React.FC<AssetListProps> = ({
 
                   {/* Allocation % (text-right) */}
                   <td className="py-2.5 px-2 lg:px-3 text-right min-w-[70px] align-middle whitespace-nowrap">
-                    <div className={`text-xs font-mono font-semibold mb-1 ${
-                      isLight ? 'text-slate-700' : 'text-slate-200'
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border ${
+                      isLight 
+                        ? 'bg-slate-100 border-slate-200/80 text-slate-800' 
+                        : 'bg-slate-900 border-slate-800 text-slate-200'
                     }`}>
-                      {asset.allocationPercentage.toFixed(1)} %
-                    </div>
-                    <div className={`w-full max-w-[60px] ml-auto rounded-full h-1.5 overflow-hidden ${
-                      isLight ? 'bg-slate-100' : 'bg-slate-800'
-                    }`}>
-                      <div 
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{ 
-                          width: `${Math.min(100, Math.max(2, asset.allocationPercentage))}%`,
-                          backgroundColor: details.color || '#6366f1' 
-                        }}
-                      />
-                    </div>
+                      <span className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: details.color || '#6366f1' }} />
+                      <span>{asset.allocationPercentage.toFixed(1)} %</span>
+                    </span>
                   </td>
                 </tr>
               );

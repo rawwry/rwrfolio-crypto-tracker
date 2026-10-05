@@ -234,34 +234,34 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
 
       {/* 2. Responsive Performance Table (Desktop) */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-left text-xs">
+        <table className="w-full text-left text-xs border-collapse">
           <thead>
-            <tr className={`border-b ${isLight ? 'border-slate-200 text-slate-500' : 'border-slate-800 text-slate-400'}`}>
+            <tr className={`text-[11px] font-sans uppercase tracking-wider ${isLight ? 'text-slate-500 bg-slate-100/80' : 'text-slate-400 bg-slate-900/60'}`}>
               <th 
                 onClick={() => toggleSort('name')}
-                className="py-3 px-3 font-semibold cursor-pointer hover:text-white transition-colors"
+                className="py-2.5 px-3 font-semibold cursor-pointer hover:text-white transition-colors"
               >
                 Coin / Asset {sortField === 'name' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
-              <th className="py-3 px-3 font-semibold text-center">Allokation</th>
+              <th className="py-2.5 px-3 font-semibold text-center">Allokation</th>
               <th 
                 onClick={() => toggleSort('invested')}
-                className="py-3 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
               >
                 Investiert {sortField === 'invested' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
               <th 
                 onClick={() => toggleSort('value')}
-                className="py-3 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
               >
                 Aktueller Wert {sortField === 'value' ? (sortAsc ? '↑' : '↓') : ''}
               </th>
-              <th className="py-3 px-3 font-semibold text-right">
+              <th className="py-2.5 px-3 font-semibold text-right">
                 {matrixTimeframe === 'all' ? 'Ø Kaufkurs / Live' : 'Live-Kurs'}
               </th>
               <th 
                 onClick={() => toggleSort('pnlPct')}
-                className="py-3 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
+                className="py-2.5 px-3 font-semibold text-right cursor-pointer hover:text-white transition-colors"
               >
                 {matrixTimeframe === 'all' 
                   ? 'Gesamt P&L / Rendite' 
@@ -269,7 +269,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/40 font-mono">
+          <tbody className="font-mono text-xs">
             {sortedAssets.map(asset => {
               const details = getCoinDetails(asset.symbol);
               const activePrice = isUSD ? (asset.currentPriceUSD || asset.currentPrice) : (asset.currentPriceEUR || asset.currentPrice);
@@ -296,7 +296,7 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                   }`}
                 >
                   {/* Asset Identity */}
-                  <td className="py-3 px-3">
+                  <td className="py-2.5 px-3">
                     <div className="flex items-center space-x-2.5">
                       <div 
                         className="w-1.5 h-8 rounded-full flex-shrink-0"
@@ -321,19 +321,16 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                     </div>
                   </td>
 
-                  {/* Allocation Bar */}
-                  <td className="py-3 px-3 text-center">
-                    <div className="inline-flex flex-col items-center">
-                      <span className="font-bold text-xs text-slate-200">
-                        {asset.allocationPercentage.toFixed(1)} %
-                      </span>
-                      <div className="w-16 bg-slate-800 rounded-full h-1.5 mt-1 overflow-hidden">
-                        <div 
-                          className="h-1.5 rounded-full bg-indigo-500" 
-                          style={{ width: `${Math.min(100, Math.max(4, asset.allocationPercentage))}%` }} 
-                        />
-                      </div>
-                    </div>
+                  {/* Allocation Badge (Pill statt horizontaler grauer Leiste) */}
+                  <td className="py-2.5 px-3 text-center">
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border ${
+                      isLight 
+                        ? 'bg-slate-100 border-slate-200/80 text-slate-800' 
+                        : 'bg-slate-900 border-slate-800 text-slate-200'
+                    }`}>
+                      <span className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: details.color || '#6366f1' }} />
+                      <span>{asset.allocationPercentage.toFixed(1)} %</span>
+                    </span>
                   </td>
 
                   {/* Invested */}

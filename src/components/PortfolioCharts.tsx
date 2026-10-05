@@ -304,26 +304,26 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             </div>
           )}
 
-          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, keine klobigen Kacheln) */}
+          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, ohne störende horizontale Linien) */}
           <div className={`rounded-xl border overflow-hidden ${
             isLight ? 'bg-white border-slate-200' : 'bg-slate-950/40 border-slate-800/80'
           }`}>
             <div className="overflow-x-auto scrollbar-none">
               <table className="w-full text-left text-xs border-collapse font-mono">
                 <thead>
-                  <tr className={`border-b text-[10px] sm:text-[11px] font-sans font-semibold uppercase tracking-wider ${
-                    isLight ? 'bg-slate-100/90 text-slate-500 border-slate-200' : 'bg-slate-900/80 text-slate-400 border-slate-800/80'
+                  <tr className={`text-[10px] sm:text-[11px] font-sans font-semibold uppercase tracking-wider ${
+                    isLight ? 'bg-slate-100/90 text-slate-500' : 'bg-slate-900/80 text-slate-400'
                   }`}>
-                    <th className="py-2 px-2.5 text-center w-8 sm:w-10">#</th>
-                    <th className="py-2 px-2.5">Asset</th>
-                    <th className="py-2 px-2.5 min-w-[130px] sm:min-w-[160px]">Gewichtung</th>
-                    <th className="py-2 px-2.5 text-right">Marktwert</th>
-                    <th className="py-2 px-2.5 text-right hidden sm:table-cell">Cost Basis</th>
-                    <th className="py-2 px-2.5 text-right">P&amp;L Rendite</th>
-                    <th className="py-2 px-2.5 text-right hidden md:table-cell">Allokations-Drift</th>
+                    <th className="py-2.5 px-2.5 text-center w-8 sm:w-10">#</th>
+                    <th className="py-2.5 px-2.5">Asset</th>
+                    <th className="py-2.5 px-2.5 min-w-[120px]">Gewichtung</th>
+                    <th className="py-2.5 px-2.5 text-right">Marktwert</th>
+                    <th className="py-2.5 px-2.5 text-right hidden sm:table-cell">Cost Basis</th>
+                    <th className="py-2.5 px-2.5 text-right">P&amp;L Rendite</th>
+                    <th className="py-2.5 px-2.5 text-right hidden md:table-cell">Allokations-Drift</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800/60 text-xs">
+                <tbody className="text-xs">
                   {visibleItems.map((item, index) => {
                     const isSelected = activeCoinSymbol === item.symbol;
                     const isPositiveShift = item.shiftPercentage > 0.5;
@@ -343,14 +343,14 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                         }`}
                       >
                         {/* Rank */}
-                        <td className={`py-1.5 sm:py-2 px-2.5 text-center font-mono text-[11px] ${
+                        <td className={`py-2 px-2.5 text-center font-mono text-[11px] ${
                           isLight ? 'text-slate-400' : 'text-slate-500'
                         }`}>
                           #{index + 1}
                         </td>
 
                         {/* Asset: Color, Symbol, FullName */}
-                        <td className="py-1.5 sm:py-2 px-2.5">
+                        <td className="py-2 px-2.5">
                           <div className="flex items-center space-x-2">
                             <span 
                               className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" 
@@ -367,24 +367,16 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                           </div>
                         </td>
 
-                        {/* Share & Micro Progress Bar */}
-                        <td className="py-1.5 sm:py-2 px-2.5">
-                          <div className="flex items-center gap-2">
-                            <div className={`flex-1 max-w-[80px] sm:max-w-[100px] h-1.5 rounded-full overflow-hidden ${
-                              isLight ? 'bg-slate-200' : 'bg-slate-800'
-                            }`}>
-                              <div 
-                                className="h-full rounded-full transition-all duration-300"
-                                style={{ 
-                                  width: `${Math.min(100, Math.max(3, item.displayPercentage))}%`, 
-                                  backgroundColor: item.color 
-                                }}
-                              />
-                            </div>
-                            <span className="font-bold text-xs text-indigo-400 font-mono tabular-nums shrink-0">
-                              {item.displayPercentage.toFixed(1)} %
-                            </span>
-                          </div>
+                        {/* Share Badge (Modern Pill statt horizontaler grauer Leiste) */}
+                        <td className="py-2 px-2.5">
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border ${
+                            isLight 
+                              ? 'bg-slate-100 border-slate-200/80 text-slate-800' 
+                              : 'bg-slate-900 border-slate-800 text-slate-200'
+                          }`}>
+                            <span className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.color }} />
+                            <span>{item.displayPercentage.toFixed(1)} %</span>
+                          </span>
                         </td>
 
                         {/* Current Value */}

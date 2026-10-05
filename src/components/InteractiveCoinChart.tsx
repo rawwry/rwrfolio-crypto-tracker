@@ -844,7 +844,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
       {/* 3.5 Interactive Chart Overlays Toolbar */}
       {!isPortfolio && (
-        <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-slate-200/60 dark:border-slate-800/80">
+        <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
           <div className="flex items-center gap-1.5 text-xs text-slate-400 font-medium">
             <Sliders className="w-3.5 h-3.5 text-indigo-400" />
             <span className="hidden sm:inline">Chart-Overlays:</span>
@@ -1134,9 +1134,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               </defs>
 
               <CartesianGrid 
-                strokeDasharray="3 3" 
-                stroke={isLight ? '#e2e8f0' : '#1e293b'} 
+                stroke="transparent" 
                 vertical={false} 
+                horizontal={false}
               />
 
               <XAxis 
@@ -1354,7 +1354,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                     cursor={{ stroke: '#818cf8', strokeWidth: 1.5, strokeDasharray: '3 3' }}
                     wrapperStyle={{ pointerEvents: 'none', outline: 'none' }}
                   />
-                  <CartesianGrid strokeDasharray="2 2" stroke={isLight ? '#e2e8f0' : '#1e293b'} vertical={false} />
+                  <CartesianGrid stroke="transparent" vertical={false} horizontal={false} />
                   <YAxis domain={[0, 100]} ticks={[30, 70]} width={25} stroke="#64748b" fontSize={9} tickLine={false} axisLine={false} />
                   <ReferenceLine y={70} stroke="#f43f5e" strokeDasharray="3 3" strokeWidth={1} />
                   <ReferenceLine y={30} stroke="#10b981" strokeDasharray="3 3" strokeWidth={1} />
@@ -1538,7 +1538,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
       {/* 7. Tranches Timeline Ribbon */}
       {!isPortfolio && allTradesInPeriod.length > 0 && (
-        <div className="space-y-2 pt-1 border-t border-slate-200/60 dark:border-slate-800">
+        <div className="space-y-2 pt-1">
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-slate-300 flex items-center gap-1.5">
               <ShoppingBag className="w-3.5 h-3.5 text-indigo-400" />
