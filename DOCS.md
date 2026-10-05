@@ -21,8 +21,8 @@
   - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.
   - 1-Klick-Aktivierung: Klick auf eine Zeile lädt das jeweilige Asset direkt in den interaktiven Großchart.
 - **📥 Smart Auto-Detect Import:**
-  - Drag & Drop für CSV-Dateien und PDF-Kontoauszüge.
-  - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements) und **Crypto.com** (App & Exchange CSVs).
+  - Drag & Drop für CSV-Dateien, PDF-Kontoauszüge und E-Mail-Belege.
+  - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements), **Kraken E-Mail Kaufbelegen** (PDF & Text) und **Crypto.com** (App & Exchange CSVs).
   - Intelligente Duplikatserkennung verhindert Mehrfacherfassung.
 - **📑 BMF-konformer Steuerbericht (§ 23 EStG):**
   - Druckfertiger 4-seitiger PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater.

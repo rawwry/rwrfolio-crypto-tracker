@@ -4,6 +4,19 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.27] - 05.10.2026
+
+### ✨ Neue Features
+- **Kraken E-Mail Kaufbeleg-Import (PDF & Text)**:
+  - Vollständige Unterstützung für gespeicherte Kraken-Kaufbestätigungs-E-Mails (z. B. *"You bought ONDO"*, *"Du hast ONDO gekauft"*).
+  - Der Parser extrahiert sekundengenau Asset (ONDO, BTC etc.), Kaufvolumen, Fiat-Gesamtbetrag, Ausführungskurs, Gebühren, Transaktions-ID und Zeitstempel aus PDF-Ausdrucken oder direkt eingefügtem Text.
+- **Smart Auto-Detection & Archivierung**:
+  - E-Mail-Belege werden beim Drag & Drop automatisch als "Kraken E-Mail Beleg" klassifiziert, dedupliziert und im Samba-Share (`/share/rwrfolio/imported/`) manipulationssicher archiviert.
+- **Demo-Button für E-Mail-Belege**:
+  - Neuer Schnelltest-Button `[Kraken E-Mail]` im Import-Modal zur sofortigen Vorschau und Funktionsprüfung mit echten Kaufbelegdaten.
+
+---
+
 ## [0.5.26] - 04.10.2026
 
 ### ✨ Neue Features

@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.26';
+export const APP_VERSION = '0.5.27';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.27',
+    date: '05.10.2026',
+    title: 'Kraken E-Mail Kaufbeleg-Import (PDF & Text) & Vorbereitung E-Mail-Synchronisation',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Kraken E-Mail Kaufbeleg-Parser (PDF & Text): Vollständige Unterstützung für gespeicherte Kraken-Kaufbestätigungen (z. B. "You bought ONDO", "Du hast ONDO gekauft"). Der Parser extrahiert sekundengenau Asset (ONDO, BTC etc.), Kaufvolumen, Fiat-Gesamtbetrag, Ausführungskurs, Gebühren, Transaktions-ID und Zeitstempel aus PDF-Ausdrucken oder direkt eingefügtem Text.',
+      },
+      {
+        type: 'feat',
+        text: 'Smart Auto-Detection & Archivierung: E-Mail-Belege werden beim Drag & Drop automatisch als "Kraken E-Mail Beleg" erkannt, gegen bestehende Trades dedupliziert und im Home Assistant Samba-Share (/share/rwrfolio/imported/) revisionssicher abgelegt.',
+      },
+      {
+        type: 'feat',
+        text: 'Demo-Button für E-Mail-Belege: Neuer Schnelltest-Button [Kraken E-Mail] im Import-Modal zur sofortigen Funktionsprüfung und Vorschau mit authentischen Kaufbelegdaten.',
+      },
+    ],
+  },
   {
     version: '0.5.26',
     date: '04.10.2026',
     title: 'Vollbildmodus (Fullscreen), zuverlässige Live-Hover-Inspektion & Beseitigung von Auswahlrahmen',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

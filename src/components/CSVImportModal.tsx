@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Transaction, CSVParseResult, ExchangeSource } from '../types';
 import { parseCSVFile, USER_SAMPLE_CRYPTO_COM_CSV, parseCSVLines, isCryptoComCSV } from '../utils/csvParser';
-import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT } from '../utils/krakenParser';
+import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT, USER_SAMPLE_KRAKEN_EMAIL_TEXT } from '../utils/krakenParser';
 import { deduplicateTransactions } from '../utils/transactionDedup';
 import { parsePdfApi } from '../utils/apiClient';
 
@@ -261,6 +261,10 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
     });
   };
 
+  const handleLoadKrakenEmailSample = () => {
+    handleProcessText(USER_SAMPLE_KRAKEN_EMAIL_TEXT, 'kraken-kaufbeleg-ondo.txt', 'kraken');
+  };
+
   const handleLoadCryptoComSample = () => {
     handleProcessText(USER_SAMPLE_CRYPTO_COM_CSV, 'crypto_com_beispiel.csv', 'crypto_com');
   };
@@ -294,7 +298,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF) oder <strong>Crypto.com App</strong> (CSV) hoch. Die Börse wird automatisch erkannt.
+                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelegen</strong> (PDF &amp; Text) oder <strong>Crypto.com App</strong> (CSV) hoch. Die Börse wird automatisch erkannt.
               </p>
             </div>
           </div>
@@ -364,7 +368,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF) sowie <strong>Crypto.com App</strong> (CSV).
+                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelege</strong> sowie <strong>Crypto.com App</strong> (CSV).
                 </p>
 
                 <div className="mt-3 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
@@ -432,6 +436,14 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </button>
                 <button
                   type="button"
+                  onClick={handleLoadKrakenEmailSample}
+                  className="px-2.5 py-1.5 rounded-lg bg-indigo-700/80 hover:bg-indigo-700 text-white font-semibold transition-colors cursor-pointer"
+                  title="Kraken E-Mail Kaufbeleg (ONDO Demo)"
+                >
+                  Kraken E-Mail
+                </button>
+                <button
+                  type="button"
                   onClick={handleLoadCryptoComSample}
                   className="px-2.5 py-1.5 rounded-lg bg-blue-600/70 hover:bg-blue-600 text-white font-semibold transition-colors cursor-pointer"
                 >
@@ -491,7 +503,9 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                       : 'bg-slate-800 text-slate-300'
                   }`}>
                     {parseResult.detectedExchange === 'kraken' 
-                      ? `Kraken Pro (${fileType.toUpperCase()})` 
+                      ? (parseResult.transactions.some(t => t.transactionKind === 'email_receipt')
+                          ? `Kraken E-Mail Beleg (${fileType.toUpperCase()})`
+                          : `Kraken Pro (${fileType.toUpperCase()})`) 
                       : parseResult.detectedExchange === 'crypto_com'
                       ? 'Crypto.com App'
                       : parseResult.detectedExchange}
