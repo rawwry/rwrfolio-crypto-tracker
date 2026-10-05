@@ -23,6 +23,7 @@ import { PDFParse } from 'pdf-parse';
 import { parseKrakenText } from './src/utils/krakenParser';
 import { parseCryptoComText } from './src/utils/cryptoComParser';
 import { Transaction } from './src/types';
+import { APP_VERSION } from './src/changelog';
 import { execFile } from 'child_process';
 import os from 'os';
 import fs from 'fs';
@@ -106,7 +107,7 @@ async function startServer() {
     res.json({ 
       status: 'ok', 
       app: 'rwrfolio', 
-      version: '0.5.27',
+      version: APP_VERSION,
       database: 'sqlite',
       databasePath: resolveDatabasePath(),
       importedCsvPath: resolveImportedCsvPath()
