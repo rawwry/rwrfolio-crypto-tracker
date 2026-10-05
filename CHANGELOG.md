@@ -4,6 +4,22 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.28] - 05.10.2026
+
+### ✨ Neue Features & Verbesserungen
+- **Crypto.com E-Mail Kaufbeleg-Import (PDF & Text)**:
+  - Vollständige Unterstützung für gespeicherte Crypto.com-Kaufbestätigungen (z. B. *"POL Kaufanfrage bestätigt"*, *"Sie haben 3537.49 POL gekauft"*).
+  - Extrahiert sekundengenau Asset (POL, BTC, ETH etc.), Kaufmenge, Gesamtkosten (€ EUR), Handelsgebühren, Zahlungsmethode (z. B. Banküberweisung) und Ausführungszeitpunkt aus iOS/Mail-PDF-Exporten (inkl. nativer Swift Vision OCR-Erkennung für gerenderte Mail-Header) oder direkt eingefügtem Text.
+- **Intelligente Multi-Source Duplikatserkennung (CSV vs. E-Mail)**:
+  - Erkennt automatisch, wenn ein Kaufbeleg bereits früher über einen CSV-Export (z. B. `viban_purchase`) oder einen Ledger-Report importiert wurde.
+  - Gleicht Asset, Volumen, Fiat-Kosten und Börsenursprung ab und fängt Mail-Versandlatenzen (z. B. 3 Sekunden Versatz zwischen Börsen-Matching-Engine und E-Mail-Gateway) sowie Zeitzonenunterschiede zuverlässig ab.
+  - Keine doppelten Bestände oder verfälschten Einstandskurse beim kombinierten Import von CSV-Listen und E-Mail-Belegen.
+- **Demo-Button & UI-Erweiterungen**:
+  - Neuer Schnelltest-Button `[Crypto.com E-Mail]` im Import-Modal zur sofortigen Überprüfung der Erkennung und Duplikatssperre.
+  - Dedizierte Badge-Anzeige `Crypto.com (E-Mail Beleg)` mit transparenter Duplikatsinformation (*"Bereits im Portfolio (0 neu)"*).
+
+---
+
 ## [0.5.27] - 05.10.2026
 
 ### ✨ Neue Features

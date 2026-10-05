@@ -15,6 +15,11 @@ import {
 } from 'lucide-react';
 import { Transaction, CSVParseResult, ExchangeSource } from '../types';
 import { parseCSVFile, USER_SAMPLE_CRYPTO_COM_CSV, parseCSVLines, isCryptoComCSV } from '../utils/csvParser';
+import { 
+  USER_SAMPLE_CRYPTO_COM_EMAIL_TEXT, 
+  isCryptoComText, 
+  parseCryptoComText 
+} from '../utils/cryptoComParser';
 import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT, USER_SAMPLE_KRAKEN_EMAIL_TEXT } from '../utils/krakenParser';
 import { deduplicateTransactions } from '../utils/transactionDedup';
 import { parsePdfApi } from '../utils/apiClient';
@@ -47,6 +52,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
   const [showDirectPaste, setShowDirectPaste] = useState(false);
   const [directPasteText, setDirectPasteText] = useState('');
   const [ambiguousData, setAmbiguousData] = useState<{ text: string; name: string } | null>(null);
+  const [isEmailReceipt, setIsEmailReceipt] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
@@ -73,8 +79,11 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       }
       detected = 'kraken';
     } else if (forcedExchange === 'crypto_com') {
-      const csvRes = parseCSVFile(text);
-      candidateTxs = csvRes.transactions;
+      candidateTxs = parseCryptoComText(text);
+      if (candidateTxs.length === 0) {
+        const csvRes = parseCSVFile(text);
+        candidateTxs = csvRes.transactions;
+      }
       detected = 'crypto_com';
     } else {
       // Auto-detect exchange from headers and text patterns
@@ -82,10 +91,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       const headers = parsedLines.length > 0 ? parsedLines[0] : [];
 
       const krakenMatch = isKrakenCSV(headers) || isKrakenText(text);
-      const cryptoComMatch = isCryptoComCSV ? isCryptoComCSV(headers) : headers.some(h => {
-        const l = h.toLowerCase();
-        return l.includes('timestamp (utc)') || l.includes('to currency') || l.includes('native currency');
-      });
+      const cryptoComMatch = isCryptoComCSV(headers) || isCryptoComText(text);
 
       if (krakenMatch && !cryptoComMatch) {
         candidateTxs = parseKrakenCSV(text);
@@ -94,19 +100,22 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         }
         detected = 'kraken';
       } else if (cryptoComMatch && !krakenMatch) {
-        const csvRes = parseCSVFile(text);
-        candidateTxs = csvRes.transactions;
+        candidateTxs = parseCryptoComText(text);
+        if (candidateTxs.length === 0) {
+          const csvRes = parseCSVFile(text);
+          candidateTxs = csvRes.transactions;
+        }
         detected = 'crypto_com';
       } else {
         // Try parsing with both parsers to see if one cleanly yields transactions
-        const krakenAttempt = parseKrakenCSV(text);
-        const cdcAttempt = parseCSVFile(text);
+        const krakenAttempt = parseKrakenText(text).length > 0 ? parseKrakenText(text) : parseKrakenCSV(text);
+        const cdcAttempt = parseCryptoComText(text).length > 0 ? parseCryptoComText(text) : parseCSVFile(text).transactions;
 
-        if (krakenAttempt.length > 0 && cdcAttempt.transactions.length === 0) {
+        if (krakenAttempt.length > 0 && cdcAttempt.length === 0) {
           candidateTxs = krakenAttempt;
           detected = 'kraken';
-        } else if (cdcAttempt.transactions.length > 0 && krakenAttempt.length === 0) {
-          candidateTxs = cdcAttempt.transactions;
+        } else if (cdcAttempt.length > 0 && krakenAttempt.length === 0) {
+          candidateTxs = cdcAttempt;
           detected = 'crypto_com';
         } else {
           // Genuinely ambiguous: ask user to choose
@@ -116,6 +125,12 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         }
       }
     }
+
+    const emailCheck = candidateTxs.some(t => t.transactionKind === 'email_receipt') ||
+      name.toLowerCase().includes('kaufbeleg') ||
+      name.toLowerCase().includes('email') ||
+      name.toLowerCase().includes('mail');
+    setIsEmailReceipt(emailCheck);
 
     const dedup = deduplicateTransactions(candidateTxs, existingTransactions);
 
@@ -152,6 +167,12 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
       const result = await parsePdfApi(base64, file.name);
 
       if (result.success && result.transactions && result.transactions.length > 0) {
+        const emailCheck = result.transactions.some(t => t.transactionKind === 'email_receipt') ||
+          file.name.toLowerCase().includes('kaufbeleg') ||
+          file.name.toLowerCase().includes('mail') ||
+          /crypto\.com|kaufanfrage/i.test(result.rawText || '');
+        setIsEmailReceipt(emailCheck);
+
         const dedup = deduplicateTransactions(result.transactions, existingTransactions);
         setParseResult({
           success: true,
@@ -159,11 +180,21 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
           totalRows: result.transactions.length,
           importedCount: dedup.newTransactions.length,
           skippedDuplicates: dedup.skippedDuplicates.length,
-          detectedExchange: 'kraken',
+          detectedExchange: result.detectedExchange || 'generic',
           errors: [],
         });
       } else {
-        const clientTxs = parseKrakenText(result.rawText || '');
+        // Client fallback parsing
+        const clientKraken = parseKrakenText(result.rawText || '');
+        const clientCdc = parseCryptoComText(result.rawText || '');
+        const clientTxs = clientCdc.length > 0 ? clientCdc : clientKraken;
+        const exchange = clientCdc.length > 0 ? 'crypto_com' : 'kraken';
+
+        const emailCheck = clientTxs.some(t => t.transactionKind === 'email_receipt') ||
+          file.name.toLowerCase().includes('kaufbeleg') ||
+          file.name.toLowerCase().includes('mail');
+        setIsEmailReceipt(emailCheck);
+
         if (clientTxs.length > 0) {
           const dedup = deduplicateTransactions(clientTxs, existingTransactions);
           setParseResult({
@@ -172,7 +203,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
             totalRows: clientTxs.length,
             importedCount: dedup.newTransactions.length,
             skippedDuplicates: dedup.skippedDuplicates.length,
-            detectedExchange: 'kraken',
+            detectedExchange: exchange,
             errors: [],
           });
         } else {
@@ -182,7 +213,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
             totalRows: 0,
             importedCount: 0,
             skippedDuplicates: 0,
-            detectedExchange: 'kraken',
+            detectedExchange: 'generic',
             errors: [result.error || 'Im PDF wurden keine Krypto-Trades erkannt.'],
           });
         }
@@ -195,7 +226,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         totalRows: 0,
         importedCount: 0,
         skippedDuplicates: 0,
-        detectedExchange: 'kraken',
+        detectedExchange: 'generic',
         errors: [`Fehler beim Verarbeiten der PDF: ${err.message || 'Unbekannter Fehler'}`],
       });
     } finally {
@@ -269,6 +300,10 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
     handleProcessText(USER_SAMPLE_CRYPTO_COM_CSV, 'crypto_com_beispiel.csv', 'crypto_com');
   };
 
+  const handleLoadCryptoComEmailSample = () => {
+    handleProcessText(USER_SAMPLE_CRYPTO_COM_EMAIL_TEXT, 'crypto_com-kaufbeleg-pol.txt', 'crypto_com');
+  };
+
   const handleConfirmImport = () => {
     if (!parseResult || parseResult.transactions.length === 0) return;
     onImportTransactions(parseResult.transactions, csvRawText, fileName, pdfBase64);
@@ -298,7 +333,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelegen</strong> (PDF &amp; Text) oder <strong>Crypto.com App</strong> (CSV) hoch. Die Börse wird automatisch erkannt.
+                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelegen</strong> (PDF &amp; Text) oder <strong>Crypto.com App</strong> (CSV &amp; E-Mail Kaufbelege) hoch. Die Börse wird automatisch erkannt.
               </p>
             </div>
           </div>
@@ -368,7 +403,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </div>
 
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelege</strong> sowie <strong>Crypto.com App</strong> (CSV).
+                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelege</strong> sowie <strong>Crypto.com App</strong> (CSV &amp; E-Mail Kaufbelege).
                 </p>
 
                 <div className="mt-3 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
@@ -449,6 +484,14 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 >
                   Crypto.com CSV
                 </button>
+                <button
+                  type="button"
+                  onClick={handleLoadCryptoComEmailSample}
+                  className="px-2.5 py-1.5 rounded-lg bg-cyan-700/80 hover:bg-cyan-700 text-white font-semibold transition-colors cursor-pointer"
+                  title="Crypto.com E-Mail Kaufbeleg (POL Demo)"
+                >
+                  Crypto.com E-Mail
+                </button>
               </div>
             </div>
             <p className="text-[11px] text-slate-400">
@@ -503,11 +546,13 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                       : 'bg-slate-800 text-slate-300'
                   }`}>
                     {parseResult.detectedExchange === 'kraken' 
-                      ? (parseResult.transactions.some(t => t.transactionKind === 'email_receipt')
+                      ? (isEmailReceipt || parseResult.transactions.some(t => t.transactionKind === 'email_receipt')
                           ? `Kraken E-Mail Beleg (${fileType.toUpperCase()})`
                           : `Kraken Pro (${fileType.toUpperCase()})`) 
                       : parseResult.detectedExchange === 'crypto_com'
-                      ? 'Crypto.com App'
+                      ? (isEmailReceipt || parseResult.transactions.some(t => t.transactionKind === 'email_receipt')
+                          ? `Crypto.com (E-Mail Beleg)`
+                          : 'Crypto.com App')
                       : parseResult.detectedExchange}
                   </span>
                 </div>

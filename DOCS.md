@@ -22,8 +22,8 @@
   - 1-Klick-Aktivierung: Klick auf eine Zeile lädt das jeweilige Asset direkt in den interaktiven Großchart.
 - **📥 Smart Auto-Detect Import:**
   - Drag & Drop für CSV-Dateien, PDF-Kontoauszüge und E-Mail-Belege.
-  - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements), **Kraken E-Mail Kaufbelegen** (PDF & Text) und **Crypto.com** (App & Exchange CSVs).
-  - Intelligente Duplikatserkennung verhindert Mehrfacherfassung.
+  - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements), **Kraken E-Mail Kaufbelegen** (PDF & Text), **Crypto.com** (App & Exchange CSVs) sowie **Crypto.com E-Mail Kaufbelegen** (PDF & Text).
+  - Intelligente Multi-Source Duplikatserkennung gleicht CSV- und E-Mail-Importe automatisch ab und verhindert Doppelerfassungen selbst bei sekundengenauem E-Mail-Laufzeitversatz.
 - **📑 BMF-konformer Steuerbericht (§ 23 EStG):**
   - Druckfertiger 4-seitiger PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater.
   - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse.

@@ -1,4 +1,4 @@
-import { Transaction, AppSettings } from '../types';
+import { Transaction, AppSettings, ExchangeSource } from '../types';
 
 export interface StorageInfo {
   success: boolean;
@@ -79,7 +79,7 @@ export async function bulkImportTransactionsToApi(
 export async function parsePdfApi(
   pdfBase64: string,
   fileName?: string
-): Promise<{ success: boolean; transactions: Transaction[]; rawText: string; error?: string }> {
+): Promise<{ success: boolean; transactions: Transaction[]; rawText: string; detectedExchange?: ExchangeSource | 'generic'; error?: string }> {
   try {
     const res = await fetch(getApiUrl('api/parse-pdf'), {
       method: 'POST',

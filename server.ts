@@ -21,6 +21,67 @@ import {
 } from './server/db';
 import { PDFParse } from 'pdf-parse';
 import { parseKrakenText } from './src/utils/krakenParser';
+import { parseCryptoComText } from './src/utils/cryptoComParser';
+import { Transaction } from './src/types';
+import { execFile } from 'child_process';
+import os from 'os';
+import fs from 'fs';
+
+async function extractPdfOcrText(buffer: Buffer): Promise<string> {
+  if (process.platform !== 'darwin') return '';
+  return new Promise((resolve) => {
+    try {
+      const tempPdf = path.join(os.tmpdir(), `rwrfolio_ocr_${Date.now()}_${Math.random().toString(36).slice(2)}.pdf`);
+      const tempSwift = path.join(os.tmpdir(), `rwrfolio_ocr_${Date.now()}_${Math.random().toString(36).slice(2)}.swift`);
+
+      const swiftCode = `
+import Cocoa
+import PDFKit
+import Vision
+
+let args = CommandLine.arguments
+guard args.count > 1 else { exit(1) }
+let pdfUrl = URL(fileURLWithPath: args[1])
+guard let doc = PDFDocument(url: pdfUrl), let page = doc.page(at: 0) else { exit(1) }
+let pageRect = page.bounds(for: .mediaBox)
+let renderer = NSImage(size: pageRect.size)
+renderer.lockFocus()
+if let ctx = NSGraphicsContext.current?.cgContext {
+    ctx.setFillColor(NSColor.white.cgColor)
+    ctx.fill(pageRect)
+    page.draw(with: .mediaBox, to: ctx)
+}
+renderer.unlockFocus()
+guard let tiff = renderer.tiffRepresentation, let ciImage = CIImage(data: tiff) else { exit(1) }
+let handler = VNImageRequestHandler(ciImage: ciImage, options: [:])
+let request = VNRecognizeTextRequest { req, _ in
+    guard let obs = req.results as? [VNRecognizedTextObservation] else { return }
+    for o in obs {
+        if let top = o.topCandidates(1).first {
+            print(top.string)
+        }
+    }
+}
+request.recognitionLanguages = ["de-DE", "en-US"]
+try? handler.perform([request])
+`;
+      fs.writeFileSync(tempPdf, buffer);
+      fs.writeFileSync(tempSwift, swiftCode);
+
+      execFile('swift', [tempSwift, tempPdf], { timeout: 6000 }, (err, stdout) => {
+        try { fs.unlinkSync(tempPdf); } catch {}
+        try { fs.unlinkSync(tempSwift); } catch {}
+        if (err || !stdout) {
+          resolve('');
+        } else {
+          resolve(stdout.trim());
+        }
+      });
+    } catch {
+      resolve('');
+    }
+  });
+}
 
 async function startServer() {
   const app = express();
@@ -156,10 +217,41 @@ async function startServer() {
       const buffer = Buffer.from(pdfBase64, 'base64');
       const parser = new PDFParse({ data: buffer });
       const textResult = await parser.getText();
-      const rawText = typeof textResult === 'string' ? textResult : (textResult?.text || '');
+      let rawText = typeof textResult === 'string' ? textResult : (textResult?.text || '');
+
+      // Optional native OCR enhancement on macOS (e.g. for raster email header banners)
+      try {
+        const ocrText = await extractPdfOcrText(buffer);
+        if (ocrText && ocrText.trim()) {
+          rawText = `${ocrText}\n\n${rawText}`;
+        }
+      } catch (ocrErr) {
+        console.warn('[PDF Parser] OCR optional fallback skipped:', ocrErr);
+      }
 
       // Parse Kraken Trades from text
-      const transactions = parseKrakenText(rawText);
+      const krakenTxs = parseKrakenText(rawText);
+      // Parse Crypto.com Trades from text
+      const cdcTxs = parseCryptoComText(rawText);
+
+      let transactions: Transaction[] = [];
+      let detectedExchange: string = 'generic';
+
+      if (cdcTxs.length > 0 && krakenTxs.length === 0) {
+        transactions = cdcTxs;
+        detectedExchange = 'crypto_com';
+      } else if (krakenTxs.length > 0 && cdcTxs.length === 0) {
+        transactions = krakenTxs;
+        detectedExchange = 'kraken';
+      } else if (cdcTxs.length > 0 && krakenTxs.length > 0) {
+        if (/crypto\.com/i.test(rawText) || /anti-phishing/i.test(rawText)) {
+          transactions = cdcTxs;
+          detectedExchange = 'crypto_com';
+        } else {
+          transactions = krakenTxs;
+          detectedExchange = 'kraken';
+        }
+      }
 
       // Archive PDF if Samba / imported folder is accessible
       let archivedPath: string | null = null;
@@ -172,7 +264,7 @@ async function startServer() {
         fileName: fileName || 'statement.pdf',
         rawText,
         transactions,
-        detectedExchange: transactions.length > 0 ? 'kraken' : 'generic',
+        detectedExchange,
         totalFound: transactions.length,
         archivedPath,
         message: `${transactions.length} Krypto-Transaktionen aus PDF extrahiert`

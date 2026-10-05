@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.27';
+export const APP_VERSION = '0.5.28';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.28',
+    date: '05.10.2026',
+    title: 'Crypto.com E-Mail Kaufbeleg-Import (PDF & Text) & Intelligente Multi-Source Duplikatserkennung',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Crypto.com E-Mail Kaufbeleg-Parser (PDF & Text): Vollständige Unterstützung für gespeicherte Crypto.com-Kaufbestätigungen (z. B. "POL Kaufanfrage bestätigt", "Sie haben 3537.49 POL gekauft"). Extrahiert präzise Asset (POL, BTC etc.), Kaufmenge, Gesamtkosten (€ EUR), Handelsgebühren, Zahlungsmethode (z. B. Banküberweisung) und Zeitstempel aus iOS/Mail-PDFs sowie direkt eingefügtem Text.',
+      },
+      {
+        type: 'feat',
+        text: 'Intelligente Multi-Source Duplikatserkennung (CSV vs. E-Mail): Erkennt nahtlos, wenn derselbe Kauf zuvor bereits über einen CSV-Export oder Ledger-Eintrag importiert wurde. Die Duplikatssperre gleicht Asset, Volumen, Eurobetrag und Börsenherkunft ab und fängt Mail-Versandverzögerungen (z. B. 3 Sekunden Laufzeitversatz zwischen Matching Engine und Mail-Gateway) sowie Zeitzonenunterschiede zuverlässig ab.',
+      },
+      {
+        type: 'ui',
+        text: 'Demo-Button & E-Mail-Badge: Neuer Schnelltest-Button [Crypto.com E-Mail] im Import-Modal sowie dediziertes Badge "Crypto.com (E-Mail Beleg)" mit transparenter Statusanzeige ("Bereits im Portfolio (0 neu)" bzw. Duplikate-Info).',
+      },
+    ],
+  },
   {
     version: '0.5.27',
     date: '05.10.2026',
     title: 'Kraken E-Mail Kaufbeleg-Import (PDF & Text) & Vorbereitung E-Mail-Synchronisation',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',
