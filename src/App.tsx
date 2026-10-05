@@ -54,6 +54,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   theme: 'dark',
   colorTheme: 'midnight',
   currency: 'EUR',
+  layoutMode: 'fullwidth',
   privacyMode: false,
   user: {
     username: 'admin',
@@ -468,6 +469,8 @@ export default function App() {
     }
   };
 
+  const isFullwidth = settings.layoutMode !== 'boxed';
+
   return (
     <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${getThemeWrapperClass()}`}>
       
@@ -503,10 +506,15 @@ export default function App() {
         currency={settings.currency || 'EUR'}
         onToggleCurrency={handleToggleCurrency}
         customLogoUrl={settings.customLogoUrl}
+        isFullwidth={isFullwidth}
       />
 
       {/* Main Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <main className={`flex-1 w-full mx-auto py-6 space-y-6 ${
+        isFullwidth 
+          ? 'max-w-[1920px] px-4 sm:px-6 lg:px-8 xl:px-10' 
+          : 'max-w-7xl px-4 sm:px-6 lg:px-8'
+      }`}>
         
         {/* Default Admin Notice Banner */}
         {((settings.user?.isInitialAdmin ?? true) || settings.user?.username === 'admin') && (
@@ -665,7 +673,11 @@ export default function App() {
       <footer className={`border-t py-4 mt-12 text-xs ${
         isLight ? 'border-slate-200 bg-white text-slate-500' : 'border-slate-800/80 bg-slate-950 text-slate-400'
       }`}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+        <div className={`mx-auto flex items-center justify-between gap-4 ${
+          isFullwidth 
+            ? 'w-full max-w-[1920px] px-4 sm:px-6 lg:px-8 xl:px-10' 
+            : 'max-w-7xl px-4 sm:px-6 lg:px-8'
+        }`}>
           <div className="flex items-center space-x-2 whitespace-nowrap">
             <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>rwr/folio</span>
             <span className="text-slate-400">&bull;</span>

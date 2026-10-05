@@ -1,13 +1,18 @@
 import React, { useState, useMemo } from 'react';
-import { 
-  PieChart, 
-  Pie, 
-  Cell, 
-  ResponsiveContainer
-} from 'recharts';
 import { AssetSummary, Transaction, PortfolioCurrency } from '../types';
 import { getCoinDetails } from '../utils/priceService';
-import { PieChart as PieIcon, ArrowUpRight, ArrowDownRight, Layers, DollarSign, Wallet } from 'lucide-react';
+import { 
+  ArrowUpRight, 
+  ArrowDownRight, 
+  Layers, 
+  DollarSign, 
+  Wallet, 
+  Scale, 
+  TrendingUp, 
+  PieChart as PieIcon,
+  ShieldCheck,
+  Percent
+} from 'lucide-react';
 
 interface PortfolioChartsProps {
   assets: AssetSummary[];
@@ -42,6 +47,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
       return sum + (inv > 0 ? inv : 0);
     }, 0);
   }, [assets, isUSD]);
+
+  const totalPnl = totalValue - totalInvested;
+  const totalPnlPct = totalInvested > 0 ? (totalPnl / totalInvested) * 100 : 0;
 
   // Transform assets into comprehensive allocation entries
   const items = useMemo(() => {
@@ -83,15 +91,15 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     const top1 = items[0];
     const top3Share = items.slice(0, 3).reduce((sum, item) => sum + item.displayPercentage, 0);
     
-    // Find greatest value grower relative to capital
+    // Find greatest value grower relative to capital (Alpha / Outperformer)
     const sortedByGrowth = [...items].sort((a, b) => b.shiftPercentage - a.shiftPercentage);
-    const topGrower = sortedByGrowth.length > 0 && sortedByGrowth[0].shiftPercentage > 1 ? sortedByGrowth[0] : null;
+    const topGrower = sortedByGrowth.length > 0 && sortedByGrowth[0].shiftPercentage > 0.5 ? sortedByGrowth[0] : null;
 
     return {
       top1,
       top3Share,
       topGrower,
-      isConcentrated: top3Share > 80,
+      isConcentrated: top3Share > 75,
     };
   }, [items]);
 
@@ -108,19 +116,17 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     ? items.find(c => c.symbol === activeCoinSymbol) || null 
     : null;
 
-  const activeTotal = mode === 'value' ? totalValue : totalInvested;
-
   return (
-    <div className={`p-4 sm:p-6 rounded-2xl border shadow-xl transition-all space-y-4 ${
+    <div className={`p-4 sm:p-5 rounded-2xl border shadow-xl transition-all space-y-4 ${
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
     }`}>
-      {/* 1. Header with Mode Toggle */}
+      {/* 1. Header with Mode Toggle & Position Badge */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
-            <PieIcon className="w-4 h-4 text-indigo-500" />
-            <span>Coin Allokation &amp; Gewichtung</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${
+          <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+            <Layers className="w-4 h-4 text-indigo-500" />
+            <span>Coin-Allokation &amp; Gewichtung</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full border font-mono ${
               isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
             }`}>
               {items.length} Positionen
@@ -128,8 +134,8 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
           </h3>
           <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             {mode === 'value' 
-              ? `Aufteilung nach aktuellem Marktwert in ${currency}` 
-              : `Aufteilung nach tatsächlich eingesetztem Eigenkapital (Cost Basis)`}
+              ? `Verteilung nach aktuellem Marktwert (${currency}) & Alpha-Gewichtung` 
+              : `Verteilung nach tatsächlich eingesetztem Eigenkapital (Cost Basis)`}
           </p>
         </div>
 
@@ -164,220 +170,253 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
         </div>
       </div>
 
-      {/* 2. Key Concentration Insights Strip */}
-      {insights && items.length > 0 && (
-        <div className={`grid grid-cols-2 sm:grid-cols-3 gap-2.5 p-3 rounded-xl border text-xs ${
-          isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950/60 border-slate-800/80 text-slate-300'
-        }`}>
-          <div>
-            <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Top 1 Dominanz ({insights.top1.symbol})
-            </span>
-            <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              {insights.top1.displayPercentage.toFixed(1)} %
-            </span>
-          </div>
-
-          <div>
-            <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Top 3 Konzentration
-            </span>
-            <div className="flex items-center space-x-1.5">
-              <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                {insights.top3Share.toFixed(1)} %
-              </span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-medium ${
-                insights.isConcentrated 
-                  ? 'bg-amber-500/15 text-amber-400' 
-                  : 'bg-emerald-500/15 text-emerald-400'
-              }`}>
-                {insights.isConcentrated ? 'Fokussiert' : 'Ausgewogen'}
-              </span>
-            </div>
-          </div>
-
-          <div className="col-span-2 sm:col-span-1">
-            <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Stärkster Werttreiber vs. Kapital
-            </span>
-            {insights.topGrower ? (
-              <span className="text-sm font-bold font-mono text-emerald-400 flex items-center gap-0.5">
-                <span>{insights.topGrower.symbol}</span>
-                <span className="text-xs font-normal text-emerald-300">
-                  (+{insights.topGrower.shiftPercentage.toFixed(1)}% Anteil)
-                </span>
-              </span>
-            ) : (
-              <span className={`text-xs ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                Ausgeglichen
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
       {items.length === 0 ? (
-        <div className="py-12 text-center text-xs text-slate-500">
+        <div className="py-8 text-center text-xs text-slate-500">
           Noch keine Bestände mit Wert vorhanden.
         </div>
       ) : (
-        <div className="flex flex-col lg:flex-row items-center lg:items-start gap-6 pt-1">
-          
-          {/* 3. Left: Crisp Donut Chart with Centerpiece Display */}
-          <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex-shrink-0 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={items}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={88}
-                  paddingAngle={items.length > 1 ? 2.5 : 0}
-                  dataKey="chartValue"
-                  onMouseEnter={(_, index) => setActiveCoinSymbol(items[index].symbol)}
-                  onMouseLeave={() => setActiveCoinSymbol(null)}
-                >
-                  {items.map((entry) => {
-                    const isSelected = activeCoinSymbol === entry.symbol;
-                    return (
-                      <Cell 
-                        key={`cell-${entry.symbol}`} 
-                        fill={entry.color} 
-                        stroke={isLight ? '#ffffff' : '#0f172a'} 
-                        strokeWidth={isSelected ? 3 : 1.5}
-                        className="transition-all duration-200 cursor-pointer"
-                        style={{
-                          transform: isSelected ? 'scale(1.04)' : 'scale(1)',
-                          transformOrigin: 'center center',
-                          filter: isSelected ? 'brightness(1.15) drop-shadow(0 4px 6px rgba(0,0,0,0.3))' : 'none'
-                        }}
-                      />
-                    );
-                  })}
-                </Pie>
-              </PieChart>
-            </ResponsiveContainer>
-
-            {/* Non-obscuring Center Hole Info */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none p-3 text-center select-none">
-              {activeCoin ? (
-                <div className="space-y-0.5 animate-fadeIn">
-                  <div className="flex items-center justify-center space-x-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: activeCoin.color }} />
-                    <span className={`font-mono font-bold text-sm sm:text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      {activeCoin.symbol}
-                    </span>
-                  </div>
-                  <div className="text-xs sm:text-sm font-extrabold text-indigo-500 font-mono">
-                    {formatCurrency(activeCoin.chartValue)}
-                  </div>
-                  <div className={`text-[11px] font-semibold px-2 py-0.2 rounded-full inline-block ${
-                    isLight ? 'bg-indigo-50 text-indigo-700' : 'bg-indigo-500/20 text-indigo-300'
-                  }`}>
-                    {activeCoin.displayPercentage.toFixed(1)} %
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-0.5">
-                  <span className={`text-[10px] uppercase tracking-wider font-semibold ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                    {mode === 'value' ? 'Marktwert' : 'Investiert'}
-                  </span>
-                  <div className={`font-extrabold text-sm sm:text-base font-mono tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                    {formatCurrency(activeTotal)}
-                  </div>
-                  <div className={`text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    {items.length} Positionen
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* 4. Right: High-Density, Space-Efficient Allocation Breakdown */}
-          <div className="flex-1 w-full">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {items.map((item, index) => {
+        <>
+          {/* 2. Interactive Horizon Allocation Bar (Ultra-kompakter gestapelter Horizon-Streifen) */}
+          <div className="space-y-1.5">
+            <div className={`w-full h-3.5 sm:h-4 rounded-xl overflow-hidden flex p-0.5 border shadow-inner ${
+              isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950 border-slate-800'
+            }`}>
+              {items.map((item) => {
                 const isSelected = activeCoinSymbol === item.symbol;
-                const isPositiveShift = item.shiftPercentage > 0.5;
-                const isNegativeShift = item.shiftPercentage < -0.5;
+                const widthPct = Math.max(0.6, item.displayPercentage);
 
                 return (
                   <div
                     key={item.symbol}
+                    onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
                     onMouseEnter={() => setActiveCoinSymbol(item.symbol)}
                     onMouseLeave={() => setActiveCoinSymbol(null)}
-                    onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
-                    className={`p-2.5 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                      isSelected
-                        ? (isLight ? 'bg-indigo-50/90 border-indigo-400 ring-1 ring-indigo-400 shadow-sm' : 'bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500/50 shadow-md')
-                        : (isLight ? 'bg-slate-50 hover:bg-slate-100/90 border-slate-200' : 'bg-slate-950/50 hover:bg-slate-900 border-slate-800/80')
+                    style={{
+                      width: `${widthPct}%`,
+                      backgroundColor: item.color,
+                    }}
+                    className={`h-full transition-all duration-150 cursor-pointer first:rounded-l-lg last:rounded-r-lg ${
+                      isSelected 
+                        ? 'brightness-125 scale-y-110 shadow-lg ring-2 ring-white z-10' 
+                        : 'hover:brightness-115 opacity-90 hover:opacity-100'
                     }`}
-                  >
-                    {/* Top Row: Rank, Color, Name, % Share */}
-                    <div className="flex items-center justify-between gap-1 mb-1">
-                      <div className="flex items-center space-x-2 min-w-0">
-                        <span className={`text-[10px] font-mono px-1 rounded ${
-                          isLight ? 'bg-slate-200/60 text-slate-600' : 'bg-slate-800 text-slate-400'
-                        }`}>
-                          #{index + 1}
-                        </span>
-                        <span 
-                          className="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" 
-                          style={{ backgroundColor: item.color }} 
-                        />
-                        <span className={`font-bold font-mono text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                          {item.symbol}
-                        </span>
-                        <span className={`text-[11px] truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {item.fullName}
-                        </span>
-                      </div>
-                      <span className="font-mono font-bold text-xs text-indigo-400 flex-shrink-0">
-                        {item.displayPercentage.toFixed(1)} %
-                      </span>
-                    </div>
-
-                    {/* Middle Row: Values (Marktwert vs. Investiert) */}
-                    <div className="flex items-baseline justify-between pt-0.5 text-xs font-mono">
-                      <div>
-                        <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-                          {formatCurrency(item.currentValue)}
-                        </span>
-                        <span className={`text-[10px] ml-1.5 font-sans ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
-                          (Inv: {formatCurrency(item.totalInvested)})
-                        </span>
-                      </div>
-
-                      {/* Value vs. Invested shift indicator */}
-                      {isPositiveShift && (
-                        <span className="text-[10px] font-mono text-emerald-400 flex items-center" title="Marktanteil übersteigt Investitionsanteil (Gewinn-Treiber)">
-                          <ArrowUpRight className="w-3 h-3" />
-                          <span>+{item.shiftPercentage.toFixed(1)}%</span>
-                        </span>
-                      )}
-                      {isNegativeShift && (
-                        <span className="text-[10px] font-mono text-slate-400 flex items-center" title="Marktanteil unter Investitionsanteil">
-                          <ArrowDownRight className="w-3 h-3" />
-                          <span>{item.shiftPercentage.toFixed(1)}%</span>
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Micro Progress Bar */}
-                    <div className="w-full bg-slate-200/60 dark:bg-slate-800 rounded-full h-1 mt-1.5 overflow-hidden">
-                      <div 
-                        className="h-1 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min(100, Math.max(2, item.displayPercentage))}%`, backgroundColor: item.color }}
-                      />
-                    </div>
-                  </div>
+                    title={`${item.symbol}: ${item.displayPercentage.toFixed(1)}% (${formatCurrency(item.chartValue)})`}
+                  />
                 );
               })}
             </div>
+
+            {/* Micro-HUD for Hovered / Focused Coin */}
+            <div className="h-5 flex items-center justify-between text-xs font-mono">
+              {activeCoin ? (
+                <div className="flex items-center gap-2 animate-fadeIn truncate">
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: activeCoin.color }} />
+                  <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{activeCoin.symbol}</span>
+                  <span className="text-slate-400 font-sans truncate">({activeCoin.fullName})</span>
+                  <span className="text-indigo-400 font-bold">
+                    {activeCoin.displayPercentage.toFixed(1)} %
+                  </span>
+                  <span className="text-slate-500 hidden sm:inline">&bull;</span>
+                  <span className={`font-semibold hidden sm:inline ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                    Wert: {formatCurrency(activeCoin.currentValue)}
+                  </span>
+                  <span className={`text-[11px] hidden md:inline ${activeCoin.shiftPercentage >= 0 ? 'text-emerald-400' : 'text-slate-400'}`}>
+                    (Drift: {activeCoin.shiftPercentage >= 0 ? '+' : ''}{activeCoin.shiftPercentage.toFixed(1)}%)
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-[11px] text-slate-400 font-sans truncate">
+                  <span>💡 Tipp: Fahre über ein Segment oder klicke eine Karte zur Detailanalyse</span>
+                </div>
+              )}
+
+              <div className="text-[11px] text-slate-400 font-sans ml-auto shrink-0">
+                <span>Gesamt: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{formatCurrency(mode === 'value' ? totalValue : totalInvested)}</strong></span>
+              </div>
+            </div>
           </div>
 
-        </div>
+          {/* 3. Key Concentration & Drift Intelligence Strip */}
+          {insights && (
+            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl border text-xs ${
+              isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950/60 border-slate-800/80 text-slate-300'
+            }`}>
+              {/* Insight 1: Top 1 Dominanz */}
+              <div>
+                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Top 1 Dominanz ({insights.top1.symbol})
+                </span>
+                <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  {insights.top1.displayPercentage.toFixed(1)} %
+                </span>
+              </div>
+
+              {/* Insight 2: Top 3 Konzentration */}
+              <div>
+                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Top 3 Konzentration
+                </span>
+                <div className="flex items-center space-x-1.5">
+                  <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                    {insights.top3Share.toFixed(1)} %
+                  </span>
+                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-medium ${
+                    insights.isConcentrated 
+                      ? 'bg-amber-500/15 text-amber-400' 
+                      : 'bg-emerald-500/15 text-emerald-400'
+                  }`}>
+                    {insights.isConcentrated ? 'Fokussiert' : 'Ausgewogen'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Insight 3: Alpha / Stärkster Werttreiber vs. Kapital */}
+              <div>
+                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Top Alpha-Treiber vs. Kapital
+                </span>
+                {insights.topGrower ? (
+                  <span className="text-sm font-bold font-mono text-emerald-400 flex items-center gap-1">
+                    <span>{insights.topGrower.symbol}</span>
+                    <span className="text-[11px] font-normal text-emerald-300">
+                      (+{insights.topGrower.shiftPercentage.toFixed(1)}% Drift)
+                    </span>
+                  </span>
+                ) : (
+                  <span className={`text-xs ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                    Ausgeglichen
+                  </span>
+                )}
+              </div>
+
+              {/* Insight 4: Gesamtrendite / P&L Gesamt */}
+              <div>
+                <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  Gesamt P&amp;L Rendite
+                </span>
+                <span className={`text-sm font-bold font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {totalPnl >= 0 ? '+' : ''}{totalPnlPct.toFixed(1)} %
+                  <span className="text-[10px] ml-1 font-normal opacity-80">
+                    ({totalPnl >= 0 ? '+' : ''}{formatCurrency(totalPnl)})
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* 4. High-Density Asset Weighting Matrix / Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 pt-1">
+            {items.map((item, index) => {
+              const isSelected = activeCoinSymbol === item.symbol;
+              const isPositiveShift = item.shiftPercentage > 0.5;
+              const isNegativeShift = item.shiftPercentage < -0.5;
+              const isProfit = item.pnl >= 0;
+
+              return (
+                <div
+                  key={item.symbol}
+                  onMouseEnter={() => setActiveCoinSymbol(item.symbol)}
+                  onMouseLeave={() => setActiveCoinSymbol(null)}
+                  onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
+                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
+                    isSelected
+                      ? (isLight ? 'bg-indigo-50/90 border-indigo-400 ring-1 ring-indigo-400 shadow-sm' : 'bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500/50 shadow-md')
+                      : (isLight ? 'bg-slate-50 hover:bg-slate-100/90 border-slate-200' : 'bg-slate-950/50 hover:bg-slate-900 border-slate-800/80')
+                  }`}
+                >
+                  {/* Top Row: Rank, Color, Symbol, Name, % Share */}
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
+                    <div className="flex items-center space-x-1.5 min-w-0">
+                      <span className={`text-[10px] font-mono px-1 rounded shrink-0 ${
+                        isLight ? 'bg-slate-200/60 text-slate-600' : 'bg-slate-800 text-slate-400'
+                      }`}>
+                        #{index + 1}
+                      </span>
+                      <span 
+                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" 
+                        style={{ backgroundColor: item.color }} 
+                      />
+                      <span className={`font-bold font-mono text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                        {item.symbol}
+                      </span>
+                      <span className={`text-[11px] truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        {item.fullName}
+                      </span>
+                    </div>
+
+                    <span className="font-mono font-bold text-xs text-indigo-400 shrink-0">
+                      {item.displayPercentage.toFixed(1)} %
+                    </span>
+                  </div>
+
+                  {/* Micro Progress Bar */}
+                  <div className={`w-full rounded-full h-1 mb-2 overflow-hidden ${
+                    isLight ? 'bg-slate-200/80' : 'bg-slate-800'
+                  }`}>
+                    <div 
+                      className="h-1 rounded-full transition-all duration-300"
+                      style={{ 
+                        width: `${Math.min(100, Math.max(2, item.displayPercentage))}%`, 
+                        backgroundColor: item.color 
+                      }}
+                    />
+                  </div>
+
+                  {/* Values Row: Marktwert & Investiert */}
+                  <div className="flex items-center justify-between text-xs font-mono mb-1">
+                    <div>
+                      <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Marktwert
+                      </span>
+                      <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        {formatCurrency(item.currentValue)}
+                      </span>
+                    </div>
+
+                    <div className="text-right">
+                      <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Cost Basis
+                      </span>
+                      <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                        {formatCurrency(item.totalInvested)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Row: P&L & Weighting Drift */}
+                  <div className={`pt-1.5 border-t flex items-center justify-between text-[11px] font-mono ${
+                    isLight ? 'border-slate-200/80' : 'border-slate-800/60'
+                  }`}>
+                    {/* P&L */}
+                    <div className={isProfit ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                      <span>{isProfit ? '+' : ''}{item.pnlPercentage.toFixed(1)} %</span>
+                      <span className="opacity-75 text-[10px] ml-1">({isProfit ? '+' : ''}{formatCurrency(item.pnl)})</span>
+                    </div>
+
+                    {/* Drift Badge */}
+                    <div>
+                      {isPositiveShift && (
+                        <span className="text-[10px] text-emerald-400 flex items-center gap-0.5" title="Marktanteil übersteigt Investitionsanteil (Gewinn-Treiber)">
+                          <ArrowUpRight className="w-3 h-3" />
+                          <span>+{item.shiftPercentage.toFixed(1)}% Drift</span>
+                        </span>
+                      )}
+                      {isNegativeShift && (
+                        <span className="text-[10px] text-slate-400 flex items-center gap-0.5" title="Marktanteil unter Investitionsanteil">
+                          <ArrowDownRight className="w-3 h-3" />
+                          <span>{item.shiftPercentage.toFixed(1)}% Drift</span>
+                        </span>
+                      )}
+                      {!isPositiveShift && !isNegativeShift && (
+                        <span className="text-[10px] text-slate-500">Parität</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
     </div>
   );

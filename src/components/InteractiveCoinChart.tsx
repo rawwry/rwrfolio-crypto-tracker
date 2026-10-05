@@ -506,9 +506,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
     );
   };
 
-  // Pinned Chart Tooltip Component: renders fixed in the top margin of the chart canvas (TradingView-style HUD),
-  // updating synchronously with mouse move so it never obscures candle curves or trades.
-  const PinnedChartTooltip = ({ active, payload }: any) => {
+  // Tooltip Synchronizer Component: synchronously updates hoveredPoint for the anchored HUD Card
+  // without rendering any duplicate floating element inside the canvas.
+  const ChartTooltipSync = ({ active, payload }: any) => {
     React.useEffect(() => {
       if (active && payload && payload.length > 0) {
         setHoveredPoint(payload[0].payload);
@@ -517,72 +517,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
       }
     }, [active, payload]);
 
-    if (!active || !payload || !payload.length) return null;
-    const pt: CoinChartPoint = payload[0].payload;
-    if (!pt) return null;
-
-    const isProfit = pt.pnl >= 0;
-    const distBuy = avgBuyPrice > 0 ? ((pt.price - avgBuyPrice) / avgBuyPrice) * 100 : null;
-
-    return (
-      <div className={`px-2.5 py-1 rounded-lg border shadow-xl backdrop-blur-md flex flex-wrap items-center gap-2 text-xs font-mono select-none pointer-events-none transition-none ${
-        isLight 
-          ? 'bg-white/95 border-slate-300 text-slate-800 shadow-slate-200/60' 
-          : 'bg-slate-900/95 border-indigo-500/50 text-slate-100 shadow-black/80'
-      }`}>
-        <div className="flex items-center gap-1 font-sans font-bold text-indigo-400">
-          <Calendar className="w-3 h-3 text-indigo-400 shrink-0" />
-          <span>{pt.formattedDate}</span>
-          {pt.isToday && (
-            <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">Live</span>
-          )}
-        </div>
-
-        <span className="opacity-25 font-sans">|</span>
-
-        {!isPortfolio && (
-          <div className="flex items-center gap-1">
-            <span className="text-slate-400 font-sans text-[11px]">Kurs:</span>
-            <span className="font-bold text-slate-100">{formatPrice(pt.price)}</span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-1">
-          <span className="text-slate-400 font-sans text-[11px]">{isPortfolio ? 'Portfolio:' : 'Wert:'}</span>
-          <span className="font-bold text-slate-100">{formatCurr(pt.holdingValue)}</span>
-        </div>
-
-        <div className="flex items-center gap-1">
-          <span className="text-slate-400 font-sans text-[11px]">P&amp;L:</span>
-          <span className={`font-bold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
-            {isProfit ? '+' : ''}{formatCurr(pt.pnl)} ({isProfit ? '+' : ''}{pt.pnlPercentage.toFixed(2)} %)
-          </span>
-        </div>
-
-        {!isPortfolio && distBuy !== null && (
-          <div className="hidden sm:flex items-center gap-1 text-[11px]">
-            <span className="text-slate-400 font-sans">Ø Einstieg:</span>
-            <span className={`font-semibold ${distBuy >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-              {distBuy >= 0 ? '+' : ''}{distBuy.toFixed(1)} %
-            </span>
-          </div>
-        )}
-
-        {pt.trades && pt.trades.length > 0 && (
-          <div className="flex items-center gap-1">
-            {pt.trades.map((tr) => (
-              <span key={tr.id} className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${
-                tr.type === 'BUY' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-              }`}>
-                <span>{tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'}</span>
-                <span>{tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}</span>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    );
+    return null;
   };
+
 
   return (
     <div className={
@@ -1041,93 +978,122 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
         </div>
       )}
 
-      {/* 3.6 Anchored Live Inspection HUD Card (Fest im Diagrammbereich verankert, keine Verdeckung der Kurve) */}
+      {/* 3.6 Anchored Live Inspection HUD Card (Fest im Diagrammbereich verankert, 100% sprungfrei & pixel-stabil) */}
       {(() => {
         const displayPoint: CoinChartPoint | null = hoveredPoint || (points.length > 0 ? points[points.length - 1] : null);
         const isLive = !hoveredPoint;
+        const distBuy = displayPoint && avgBuyPrice > 0 
+          ? ((displayPoint.price - avgBuyPrice) / avgBuyPrice) * 100 
+          : null;
 
         return (
-          <div className={`px-3.5 py-2.5 rounded-xl border flex flex-col md:flex-row md:items-center justify-between gap-2.5 text-xs font-mono shadow-sm transition-all min-h-[46px] ${
+          <div className={`h-11 min-h-[44px] max-h-[44px] px-3.5 rounded-xl border flex items-center justify-between text-xs font-mono shadow-sm select-none overflow-x-auto scrollbar-none gap-3 transition-colors duration-150 ${
             isLight 
               ? 'bg-slate-100/90 border-slate-200 text-slate-800' 
               : (hoveredPoint ? 'bg-indigo-950/40 border-indigo-700/60 text-slate-100' : 'bg-slate-950/70 border-slate-800/80 text-slate-200')
           }`}>
-            {/* Left: Date / Status / Trades */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <div className="flex items-center gap-1.5">
+            {/* Left Slot: Date, Live/Inspektion Badge & Fixed Trade Slot */}
+            <div className="flex items-center gap-2.5 shrink-0 h-full">
+              {/* Date */}
+              <div className="w-24 shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs text-indigo-400">
                 <Calendar className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                <span className="font-bold text-xs font-sans text-indigo-400">
-                  {displayPoint ? displayPoint.formattedDate : 'Live'}
-                </span>
+                <span className="truncate">{displayPoint ? displayPoint.formattedDate : 'Live'}</span>
               </div>
 
-              {displayPoint?.isToday || isLive ? (
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  <span>Live-Stand</span>
-                </span>
-              ) : (
-                <span className="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans">
-                  Inspektion
-                </span>
-              )}
+              {/* Status Badge with fixed sizing */}
+              <div className="w-20 shrink-0 flex items-center">
+                {displayPoint?.isToday || isLive ? (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+                    <span>Live</span>
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-sans">
+                    Inspektion
+                  </span>
+                )}
+              </div>
 
-              {displayPoint?.trades && displayPoint.trades.length > 0 ? (
-                <div className="flex items-center gap-1.5 flex-wrap">
-                  {displayPoint.trades.map((tr) => (
-                    <span 
-                      key={tr.id}
-                      onClick={() => setInspectedTrade(tr)}
-                      title="Klick für Tranchen-Details (§ 23 EStG)"
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 ${
-                        tr.type === 'BUY'
-                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                          : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                      }`}
-                    >
-                      <ShoppingBag className="w-2.5 h-2.5" />
-                      <span>
-                        {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}
+              {/* Fixed Separator */}
+              <div className="w-px h-4 bg-slate-700/40 shrink-0" />
+
+              {/* Reserved Trade Slot (Fixed width to completely prevent jitter) */}
+              <div className="w-64 sm:w-80 shrink-0 h-7 flex items-center overflow-hidden">
+                {displayPoint?.trades && displayPoint.trades.length > 0 ? (
+                  <div className="flex items-center gap-1.5 truncate">
+                    {displayPoint.trades.map((tr) => (
+                      <span 
+                        key={tr.id}
+                        onClick={() => setInspectedTrade(tr)}
+                        title="Klick für Tranchen-Details (§ 23 EStG)"
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 shrink-0 ${
+                          tr.type === 'BUY'
+                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        }`}
+                      >
+                        <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
+                        <span className="truncate">
+                          {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}
+                        </span>
+                        <span className="opacity-75 uppercase text-[9px] font-normal shrink-0">({tr.source.replace('_', '.')})</span>
                       </span>
-                      <span className="opacity-75 uppercase text-[9px] font-normal">({tr.source.replace('_', '.')})</span>
-                    </span>
-                  ))}
-                </div>
-              ) : isLive && !isPortfolio ? (
-                <span className="text-[10px] text-slate-400 hidden lg:inline font-sans">
-                  💡 Bewege die Maus über die Kurve zur Punkt-Inspektion einzelner Tage
-                </span>
-              ) : null}
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex items-center text-[11px] text-slate-500/80 font-sans truncate">
+                    {isLive && !isPortfolio ? (
+                      <span>💡 Bewege die Maus über die Kurve zur Punkt-Inspektion</span>
+                    ) : (
+                      <span className="opacity-60 font-mono text-[10px]">Keine Trades am Tag</span>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
-            {/* Right: Key metrics */}
+            {/* Right Slot: Key metrics with fixed column widths & tabular-nums */}
             {displayPoint && (
-              <div className="flex flex-wrap items-center gap-3 text-xs">
+              <div className="flex items-center gap-2 sm:gap-4 shrink-0 text-xs font-mono tabular-nums ml-auto h-full">
+                {/* Metric 1: Kurs */}
                 {!isPortfolio && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-slate-400 font-sans text-[11px]">Kurs:</span>
-                    <span className="font-bold text-slate-100">{formatPrice(displayPoint.price)}</span>
+                  <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Kurs:</span>
+                    <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                      {formatPrice(displayPoint.price)}
+                    </span>
                   </div>
                 )}
 
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-400 font-sans text-[11px]">{isPortfolio ? 'Portfolio:' : 'Wert:'}</span>
-                  <span className="font-bold text-slate-100">{formatCurr(displayPoint.holdingValue)}</span>
+                {/* Metric 2: Wert / Portfolio */}
+                <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {isPortfolio ? 'Portf.:' : 'Wert:'}
+                  </span>
+                  <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                    {formatCurr(displayPoint.holdingValue)}
+                  </span>
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <span className="text-slate-400 font-sans text-[11px]">P&amp;L:</span>
-                  <span className={`font-bold ${displayPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {/* Metric 3: P&L */}
+                <div className="w-40 sm:w-48 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>P&amp;L:</span>
+                  <span className={`font-bold tabular-nums truncate ${displayPoint.pnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {displayPoint.pnl >= 0 ? '+' : ''}{formatCurr(displayPoint.pnl)} ({displayPoint.pnl >= 0 ? '+' : ''}{displayPoint.pnlPercentage.toFixed(2)} %)
                   </span>
                 </div>
 
-                {!isPortfolio && avgBuyPrice > 0 && metricMode === 'price' && (
-                  <div className="hidden sm:flex items-center gap-1 text-[11px]">
-                    <span className="text-slate-400 font-sans">Ø Einstieg:</span>
-                    <span className={`font-semibold ${((displayPoint.price - avgBuyPrice) / avgBuyPrice) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {((displayPoint.price - avgBuyPrice) / avgBuyPrice) >= 0 ? '+' : ''}{(((displayPoint.price - avgBuyPrice) / avgBuyPrice) * 100).toFixed(1)} %
-                    </span>
+                {/* Metric 4: Ø Einstieg */}
+                {!isPortfolio && (
+                  <div className="w-24 sm:w-28 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                    <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Ø:</span>
+                    {distBuy !== null ? (
+                      <span className={`font-semibold tabular-nums truncate ${distBuy >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                        {distBuy >= 0 ? '+' : ''}{distBuy.toFixed(1)} %
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 font-mono text-[11px]">-</span>
+                    )}
                   </div>
                 )}
               </div>
@@ -1191,10 +1157,9 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                 tickFormatter={formatYAxisTick}
               />
 
-              {/* Pinned Top-Left Chart Legend / Inspection HUD inside canvas & Crosshair Tracker */}
+              {/* Crosshair Tracker & Payload Synchronizer for Anchored HUD (no inner duplicate box) */}
               <RechartsTooltip 
-                position={{ x: 75, y: 4 }}
-                content={<PinnedChartTooltip />}
+                content={<ChartTooltipSync />}
                 isAnimationActive={false}
                 animationDuration={0}
                 cursor={{ stroke: '#818cf8', strokeWidth: 1.5, strokeDasharray: '3 3' }}

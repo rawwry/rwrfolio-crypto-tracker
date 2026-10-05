@@ -9,14 +9,37 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.28';
+export const APP_VERSION = '0.5.29';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.29',
+    date: '05.10.2026',
+    title: 'Fullwidth-Layout (Standard), Pixel-stabiles Chart-HUD & Neugestaltete Coin-Allokation',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Fullwidth-Layout als neuer Standard: Die gesamte Webapp nutzt standardmäßig ein flüssiges Widescreen-Layout bis 1920px (Navbar, KPIs, Charts, Tabellen und Footer) für beste Ausnutzung moderner Monitore. In den Einstellungen unter "Erscheinungsbild" kann flexibel zwischen "Volle Breite (Standard)" und "Kompakt (Boxed Layout)" gewählt werden.',
+      },
+      {
+        type: 'fix',
+        text: '100% pixel-stabiles & sprungfreies Chart-HUD: Die im Analyse-Tab über dem Kurschart verankerte Inspektionsleiste springt nicht mehr um wenige Pixel. Durch reservierte Trade-Badge-Slots, rigide Spaltenbreiten und tabular-nums (feste Schriftbreiten) bleibt die Leiste beim Schweben über Trades oder leere Tage vollständig fixiert.',
+      },
+      {
+        type: 'ui',
+        text: 'Beseitigung doppelter Tooltips: Der redundante Kasten im Zeichenbereich des Charts wurde entfernt. Die Kurslinie bleibt frei und wird niemals verdeckt.',
+      },
+      {
+        type: 'feat',
+        text: 'Neugestaltete Coin-Allokation & Gewichtung: Der unpraktische, vertikal sperrige Donut-Kreis wurde durch einen modernen, horizontalen Horizon-Allokationsstreifen mit dynamischem Fokus ersetzt. Ergänzt um eine 4-KPI-Konzentrationsleiste (Top 1 Dominanz, Top 3 Anteil, Alpha-Treiber, Gesamtrendite) und eine kompakte, hochdichte Asset-Matrix mit Drift-Analysen (Marktgewicht vs. Investitionsanteil).',
+      },
+    ],
+  },
   {
     version: '0.5.28',
     date: '05.10.2026',
     title: 'Crypto.com E-Mail Kaufbeleg-Import (PDF & Text) & Intelligente Multi-Source Duplikatserkennung',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

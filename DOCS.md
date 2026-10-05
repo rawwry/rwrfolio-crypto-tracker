@@ -15,7 +15,11 @@
   - **Vollbildmodus (Fullscreen):** Großformatige TradingView-Pro Ansicht per Knopfdruck (`[ ⛶ Vollbild ]` oder Tastatur-Shortcut `Esc`) mit erweiterter Zeichenfläche (`58vh`).
   - **Trade-Pins:** Kaufzeitpunkte (▲ KAUF) und Verkäufe (▼ VERK.) direkt auf der Kurslinie mit Glow-Effekten und vertikalen Orientierungslinien.
   - **Horizontale DCA-Referenzlinie:** Zeigt deinen persönlichen durchschnittlichen Kaufpreis mit prozentualem Abstand zum aktuellen Kurs.
-  - **Fest verankertes Live-HUD & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart; zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
+  - **100% pixel-stabiles Live-HUD & Technische Indikatoren:** Feste, verdeckungsfreie Inspektionsleiste über dem Chart mit rigiden Spalten und `font-mono tabular-nums` (kein Springen oder Jitter beim Hovern über Trades); zuschaltbare **Bollinger Bänder (20, 2σ)**, **ATH-Referenzlinie** und synchronisierter **RSI (14)** Momentum-Oszillator.
+- **🥧 Neugestaltete Coin-Allokation & Gewichtung:**
+  - Kompakter, horizontaler **Horizon-Allokationsstreifen** mit Farbsegmentierung nach Coin-Markenfarben und interaktiver Segmentfokussierung (spart über 200px vertikalen Platz gegenüber alten Kreisdiagrammen).
+  - **4-KPI-Konzentrationsleiste:** Top 1 Dominanz, Top 3 Konzentrationsgrad (*Fokussiert* vs. *Ausgewogen*), stärkster Alpha-Werttreiber vs. Kapital sowie Gesamtportfolio-Rendite.
+  - **Kompakte Asset-Gewichtungsmatrix:** Klare Gegenüberstellung von Marktwert, Cost Basis (eingesetztes Eigenkapital), P&L und Allokations-Drift (*Übergewichtet* / *Untergewichtet*).
 - **⚡ Multi-Timeframe Performance-Matrix:**
   - Schneller Wechsel zwischen **24h (Tag)**, **7T (Woche)**, **30T (Monat)**, **90T (3 Monate)**, **1J (Jahr)** und **Gesamt (All-Time DCA)**.
   - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.
@@ -29,7 +33,8 @@
   - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse.
   - Automatische Berücksichtigung der Freigrenzen (1.000 € für private Veräußerungsgeschäfte ab VZ 2024, 256 € für Staking/Rewards nach § 22 Nr. 3 EStG).
   - Vollständige Buchungsprotokolle als Querformat-Anhang B (Kraken) und Anhang C (Crypto.com) mit ungekürzten Transaktions-IDs.
-- **🎨 Design, Themes & Touchicons:**
+- **🖥️ Layout & Design (Fullwidth vs. Boxed):**
+  - **Fullwidth-Widescreen-Layout:** Flüssige 1920px Widescreen-Darstellung als Standard für optimale Übersicht. Umschaltbar auf Kompakt (Boxed Layout, max. 1280px) in den Einstellungen.
   - 5 Farbthemen: *Midnight Slate*, *OLED Pure Black*, *Cyber Emerald*, *Nordic Cyan* und *Amber Gold*.
   - Upload eigener Webapp-Logos und Homescreen-Touchicons für iOS und Android.
 

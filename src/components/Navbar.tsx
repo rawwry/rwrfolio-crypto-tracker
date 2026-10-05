@@ -23,6 +23,7 @@ interface NavbarProps {
   currency?: PortfolioCurrency;
   onToggleCurrency?: () => void;
   customLogoUrl?: string;
+  isFullwidth?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -33,6 +34,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   theme,
   userProfile,
   customLogoUrl,
+  isFullwidth = true,
 }) => {
   const isLight = theme === 'light';
 
@@ -42,7 +44,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         ? 'bg-white/95 border-slate-200 text-slate-900 shadow-sm' 
         : 'bg-slate-900/95 border-slate-800/80 text-white'
     }`}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={`mx-auto ${isFullwidth ? 'w-full max-w-[1920px] px-4 sm:px-6 lg:px-8 xl:px-10' : 'max-w-7xl px-4 sm:px-6 lg:px-8'}`}>
         <div className="flex items-center justify-between h-13 sm:h-14 gap-4">
           
           {/* Logo & Brand: Emblem + rwr/folio */}

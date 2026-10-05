@@ -4,6 +4,25 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.29] - 05.10.2026
+
+### ✨ Neue Features & Verbesserungen
+- **Fullwidth-Widescreen-Layout als neuer Standard**:
+  - Die gesamte Benutzeroberfläche nutzt standardmäßig ein flüssiges Widescreen-Layout (bis 1920px), das große Monitore optimal ausnutzt und mehr Platz für Charts, KPIs und Tabellen bietet.
+  - Neuer Layout-Wahlschalter in den Einstellungen unter *Erscheinungsbild*: Flexibler Wechsel zwischen **Volle Breite (Standard)** und **Kompakt (Boxed Layout, max. 1280px)**.
+- **100 % pixel-stabiles & sprungfreies Chart-HUD**:
+  - Vollständige Behebung von Höhen- und Breiten-Jitter beim Bewegen der Maus über den Chart.
+  - Reservierter, fester Badge-Slot für Kauf-/Verkaufsinformationen mit dezentem Platzhalter verhindert das Verschieben benachbarter Spalten.
+  - Feste Breiten (`shrink-0`) und `font-mono tabular-nums` für Kurs, Wert, P&L und Durchschnittspreis eliminieren jedes Ziffernwackeln.
+  - Beseitigung redundanter Tooltip-Kästen im Zeichenbereich – freier Blick auf die Kurve.
+- **Neugestaltete Coin-Allokation & Gewichtung**:
+  - Der unpraktische und platzraubende Recharts-Donut-Kreis wurde durch einen modernen, horizontalen **Horizon-Allokationsstreifen** ersetzt (spart über 200px vertikale Bauhöhe).
+  - Interaktives Segment-Hover mit Sofort-Feedback und Fokussierung verknüpfter Asset-Karten.
+  - **4-KPI-Konzentrationsleiste**: Direkte Anzeige von Top 1 Dominanz, Top 3 Konzentration (Fokussiert vs. Ausgewogen), größtem Alpha-Werttreiber vs. Kapital sowie Portfolio-Gesamtrendite.
+  - **Kompakte, hochdichte Asset-Matrix**: Strukturierte Kartenansicht mit Marktwert, Cost Basis, P&L und Allokations-Drift (Marktgewicht vs. Investitionsanteil).
+
+---
+
 ## [0.5.28] - 05.10.2026
 
 ### ✨ Neue Features & Verbesserungen

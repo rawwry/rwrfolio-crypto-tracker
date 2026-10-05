@@ -26,9 +26,11 @@ import {
   Sparkles,
   Upload,
   Image as ImageIcon,
-  Smartphone
+  Smartphone,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
-import { AppSettings, ThemeMode, PortfolioCurrency, ColorThemePreset } from '../types';
+import { AppSettings, ThemeMode, PortfolioCurrency, ColorThemePreset, LayoutMode } from '../types';
 import { sendTestEmailApi } from '../utils/apiClient';
 import { hashPassword } from '../utils/auth';
 import { AppLogo } from './AppLogo';
@@ -118,6 +120,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const [theme, setTheme] = useState<ThemeMode>(settings.theme || 'dark');
   const [colorTheme, setColorTheme] = useState<ColorThemePreset>(settings.colorTheme || 'midnight');
   const [currency, setCurrency] = useState<PortfolioCurrency>(settings.currency || 'EUR');
+  const [layoutMode, setLayoutMode] = useState<LayoutMode>(settings.layoutMode || 'fullwidth');
   const [privacyMode, setPrivacyMode] = useState(settings.privacyMode || false);
 
   // Custom Branding states
@@ -165,6 +168,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
       theme,
       colorTheme,
       currency,
+      layoutMode,
       privacyMode,
       customLogoUrl: customLogoUrl.trim() || undefined,
       customTouchiconUrl: customTouchiconUrl.trim() || undefined,
@@ -729,6 +733,63 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
                       </div>
                       {currency === 'USD' && <Check className="w-4 h-4 text-emerald-400 font-bold" />}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Layout Mode Selection (Fullwidth vs. Boxed) */}
+                <div className={`space-y-2 pt-2 border-t ${theme === 'light' ? 'border-slate-200' : 'border-slate-800/80'}`}>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-xs font-bold flex items-center gap-1.5">
+                        <Maximize2 className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>Seiten-Layout &amp; Anzeigebreite</span>
+                      </div>
+                      <p className={`text-[11px] ${theme === 'light' ? 'text-slate-500' : 'text-slate-400'}`}>
+                        Wähle zwischen dem modernen Widescreen-Layout und der zentrierten Kompakt-Ansicht.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div
+                      onClick={() => setLayoutMode('fullwidth')}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                        layoutMode === 'fullwidth'
+                          ? 'border-indigo-500 bg-indigo-500/10'
+                          : theme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-slate-900/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-indigo-600/20 text-indigo-400 font-bold flex items-center justify-center">
+                          <Maximize2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className={`font-bold text-xs ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Volle Breite (Standard)</div>
+                          <div className="text-[10px] text-slate-400">Widescreen bis 1920px – maximale Übersicht</div>
+                        </div>
+                      </div>
+                      {layoutMode === 'fullwidth' && <Check className="w-4 h-4 text-indigo-400 font-bold" />}
+                    </div>
+
+                    <div
+                      onClick={() => setLayoutMode('boxed')}
+                      className={`p-3.5 rounded-xl border-2 transition-all cursor-pointer flex items-center justify-between ${
+                        layoutMode === 'boxed'
+                          ? 'border-indigo-500 bg-indigo-500/10'
+                          : theme === 'light' ? 'border-slate-200 bg-slate-50' : 'border-slate-800 bg-slate-900/50'
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <div className="w-7 h-7 rounded-lg bg-slate-700/30 text-slate-300 font-bold flex items-center justify-center">
+                          <Minimize2 className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className={`font-bold text-xs ${theme === 'light' ? 'text-slate-900' : 'text-white'}`}>Kompakt (Boxed Layout)</div>
+                          <div className="text-[10px] text-slate-400">Zentriert (max. 1280px) mit Rändern</div>
+                        </div>
+                      </div>
+                      {layoutMode === 'boxed' && <Check className="w-4 h-4 text-indigo-400 font-bold" />}
                     </div>
                   </div>
                 </div>

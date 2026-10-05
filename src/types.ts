@@ -116,10 +116,13 @@ export interface EmailNotificationSettings {
   alertOnTargetReached: boolean;
 }
 
+export type LayoutMode = 'fullwidth' | 'boxed';
+
 export interface AppSettings {
   theme: ThemeMode;
   colorTheme?: ColorThemePreset;
   currency?: PortfolioCurrency;
+  layoutMode?: LayoutMode;
   user: UserProfile;
   email: EmailNotificationSettings;
   privacyMode: boolean; // hide balances with ***
