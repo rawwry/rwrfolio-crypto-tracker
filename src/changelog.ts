@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.29';
+export const APP_VERSION = '0.5.30';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.30',
+    date: '05.10.2026',
+    title: 'Hochdichte Allokations-Tabelle (Ersatz der Kacheln durch schlanke Einzeiler)',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Ablösung sperriger Kacheln: Die blockigen Kacheln unter der Coin-Allokation wurden durch eine elegante, einzeilige Finanz-Tabelle ersetzt. Spart über 65 % vertikale Höhe und beseitigt unübersichtliches Scrollen auf dem Dashboard und in der Analyse.',
+      },
+      {
+        type: 'feat',
+        text: 'Hochdichte Zeilendarstellung mit interaktiver Verknüpfung: Jede Position wird als schlanke Zeile (Rang, Asset, Gewichtung mit Inline-Balken, Marktwert, Cost Basis, P&L Rendite und Allokations-Drift) dargestellt. Hover-Zustände synchronisieren in Echtzeit mit dem Horizon-Streifen.',
+      },
+      {
+        type: 'feat',
+        text: 'Intelligente Top-6-Kompaktansicht & Ausklappen: Bei Portfolios mit mehr als 6 Coins werden standardmäßig die Top-6-Hauptpositionen angezeigt, mit einem Ein-Klick-Button zum nahtlosen Ausklappen aller weiteren Bestände.',
+      },
+    ],
+  },
   {
     version: '0.5.29',
     date: '05.10.2026',
     title: 'Fullwidth-Layout (Standard), Pixel-stabiles Chart-HUD & Neugestaltete Coin-Allokation',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

@@ -1,7 +1,7 @@
 # rwrfolio – Krypto Portfolio & DCA Tracker für Home Assistant OS
 
 [![Home Assistant Add-on](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/Version-0.5.29-emerald.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.5.30-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 **rwrfolio** ist ein privater, lokaler Krypto-Portfolio- und DCA-Tracker für Home Assistant OS mit persistenter SQLite-Datenbank, echten Live-Marktkursen, interaktiven TradingView-Style Charts, Multi-Timeframe Performance-Matrix und offiziellem Steuerbericht (§ 23 EStG).
@@ -15,7 +15,7 @@
 - **📈 Echte Live-Marktkurse:** Direkte Einbindung von Binance & Kraken Public APIs (ohne API-Keys).
 - **📊 Interaktive Charts & Vollbildmodus:** Großformatige TradingView Pro Ansicht per Knopfdruck (`[ ⛶ Vollbild ]`), Einstiegs- und Ausstiegskurse (▲ KAUF / ▼ VERK.), horizontale DCA-Linie, SMA 20 Trend, Bollinger Bänder, ATH-Abstand und synchronisierter RSI (14) Momentum-Oszillator.
 - **🎯 100% pixel-stabiles Live-HUD:** Fest verankerte, sprungfreie Punkt- und Trade-Inspektion direkt über der Kurve mit rigiden Spalten und `tabular-nums`.
-- **🥧 Neugestaltete Coin-Allokation:** Platzsparender Horizon-Streifen mit 4-KPI-Konzentrationsleiste und hochdichter Asset-Gewichtungsmatrix (Markt vs. Cost Basis Drift).
+- **🥧 Neugestaltete Coin-Allokation:** Platzsparender Horizon-Streifen mit 4-KPI-Konzentrationsleiste und hochdichter Einzeiler-Tabelle (Markt vs. Cost Basis Drift, keine klobigen Kacheln).
 - **⚡ Multi-Timeframe Performance-Matrix:** Umschalten zwischen 24h, 7T, 30T, 90T, 1J und Gesamt mit relativer Kursrendite (%) und absolutem Vermögenszuwachs (€ / $).
 - **📥 Smart Auto-Detect Import:** Drag & Drop für Kraken Pro (CSV & PDF-Statements), **Kraken E-Mail Kaufbelege** (PDF & Text), **Crypto.com App** (CSV) sowie **Crypto.com E-Mail Kaufbelege** (PDF & Text) mit intelligenter Multi-Source Duplikatserkennung.
 - **📑 BMF-Steuerbericht (§ 23 EStG):** 4-seitiger PDF-Steuerbericht mit FIFO-Haltefristen, Freigrenzen und ungekürzten Buchungsbelegen (Anhänge B & C).

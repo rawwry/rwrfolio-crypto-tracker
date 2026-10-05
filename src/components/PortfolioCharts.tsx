@@ -7,11 +7,8 @@ import {
   Layers, 
   DollarSign, 
   Wallet, 
-  Scale, 
-  TrendingUp, 
-  PieChart as PieIcon,
-  ShieldCheck,
-  Percent
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 interface PortfolioChartsProps {
@@ -32,6 +29,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
   const isUSD = currency === 'USD';
   const [mode, setMode] = useState<AllocationMode>('value');
   const [activeCoinSymbol, setActiveCoinSymbol] = useState<string | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false);
 
   // Compute portfolio totals
   const totalValue = useMemo(() => {
@@ -116,12 +114,14 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
     ? items.find(c => c.symbol === activeCoinSymbol) || null 
     : null;
 
+  const visibleItems = isExpanded || items.length <= 6 ? items : items.slice(0, 6);
+
   return (
-    <div className={`p-4 sm:p-5 rounded-2xl border shadow-xl transition-all space-y-4 ${
+    <div className={`p-4 sm:p-5 rounded-2xl border shadow-xl transition-all space-y-3.5 ${
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800'
     }`}>
       {/* 1. Header with Mode Toggle & Position Badge */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
           <h3 className={`text-base font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <Layers className="w-4 h-4 text-indigo-500" />
@@ -171,14 +171,14 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
       </div>
 
       {items.length === 0 ? (
-        <div className="py-8 text-center text-xs text-slate-500">
+        <div className="py-6 text-center text-xs text-slate-500">
           Noch keine Bestände mit Wert vorhanden.
         </div>
       ) : (
         <>
           {/* 2. Interactive Horizon Allocation Bar (Ultra-kompakter gestapelter Horizon-Streifen) */}
           <div className="space-y-1.5">
-            <div className={`w-full h-3.5 sm:h-4 rounded-xl overflow-hidden flex p-0.5 border shadow-inner ${
+            <div className={`w-full h-3 sm:h-3.5 rounded-xl overflow-hidden flex p-0.5 border shadow-inner ${
               isLight ? 'bg-slate-100 border-slate-200' : 'bg-slate-950 border-slate-800'
             }`}>
               {items.map((item) => {
@@ -226,7 +226,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                 </div>
               ) : (
                 <div className="flex items-center gap-2 text-[11px] text-slate-400 font-sans truncate">
-                  <span>💡 Tipp: Fahre über ein Segment oder klicke eine Karte zur Detailanalyse</span>
+                  <span>💡 Tipp: Fahre über ein Segment oder eine Zeile zur Detailanalyse</span>
                 </div>
               )}
 
@@ -236,9 +236,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             </div>
           </div>
 
-          {/* 3. Key Concentration & Drift Intelligence Strip */}
+          {/* 3. Key Concentration & Drift Intelligence Strip (Super-kompakt) */}
           {insights && (
-            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3 rounded-xl border text-xs ${
+            <div className={`grid grid-cols-2 sm:grid-cols-4 gap-2 py-2 px-3 rounded-xl border text-xs ${
               isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-slate-950/60 border-slate-800/80 text-slate-300'
             }`}>
               {/* Insight 1: Top 1 Dominanz */}
@@ -246,7 +246,7 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                 <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                   Top 1 Dominanz ({insights.top1.symbol})
                 </span>
-                <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {insights.top1.displayPercentage.toFixed(1)} %
                 </span>
               </div>
@@ -257,10 +257,10 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                   Top 3 Konzentration
                 </span>
                 <div className="flex items-center space-x-1.5">
-                  <span className={`text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                  <span className={`text-xs sm:text-sm font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                     {insights.top3Share.toFixed(1)} %
                   </span>
-                  <span className={`text-[10px] px-1.5 py-0.2 rounded font-sans font-medium ${
+                  <span className={`text-[9px] px-1.5 py-0.2 rounded font-sans font-medium ${
                     insights.isConcentrated 
                       ? 'bg-amber-500/15 text-amber-400' 
                       : 'bg-emerald-500/15 text-emerald-400'
@@ -276,9 +276,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                   Top Alpha-Treiber vs. Kapital
                 </span>
                 {insights.topGrower ? (
-                  <span className="text-sm font-bold font-mono text-emerald-400 flex items-center gap-1">
+                  <span className="text-xs sm:text-sm font-bold font-mono text-emerald-400 flex items-center gap-1 truncate">
                     <span>{insights.topGrower.symbol}</span>
-                    <span className="text-[11px] font-normal text-emerald-300">
+                    <span className="text-[10px] font-normal text-emerald-300">
                       (+{insights.topGrower.shiftPercentage.toFixed(1)}% Drift)
                     </span>
                   </span>
@@ -294,9 +294,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                 <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                   Gesamt P&amp;L Rendite
                 </span>
-                <span className={`text-sm font-bold font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                <span className={`text-xs sm:text-sm font-bold font-mono ${totalPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                   {totalPnl >= 0 ? '+' : ''}{totalPnlPct.toFixed(1)} %
-                  <span className="text-[10px] ml-1 font-normal opacity-80">
+                  <span className="text-[10px] ml-1 font-normal opacity-80 hidden md:inline">
                     ({totalPnl >= 0 ? '+' : ''}{formatCurrency(totalPnl)})
                   </span>
                 </span>
@@ -304,117 +304,162 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             </div>
           )}
 
-          {/* 4. High-Density Asset Weighting Matrix / Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2.5 pt-1">
-            {items.map((item, index) => {
-              const isSelected = activeCoinSymbol === item.symbol;
-              const isPositiveShift = item.shiftPercentage > 0.5;
-              const isNegativeShift = item.shiftPercentage < -0.5;
-              const isProfit = item.pnl >= 0;
+          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, keine klobigen Kacheln) */}
+          <div className={`rounded-xl border overflow-hidden ${
+            isLight ? 'bg-white border-slate-200' : 'bg-slate-950/40 border-slate-800/80'
+          }`}>
+            <div className="overflow-x-auto scrollbar-none">
+              <table className="w-full text-left text-xs border-collapse font-mono">
+                <thead>
+                  <tr className={`border-b text-[10px] sm:text-[11px] font-sans font-semibold uppercase tracking-wider ${
+                    isLight ? 'bg-slate-100/90 text-slate-500 border-slate-200' : 'bg-slate-900/80 text-slate-400 border-slate-800/80'
+                  }`}>
+                    <th className="py-2 px-2.5 text-center w-8 sm:w-10">#</th>
+                    <th className="py-2 px-2.5">Asset</th>
+                    <th className="py-2 px-2.5 min-w-[130px] sm:min-w-[160px]">Gewichtung</th>
+                    <th className="py-2 px-2.5 text-right">Marktwert</th>
+                    <th className="py-2 px-2.5 text-right hidden sm:table-cell">Cost Basis</th>
+                    <th className="py-2 px-2.5 text-right">P&amp;L Rendite</th>
+                    <th className="py-2 px-2.5 text-right hidden md:table-cell">Allokations-Drift</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200/60 dark:divide-slate-800/60 text-xs">
+                  {visibleItems.map((item, index) => {
+                    const isSelected = activeCoinSymbol === item.symbol;
+                    const isPositiveShift = item.shiftPercentage > 0.5;
+                    const isNegativeShift = item.shiftPercentage < -0.5;
+                    const isProfit = item.pnl >= 0;
 
-              return (
-                <div
-                  key={item.symbol}
-                  onMouseEnter={() => setActiveCoinSymbol(item.symbol)}
-                  onMouseLeave={() => setActiveCoinSymbol(null)}
-                  onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
-                  className={`p-3 rounded-xl border transition-all cursor-pointer flex flex-col justify-between ${
-                    isSelected
-                      ? (isLight ? 'bg-indigo-50/90 border-indigo-400 ring-1 ring-indigo-400 shadow-sm' : 'bg-indigo-950/40 border-indigo-500 ring-1 ring-indigo-500/50 shadow-md')
-                      : (isLight ? 'bg-slate-50 hover:bg-slate-100/90 border-slate-200' : 'bg-slate-950/50 hover:bg-slate-900 border-slate-800/80')
-                  }`}
+                    return (
+                      <tr
+                        key={item.symbol}
+                        onMouseEnter={() => setActiveCoinSymbol(item.symbol)}
+                        onMouseLeave={() => setActiveCoinSymbol(null)}
+                        onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
+                        className={`transition-colors cursor-pointer ${
+                          isSelected
+                            ? (isLight ? 'bg-indigo-50/90 font-semibold' : 'bg-indigo-950/50 font-semibold')
+                            : (isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/60')
+                        }`}
+                      >
+                        {/* Rank */}
+                        <td className={`py-1.5 sm:py-2 px-2.5 text-center font-mono text-[11px] ${
+                          isLight ? 'text-slate-400' : 'text-slate-500'
+                        }`}>
+                          #{index + 1}
+                        </td>
+
+                        {/* Asset: Color, Symbol, FullName */}
+                        <td className="py-1.5 sm:py-2 px-2.5">
+                          <div className="flex items-center space-x-2">
+                            <span 
+                              className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" 
+                              style={{ backgroundColor: item.color }} 
+                            />
+                            <span className={`font-bold font-mono text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                              {item.symbol}
+                            </span>
+                            <span className={`text-[11px] font-sans truncate hidden lg:inline ${
+                              isLight ? 'text-slate-500' : 'text-slate-400'
+                            }`}>
+                              {item.fullName}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Share & Micro Progress Bar */}
+                        <td className="py-1.5 sm:py-2 px-2.5">
+                          <div className="flex items-center gap-2">
+                            <div className={`flex-1 max-w-[80px] sm:max-w-[100px] h-1.5 rounded-full overflow-hidden ${
+                              isLight ? 'bg-slate-200' : 'bg-slate-800'
+                            }`}>
+                              <div 
+                                className="h-full rounded-full transition-all duration-300"
+                                style={{ 
+                                  width: `${Math.min(100, Math.max(3, item.displayPercentage))}%`, 
+                                  backgroundColor: item.color 
+                                }}
+                              />
+                            </div>
+                            <span className="font-bold text-xs text-indigo-400 font-mono tabular-nums shrink-0">
+                              {item.displayPercentage.toFixed(1)} %
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* Current Value */}
+                        <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums">
+                          <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                            {formatCurrency(item.currentValue)}
+                          </span>
+                        </td>
+
+                        {/* Cost Basis (Invested) */}
+                        <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums hidden sm:table-cell">
+                          <span className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+                            {formatCurrency(item.totalInvested)}
+                          </span>
+                        </td>
+
+                        {/* P&L */}
+                        <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums">
+                          <span className={`font-semibold ${isProfit ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {isProfit ? '+' : ''}{item.pnlPercentage.toFixed(1)} %
+                            <span className="text-[10px] ml-1 opacity-75 font-normal hidden lg:inline">
+                              ({isProfit ? '+' : ''}{formatCurrency(item.pnl)})
+                            </span>
+                          </span>
+                        </td>
+
+                        {/* Drift */}
+                        <td className="py-1.5 sm:py-2 px-2.5 text-right font-mono tabular-nums hidden md:table-cell">
+                          {isPositiveShift && (
+                            <span className="text-[10px] font-bold text-emerald-400 inline-flex items-center gap-0.5" title="Marktanteil übersteigt Investitionsanteil (Alpha / Übergewichtet)">
+                              <ArrowUpRight className="w-3 h-3" />
+                              <span>+{item.shiftPercentage.toFixed(1)}%</span>
+                            </span>
+                          )}
+                          {isNegativeShift && (
+                            <span className="text-[10px] text-slate-400 inline-flex items-center gap-0.5" title="Marktanteil unter Investitionsanteil (Untergewichtet)">
+                              <ArrowDownRight className="w-3 h-3" />
+                              <span>{item.shiftPercentage.toFixed(1)}%</span>
+                            </span>
+                          )}
+                          {!isPositiveShift && !isNegativeShift && (
+                            <span className="text-[10px] text-slate-500">Parität</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Expand / Collapse Toggle if > 6 positions */}
+            {items.length > 6 && (
+              <div className={`py-2 px-3 text-center border-t text-xs ${
+                isLight ? 'bg-slate-50/80 border-slate-200' : 'bg-slate-900/40 border-slate-800/80'
+              }`}>
+                <button
+                  type="button"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="font-semibold text-indigo-400 hover:text-indigo-300 inline-flex items-center gap-1.5 transition-colors cursor-pointer text-[11px]"
                 >
-                  {/* Top Row: Rank, Color, Symbol, Name, % Share */}
-                  <div className="flex items-center justify-between gap-1 mb-1.5">
-                    <div className="flex items-center space-x-1.5 min-w-0">
-                      <span className={`text-[10px] font-mono px-1 rounded shrink-0 ${
-                        isLight ? 'bg-slate-200/60 text-slate-600' : 'bg-slate-800 text-slate-400'
-                      }`}>
-                        #{index + 1}
-                      </span>
-                      <span 
-                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" 
-                        style={{ backgroundColor: item.color }} 
-                      />
-                      <span className={`font-bold font-mono text-xs ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                        {item.symbol}
-                      </span>
-                      <span className={`text-[11px] truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        {item.fullName}
-                      </span>
-                    </div>
-
-                    <span className="font-mono font-bold text-xs text-indigo-400 shrink-0">
-                      {item.displayPercentage.toFixed(1)} %
-                    </span>
-                  </div>
-
-                  {/* Micro Progress Bar */}
-                  <div className={`w-full rounded-full h-1 mb-2 overflow-hidden ${
-                    isLight ? 'bg-slate-200/80' : 'bg-slate-800'
-                  }`}>
-                    <div 
-                      className="h-1 rounded-full transition-all duration-300"
-                      style={{ 
-                        width: `${Math.min(100, Math.max(2, item.displayPercentage))}%`, 
-                        backgroundColor: item.color 
-                      }}
-                    />
-                  </div>
-
-                  {/* Values Row: Marktwert & Investiert */}
-                  <div className="flex items-center justify-between text-xs font-mono mb-1">
-                    <div>
-                      <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        Marktwert
-                      </span>
-                      <span className={`font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                        {formatCurrency(item.currentValue)}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className={`text-[10px] block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        Cost Basis
-                      </span>
-                      <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                        {formatCurrency(item.totalInvested)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Bottom Row: P&L & Weighting Drift */}
-                  <div className={`pt-1.5 border-t flex items-center justify-between text-[11px] font-mono ${
-                    isLight ? 'border-slate-200/80' : 'border-slate-800/60'
-                  }`}>
-                    {/* P&L */}
-                    <div className={isProfit ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
-                      <span>{isProfit ? '+' : ''}{item.pnlPercentage.toFixed(1)} %</span>
-                      <span className="opacity-75 text-[10px] ml-1">({isProfit ? '+' : ''}{formatCurrency(item.pnl)})</span>
-                    </div>
-
-                    {/* Drift Badge */}
-                    <div>
-                      {isPositiveShift && (
-                        <span className="text-[10px] text-emerald-400 flex items-center gap-0.5" title="Marktanteil übersteigt Investitionsanteil (Gewinn-Treiber)">
-                          <ArrowUpRight className="w-3 h-3" />
-                          <span>+{item.shiftPercentage.toFixed(1)}% Drift</span>
-                        </span>
-                      )}
-                      {isNegativeShift && (
-                        <span className="text-[10px] text-slate-400 flex items-center gap-0.5" title="Marktanteil unter Investitionsanteil">
-                          <ArrowDownRight className="w-3 h-3" />
-                          <span>{item.shiftPercentage.toFixed(1)}% Drift</span>
-                        </span>
-                      )}
-                      {!isPositiveShift && !isNegativeShift && (
-                        <span className="text-[10px] text-slate-500">Parität</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+                  {isExpanded ? (
+                    <>
+                      <ChevronUp className="w-3.5 h-3.5" />
+                      <span>Auf Top 6 Positionen reduzieren</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                      <span>Alle {items.length} Positionen anzeigen (+{items.length - 6} weitere)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}

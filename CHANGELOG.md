@@ -4,6 +4,18 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.30] - 05.10.2026
+
+### 🎨 Optimierungen & Platzersparnis
+- **Hochdichte Allokations-Tabelle (Ersatz der Kacheln)**:
+  - Vollständige Ablösung der sperrigen Kacheln/Boxen unter der Coin-Allokation durch eine extrem platzsparende, einzeilige Finanztabelle.
+  - Reduziert die vertikale Bauhöhe um über 65 % und sorgt für eine übersichtliche Gesamtdarstellung auf dem Dashboard und der Analyse-Seite.
+  - Jede Position bietet auf einen Blick: Rang (`#1`), Asset-Farbe, Symbol & Name, Gewichtung mit Miniatur-Fortschrittsbalken, aktueller Marktwert, Cost Basis (eingesetztes Kapital), P&L-Rendite und Alpha-Drift.
+  - Vollständig interaktiv: Zeilen-Hover hebt das entsprechende Segment im Horizon-Allokationsstreifen synchron hervor und umgekehrt.
+  - **Intelligente Top-6-Kompaktansicht**: Bei Portfolios mit mehr als 6 Positionen werden standardmäßig die Top 6 angezeigt, mit einem dezenten Schalter zum Ausklappen aller weiteren Bestände.
+
+---
+
 ## [0.5.29] - 05.10.2026
 
 ### ✨ Neue Features & Verbesserungen
