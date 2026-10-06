@@ -4,6 +4,18 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.33] - 06.10.2026
+
+### 🎨 Design & Minimalismus
+- **Seitenübergreifende Bereinigung der Coin-Anzahl-Pills**:
+  - Vollständige Entfernung aller redundanten Plaketten mit der Anzahl an Coins bzw. Assets über alle Bereiche der Benutzeroberfläche hinweg.
+  - Entfernt aus der Überschrift von **Coinübersicht & Durchschnittskurse** (unter *Coins*).
+  - Entfernt aus der Überschrift der **Coin-Performance Matrix** (unter *Analysen*).
+  - Entfernt aus dem **"Coins"**-Reiter in der Hauptnavigationsleiste (Desktop-Header).
+  - Sorgt für ein konsistentes, klares und reduziertes Erscheinungsbild ohne unnötige Zähler-Abzeichen in den Titeln.
+
+---
+
 ## [0.5.32] - 05.10.2026
 
 ### 🎨 Design & Kontrast

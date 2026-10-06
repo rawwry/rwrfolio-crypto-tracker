@@ -178,11 +178,6 @@ export const AssetList: React.FC<AssetListProps> = ({
         <div>
           <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
             <span>Coinübersicht &amp; Durchschnittskurse</span>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
-            }`}>
-              {assets.length} Coins
-            </span>
           </h3>
           <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
             Automatisch berechneter Einkaufswert, aktueller Marktwert und Gewinn/Verlust

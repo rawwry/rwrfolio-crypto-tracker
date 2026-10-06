@@ -9,14 +9,29 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.32';
+export const APP_VERSION = '0.5.33';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.33',
+    date: '06.10.2026',
+    title: 'Seitenübergreifende Bereinigung der Coin-Anzahl-Pills',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Seitenübergreifende Entfernung der Coin-Anzahl-Pillen: Sämtliche redundanten Plaketten mit der Anzahl an Coins/Assets wurden aus den Überschriften und Reitern entfernt (unter Coinübersicht & Durchschnittskurse, in der Coin-Performance Matrix sowie im "Coins"-Reiter der Hauptnavigation).',
+      },
+      {
+        type: 'ui',
+        text: 'Aufgeräumte, konsistente Typografie: Überschriften und Navigations-Reiter wirken nun deutlich ruhiger, minimalistischer und aufgeräumter, ohne überflüssige Zähler-Abzeichen.',
+      },
+    ],
+  },
   {
     version: '0.5.32',
     date: '05.10.2026',
     title: 'Light-Theme Kontrast-Overhaul & 100 % sprungfreie, dauerhaft ausgeklappte Allokations-Tabelle',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

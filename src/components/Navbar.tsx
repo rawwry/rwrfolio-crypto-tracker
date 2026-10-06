@@ -107,20 +107,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 e.preventDefault();
                 setActiveTab('assets');
               }}
-              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all flex items-center space-x-1.5 no-underline ${
+              className={`px-3.5 py-1.5 rounded-lg font-medium transition-all no-underline ${
                 activeTab === 'assets'
                   ? 'bg-indigo-600 text-white font-semibold shadow-sm'
                   : isLight ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
               }`}
             >
-              <span>Coins</span>
-              <span className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                activeTab === 'assets' 
-                  ? 'bg-indigo-800 text-indigo-200' 
-                  : isLight ? 'bg-slate-200 text-slate-700 font-semibold' : 'bg-slate-800 text-slate-400'
-              }`}>
-                {totals.assetCount}
-              </span>
+              Coins
             </a>
             <a
               href={buildFullPath('/analytics')}

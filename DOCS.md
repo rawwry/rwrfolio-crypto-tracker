@@ -20,7 +20,7 @@
   - Kompakter, horizontaler **Horizon-Allokationsstreifen** mit Farbsegmentierung nach Coin-Markenfarben und interaktiver Segmentfokussierung (spart über 200px vertikalen Platz gegenüber alten Kreisdiagrammen).
   - **4-KPI-Konzentrationsleiste:** Top 1 Dominanz, Top 3 Konzentrationsgrad (*Fokussiert* vs. *Ausgewogen*), stärkster Alpha-Werttreiber vs. Kapital sowie Gesamtportfolio-Rendite.
   - **Hochdichte, 100 % sprungfreie Allokations-Tabelle:** Extrem schlanke, einzeilige Tabelle je Coin mit Rang, Asset, klaren Allokations-Pill-Badges (ohne graue Balkenspuren), Marktwert, Cost Basis, P&L und Allokations-Drift. Rigides `table-fixed`-Raster ohne Schriftstärken-Mutationen auf Hover verhindert jegliches Breitenwackeln. Startet standardmäßig stets vollständig ausgeklappt für maximalen Überblick.
-- **☀️ Light-Theme Kontrast-Perfektion:** Sämtliche Komponenten, Metriken, Sortierknöpfe und Badges wurden auf optimale Lesbarkeit im Hellen Modus nach WCAG-Standards angepasst.
+- **☀️ Light-Theme Kontrast-Perfektion & Bereinigte Typografie:** Sämtliche Komponenten, Metriken, Sortierknöpfe und Badges wurden auf optimale Lesbarkeit im Hellen Modus nach WCAG-Standards angepasst. Redundante Coin-Anzahl-Pills wurden seitenübergreifend aus Überschriften und Reitern entfernt für ein klares, modernes Erscheinungsbild.
 - **⚡ Multi-Timeframe Performance-Matrix:**
   - Schneller Wechsel zwischen **24h (Tag)**, **7T (Woche)**, **30T (Monat)**, **90T (3 Monate)**, **1J (Jahr)** und **Gesamt (All-Time DCA)**.
   - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.

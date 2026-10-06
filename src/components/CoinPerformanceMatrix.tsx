@@ -168,11 +168,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
               <h3 className={`text-base sm:text-lg font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 Coin-Performance Matrix
               </h3>
-              <span className={`text-[11px] px-2 py-0.5 rounded-full font-semibold border ${
-                isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-slate-700'
-              }`}>
-                {assets.length} Assets
-              </span>
             </div>
             <p className={`text-xs mt-0.5 flex flex-wrap items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
               <span>
