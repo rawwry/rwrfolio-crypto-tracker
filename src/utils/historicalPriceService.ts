@@ -3,10 +3,15 @@
 
 import { ChartTimeframe } from './coinChartData';
 import { getLiveEurUsdRate } from './priceService';
+import { AssetSummary, PortfolioCurrency, Portfolio24hDelta, Asset24hChange } from '../types';
 
 // In-memory cache for market price series to ensure instantaneous responsiveness
 const memoryPriceCache = new Map<string, { timestamp: number; prices: Map<string, number> }>();
 const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+// In-memory 24h ticker cache (60 seconds TTL) to avoid duplicate API requests
+const ticker24hCache = new Map<string, { timestamp: number; pct: number }>();
+const TICKER_24H_TTL_MS = 60 * 1000;
 
 /**
  * Fetch real historical market price curve (daily or hourly) for a given coin.
@@ -201,22 +206,68 @@ export async function fetchAssetPeriodChange(
 ): Promise<AssetPeriodChange | null> {
   if (timeframe === 'all' || !symbol || symbol === 'ALL') return null;
 
-  // 1. Fast 24h ticker optimization via Binance & Kraken
+  // 1. Fast 24h ticker optimization via Binance & Crypto.com with in-memory caching
   if (timeframe === '24h') {
+    const sym = symbol.toUpperCase() === 'MATIC' || symbol.toUpperCase() === 'POLYGON' ? 'POL' : symbol.toUpperCase();
+    
+    // Check in-memory 24h cache first
+    const cached = ticker24hCache.get(sym);
+    if (cached && Date.now() - cached.timestamp < TICKER_24H_TTL_MS) {
+      const pct = cached.pct;
+      const oldPrice = currentPrice / (1 + pct / 100);
+      const priceChangeFiat = currentPrice - oldPrice;
+      const valueChangeFiat = priceChangeFiat * balance;
+      return {
+        priceChangePct: pct,
+        priceChangeFiat,
+        valueChangeFiat,
+      };
+    }
+
+    // Attempt Binance 24hr ticker
     try {
-      const sym = symbol.toUpperCase() === 'MATIC' || symbol.toUpperCase() === 'POLYGON' ? 'POL' : symbol.toUpperCase();
       const res = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}USDT`);
       if (res.ok) {
         const data = await res.json();
         const pct = parseFloat(data.priceChangePercent);
         if (!isNaN(pct)) {
-          const priceChange = (pct / 100) * currentPrice;
-          const valueChange = priceChange * balance;
+          ticker24hCache.set(sym, { timestamp: Date.now(), pct });
+          const oldPrice = currentPrice / (1 + pct / 100);
+          const priceChangeFiat = currentPrice - oldPrice;
+          const valueChangeFiat = priceChangeFiat * balance;
           return {
             priceChangePct: pct,
-            priceChangeFiat: priceChange,
-            valueChangeFiat: valueChange,
+            priceChangeFiat,
+            valueChangeFiat,
           };
+        }
+      }
+    } catch {
+      // Fall back to Crypto.com or historical candles
+    }
+
+    // Attempt Crypto.com public ticker fallback (e.g. for AKT, CRO, etc.)
+    try {
+      const cdcRes = await fetch(`https://api.crypto.com/v2/public/get-ticker?instrument_name=${sym}_USDT`);
+      if (cdcRes.ok) {
+        const cdcData = await cdcRes.json();
+        const ticker = cdcData.result?.data?.[0];
+        if (ticker && ticker.a && ticker.c) {
+          const lastAsk = parseFloat(ticker.a);
+          const change24 = parseFloat(ticker.c);
+          const open24 = lastAsk - change24;
+          if (open24 > 0) {
+            const pct = (change24 / open24) * 100;
+            ticker24hCache.set(sym, { timestamp: Date.now(), pct });
+            const oldPrice = currentPrice / (1 + pct / 100);
+            const priceChangeFiat = currentPrice - oldPrice;
+            const valueChangeFiat = priceChangeFiat * balance;
+            return {
+              priceChangePct: pct,
+              priceChangeFiat,
+              valueChangeFiat,
+            };
+          }
         }
       }
     } catch {
@@ -236,7 +287,7 @@ export async function fetchAssetPeriodChange(
     if (startPrice <= 0) return null;
 
     const priceChangePct = ((endPrice - startPrice) / startPrice) * 100;
-    const priceChangeFiat = (priceChangePct / 100) * currentPrice;
+    const priceChangeFiat = endPrice - startPrice;
     const valueChangeFiat = priceChangeFiat * balance;
 
     return {
@@ -248,4 +299,97 @@ export async function fetchAssetPeriodChange(
     console.warn(`[HistoricalPrices] Error calculating period return for ${symbol}:`, err);
     return null;
   }
+}
+
+/**
+ * Calculate aggregate 24h Portfolio Delta (€ / $ absolute & %) across all current coin holdings.
+ * Queries ticker price moves for all active assets in parallel, determines exact fiat value gains/losses,
+ * and identifies the top 24h contributor and detractor.
+ */
+export async function calculatePortfolio24hDelta(
+  assets: AssetSummary[],
+  currency: PortfolioCurrency = 'EUR',
+  eurUsdRate: number = getLiveEurUsdRate()
+): Promise<Portfolio24hDelta> {
+  const isUSD = currency === 'USD';
+  const activeAssets = assets.filter(a => a.currentBalance > 0);
+
+  if (activeAssets.length === 0) {
+    return {
+      changeFiat: 0,
+      changePercentage: 0,
+      value24hAgo: 0,
+      currentValue: 0,
+      isPositive: true,
+      assetChanges: {},
+      isLoading: false,
+    };
+  }
+
+  const assetChanges: Record<string, Asset24hChange> = {};
+  let totalCurrentValue = 0;
+  let totalChangeFiat = 0;
+
+  await Promise.allSettled(
+    activeAssets.map(async (asset) => {
+      const activePrice = isUSD
+        ? (asset.currentPriceUSD || asset.currentPrice)
+        : (asset.currentPriceEUR || asset.currentPrice);
+      const activeValue = isUSD
+        ? (asset.currentValueUSD ?? asset.currentValue)
+        : (asset.currentValueEUR ?? asset.currentValue);
+
+      totalCurrentValue += activeValue;
+
+      const res = await fetchAssetPeriodChange(
+        asset.symbol,
+        '24h',
+        activePrice,
+        asset.currentBalance,
+        eurUsdRate
+      );
+
+      if (res) {
+        totalChangeFiat += res.valueChangeFiat;
+        assetChanges[asset.symbol] = {
+          symbol: asset.symbol,
+          priceChangePct: res.priceChangePct,
+          priceChangeFiat: res.priceChangeFiat,
+          valueChangeFiat: res.valueChangeFiat,
+          currentValue: activeValue,
+        };
+      } else {
+        assetChanges[asset.symbol] = {
+          symbol: asset.symbol,
+          priceChangePct: 0,
+          priceChangeFiat: 0,
+          valueChangeFiat: 0,
+          currentValue: activeValue,
+        };
+      }
+    })
+  );
+
+  const value24hAgo = totalCurrentValue - totalChangeFiat;
+  const changePercentage = value24hAgo > 0 ? (totalChangeFiat / value24hAgo) * 100 : 0;
+  const isPositive = totalChangeFiat >= 0;
+
+  const changeList = Object.values(assetChanges);
+  const contributors = [...changeList].filter(c => c.valueChangeFiat > 0).sort((a, b) => b.valueChangeFiat - a.valueChangeFiat);
+  const detractors = [...changeList].filter(c => c.valueChangeFiat < 0).sort((a, b) => a.valueChangeFiat - b.valueChangeFiat);
+
+  const topContributor = contributors[0] || undefined;
+  const topDetractor = detractors[0] || undefined;
+
+  return {
+    changeFiat: totalChangeFiat,
+    changePercentage,
+    value24hAgo,
+    currentValue: totalCurrentValue,
+    isPositive,
+    assetChanges,
+    topContributor,
+    topDetractor,
+    isLoading: false,
+  };
 }

@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.34';
+export const APP_VERSION = '0.5.35';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.35',
+    date: '06.10.2026',
+    title: '24h-Portfolio Delta (€ & %) in Hero-KPIs & Coinübersicht',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Live 24h-Portfolio Delta in Hero-KPIs: Prominente Anzeige des absoluten (€ / $) und relativen (%) Depot-Gewinns/-Verlusts der letzten 24 Stunden direkt in der "Portfolio Gesamtwert"-Karte auf dem Dashboard.',
+      },
+      {
+        type: 'ui',
+        text: 'Interaktiver 24h Delta-Inspektor: Detaillierter Aufschlüsselungs-Tooltip beim Bewegen der Maus über die 24h-Plakette zeigt auf einen Blick die genauen Wertbeiträge und prozentualen Kursbewegungen jedes einzelnen Assets im Portfolio.',
+      },
+      {
+        type: 'feat',
+        text: 'Top 24h-Treiber-Indikator: Sofortige Erkennung des stärksten Werttreibers des Tages (z. B. "Top: BTC (+0,4 %)") direkt in der Fußzeile der Gesamtwert-Karte.',
+      },
+      {
+        type: 'ui',
+        text: '24h-Preisentwicklung in Coin-Tabelle: Die Spalte "Aktueller Kurs" in der Coinübersicht (sowohl in der Desktop-Tabelle als auch in den mobilen Asset-Karten) zeigt nun für jeden Coin die tagesaktuelle prozentuale 24h-Kursveränderung an.',
+      },
+      {
+        type: 'perf',
+        text: 'Ultraschnelle Ticker-Abfrage & Multi-Börsen Fallback: Intelligente Parallelabfrage von 24h-Spot-Tickern über Binance und Crypto.com mit 60-Sekunden In-Memory Caching für blitzschnelle Ladezeiten ohne API-Rate-Limits.',
+      },
+    ],
+  },
   {
     version: '0.5.34',
     date: '06.10.2026',
     title: 'Mobile Layout-Fixes, Timeline-Chart im Dashboard & Strukturbereinigung',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

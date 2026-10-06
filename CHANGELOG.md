@@ -4,6 +4,25 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.35] - 06.10.2026
+
+### 📈 24h-Portfolio Delta (€ & %) & Live-Tagesrendite
+- **Live 24h-Portfolio Delta in Hero-KPIs**:
+  - Prominente Integration der tagesaktuellen Portfolio-Veränderung in absoluter Währung (€ / $) und relativer Performance (%) direkt in der Karte **Portfolio Gesamtwert** auf dem Dashboard (analog zu führenden Neobrokern wie Trade Republic oder Bitpanda).
+  - Zeigt auf einen Blick: `[▲ +240,50 € (+1,94 %)] 24h Delta` mit dynamischer Farbcodierung (Smaragdgrün bei Gewinn, Rosenrot bei Verlust).
+- **Interaktiver 24h Delta-Inspektor (Tooltip)**:
+  - Beim Bewegen der Maus über die 24h-Plakette wird ein vollständiger Aufschlüsselungs-Tooltip eingeblendet, der die genauen Wertbeiträge (€ / $) und prozentualen Kursbewegungen jedes einzelnen gehaltenen Coins für die letzten 24 Stunden detailliert auflistet.
+- **Top 24h-Treiber-Indikator**:
+  - Zeigt in der Status-Fußzeile der Gesamtwert-Karte automatisch das krypto-Asset mit dem stärksten positiven Tagesbeitrag (z. B. `Top: BTC (+0,4 %)`).
+- **Klar abgegrenzter All-Time Gesamtertrag**:
+  - Karte 2 (**Gesamtertrag P&L**) wurde mit einer expliziten `Gesamt`-Plakette versehen, um die langfristige DCA-Gesamtrendite eindeutig von der 24h-Tagesbewegung abzugrenzen.
+- **24h-Kursveränderung in der Coin-Tabelle**:
+  - In der Coinübersicht (`AssetList`) wird neben dem aktuellen Live-Kurs nun für jedes Asset die 24h-Performance angezeigt (sowohl in der Desktop-Tabelle als auch in den mobilen Asset-Karten).
+- **Ultraschneller Multi-Börsen Ticker-Abruf mit Cache**:
+  - Parallele Abfrage der 24h-Spot-Ticker über Binance und Crypto.com mit 60-Sekunden In-Memory Caching für maximale Performance und zuverlässigen Fallback.
+
+---
+
 ## [0.5.34] - 06.10.2026
 
 ### 📱 Mobile Optimierungen & Layout-Fixes

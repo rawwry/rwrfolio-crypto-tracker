@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { AssetSummary, PortfolioCurrency } from '../types';
+import { AssetSummary, PortfolioCurrency, Asset24hChange } from '../types';
 import { 
   Edit3, 
   Filter, 
@@ -23,6 +23,7 @@ interface AssetListProps {
   onSelectAssetForFilter?: (symbol: string) => void;
   onSelectAssetForChart?: (symbol: string) => void;
   onEditPrice?: (symbol: string, currentPrice: number) => void;
+  asset24hChanges?: Record<string, Asset24hChange>;
 }
 
 export const AssetList: React.FC<AssetListProps> = ({
@@ -32,6 +33,7 @@ export const AssetList: React.FC<AssetListProps> = ({
   onSelectAssetForFilter,
   onSelectAssetForChart,
   onEditPrice,
+  asset24hChanges,
 }) => {
   const isLight = theme === 'light';
   const isUSD = currency === 'USD';
@@ -281,6 +283,15 @@ export const AssetList: React.FC<AssetListProps> = ({
                 <div>
                   <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Aktueller Kurs</div>
                   <div className={`font-medium truncate ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</div>
+                  {asset24hChanges && asset24hChanges[asset.symbol] && (
+                    <div className={`text-[10px] font-bold leading-tight ${
+                      asset24hChanges[asset.symbol].priceChangePct >= 0
+                        ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
+                        : (isLight ? 'text-rose-700' : 'text-rose-400')
+                    }`}>
+                      {asset24hChanges[asset.symbol].priceChangePct >= 0 ? '+' : ''}{asset24hChanges[asset.symbol].priceChangePct.toFixed(2)} %
+                    </div>
+                  )}
                 </div>
                 <div className="text-right">
                   <div className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Gewinn (€)</div>
@@ -422,7 +433,7 @@ export const AssetList: React.FC<AssetListProps> = ({
 
                   {/* Current Price (text-right) */}
                   <td className="py-2.5 px-2 lg:px-3 text-right font-mono text-xs sm:text-sm align-middle whitespace-nowrap">
-                    <div className="flex items-center justify-end space-x-1 group/price">
+                    <div className="flex items-center justify-end space-x-1.5 group/price">
                       {onEditPrice && (
                         <button
                           onClick={() => onEditPrice(asset.symbol, activePrice)}
@@ -434,7 +445,18 @@ export const AssetList: React.FC<AssetListProps> = ({
                           <Edit3 className="w-3 h-3" />
                         </button>
                       )}
-                      <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</span>
+                      <div className="flex flex-col items-end">
+                        <span className={`font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{formatActive(activePrice, priceDecimals)}</span>
+                        {asset24hChanges && asset24hChanges[asset.symbol] && (
+                          <span className={`text-[10px] font-semibold leading-tight ${
+                            asset24hChanges[asset.symbol].priceChangePct >= 0
+                              ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
+                              : (isLight ? 'text-rose-700' : 'text-rose-400')
+                          }`}>
+                            {asset24hChanges[asset.symbol].priceChangePct >= 0 ? '+' : ''}{asset24hChanges[asset.symbol].priceChangePct.toFixed(2)} %
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
 

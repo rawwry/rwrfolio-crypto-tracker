@@ -58,6 +58,29 @@ export interface AssetSummary {
   lastBuyDate: string;
   transactionCount: number;
   allocationPercentage: number;
+  change24hPct?: number;
+  change24hFiat?: number;
+  change24hValue?: number;
+}
+
+export interface Asset24hChange {
+  symbol: string;
+  priceChangePct: number;
+  priceChangeFiat: number;
+  valueChangeFiat: number;
+  currentValue: number;
+}
+
+export interface Portfolio24hDelta {
+  changeFiat: number;
+  changePercentage: number;
+  value24hAgo: number;
+  currentValue: number;
+  isPositive: boolean;
+  assetChanges: Record<string, Asset24hChange>;
+  topContributor?: Asset24hChange;
+  topDetractor?: Asset24hChange;
+  isLoading?: boolean;
 }
 
 export interface PortfolioTotals {
@@ -76,6 +99,8 @@ export interface PortfolioTotals {
   transactionCount: number;
   topAssetSymbol: string;
   topAssetPercentage: number;
+  delta24hFiat?: number;
+  delta24hPercentage?: number;
 }
 
 export interface CSVParseResult {

@@ -7,8 +7,9 @@
 ## 🌟 Funktionsumfang im Überblick
 
 - **🔒 100 % Privat & Lokal:** Keine Weitergabe von Beständen oder Transaktionen an Drittanbieter. Alle Daten liegen ausschließlich auf deinem Home Assistant Server (z. B. Raspberry Pi, Intel NUC, Home Assistant Green/Yellow).
-- **📈 Echte Live-Marktkurse & Historie:**
+- **📈 Echte Live-Marktkurse, Historie & 24h-Portfolio Delta:**
   - Direkte Kursabfrage über die öffentlichen Schnittstellen von **Binance** und **Kraken** (kein API-Schlüssel erforderlich).
+  - **Live 24h-Portfolio Delta (€ & %):** Sofortige Anzeige des absoluten und prozentualen Depotgewinns/-verlusts der letzten 24 Stunden direkt in der Hero-Karte des Dashboards inklusive interaktivem Asset-Aufschlüsselungs-Tooltip und Erkennung des stärksten Tages-Werttreibers.
   - Sekundengenaue Aktualisierung von Preisen, Allokationen, unrealisierten Gewinnen/Verlusten (UP&L) und DCA-Durchschnittspreisen.
 - **📊 Interaktive TradingView-Style Charts:**
   - Echte historische Marktkurven für Bitcoin, Ethereum, Solana, Polkadot, Hedera, Akash und alle weiteren Portfolio-Assets.

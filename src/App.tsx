@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Transaction, AppSettings, ThemeMode, PortfolioCurrency } from './types';
+import { Transaction, AppSettings, ThemeMode, PortfolioCurrency, Portfolio24hDelta } from './types';
 import { parseCryptoComCSV, parseCSVLines, USER_SAMPLE_CRYPTO_COM_CSV, exportTransactionsToCSV } from './utils/csvParser';
 import { calculateAssetSummaries } from './utils/portfolioCalculations';
-import { fetchLivePrices, getStoredCustomPrices, getCoinDetails, getLastPriceUpdateTime } from './utils/priceService';
+import { fetchLivePrices, getStoredCustomPrices, getCoinDetails, getLastPriceUpdateTime, getLiveEurUsdRate } from './utils/priceService';
+import { calculatePortfolio24hDelta } from './utils/historicalPriceService';
 import { 
   fetchTransactionsFromApi, 
   saveTransactionToApi, 
@@ -227,6 +228,36 @@ export default function App() {
   const { assets, totals } = useMemo(() => {
     return calculateAssetSummaries(transactions, customPrices, settings.currency || 'EUR');
   }, [transactions, customPrices, settings.currency]);
+
+  // 24h Portfolio Delta State
+  const [portfolio24hDelta, setPortfolio24hDelta] = useState<Portfolio24hDelta | null>(null);
+  const [isLoading24hDelta, setIsLoading24hDelta] = useState<boolean>(false);
+
+  // Compute 24h Portfolio Delta whenever assets, prices, or currency change
+  useEffect(() => {
+    let isMounted = true;
+    if (assets.length === 0) {
+      setPortfolio24hDelta(null);
+      return;
+    }
+
+    setIsLoading24hDelta(true);
+    calculatePortfolio24hDelta(assets, settings.currency || 'EUR', getLiveEurUsdRate())
+      .then(delta => {
+        if (isMounted) {
+          setPortfolio24hDelta(delta);
+          setIsLoading24hDelta(false);
+        }
+      })
+      .catch(err => {
+        console.warn('[App] 24h portfolio delta calculation error:', err);
+        if (isMounted) setIsLoading24hDelta(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [assets, settings.currency, customPrices]);
 
   // Currency switcher callback (EUR <-> USD)
   const handleToggleCurrency = async () => {
@@ -570,7 +601,14 @@ export default function App() {
             />
 
             {/* 2. Top KPIs Summary Cards (3 Cards) */}
-            <PortfolioStats totals={totals} assets={assets} currency={settings.currency || 'EUR'} theme={settings.theme} />
+            <PortfolioStats 
+              totals={totals} 
+              assets={assets} 
+              currency={settings.currency || 'EUR'} 
+              theme={settings.theme} 
+              delta24h={portfolio24hDelta}
+              isLoading24h={isLoading24hDelta}
+            />
 
             {/* 3. Historischer Gesamtverlauf (Portfoliowert über Zeit) */}
             {transactions.length > 0 && (
@@ -661,6 +699,7 @@ export default function App() {
               onSelectAssetForFilter={handleSelectAssetForFilter}
               onSelectAssetForChart={handleSelectAssetForChart}
               onEditPrice={(symbol, currentPrice) => setPriceEditTarget({ symbol, price: currentPrice })}
+              asset24hChanges={portfolio24hDelta?.assetChanges}
             />
           </div>
         )}
