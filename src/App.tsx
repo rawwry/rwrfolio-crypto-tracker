@@ -20,6 +20,7 @@ import { PortfolioStats } from './components/PortfolioStats';
 import { AssetList } from './components/AssetList';
 import { TransactionTable } from './components/TransactionTable';
 import { PortfolioCharts } from './components/PortfolioCharts';
+import { PortfolioValueTimelineChart } from './components/PortfolioValueTimelineChart';
 import { CSVImportModal } from './components/CSVImportModal';
 import { AddTransactionModal } from './components/AddTransactionModal';
 import { PriceEditModal } from './components/PriceEditModal';
@@ -391,6 +392,13 @@ export default function App() {
     setActiveTab('transactions', symbol);
   };
 
+  const [selectedAnalyticsCoin, setSelectedAnalyticsCoin] = useState<string>('BTC');
+
+  const handleSelectAssetForChart = (symbol: string) => {
+    setSelectedAnalyticsCoin(symbol);
+    setActiveTab('analytics');
+  };
+
   // Auth Handlers
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
@@ -564,20 +572,30 @@ export default function App() {
             {/* 2. Top KPIs Summary Cards (3 Cards) */}
             <PortfolioStats totals={totals} assets={assets} currency={settings.currency || 'EUR'} theme={settings.theme} />
 
-            {/* 3. Quick-Cards: Top Gainer, Top Loser / Dip & Fear/Greed Index */}
+            {/* 3. Historischer Gesamtverlauf (Portfoliowert über Zeit) */}
+            {transactions.length > 0 && (
+              <PortfolioValueTimelineChart
+                transactions={transactions}
+                customPrices={customPrices}
+                currency={settings.currency || 'EUR'}
+                theme={settings.theme}
+              />
+            )}
+
+            {/* 4. Quick-Cards: Top Gainer, Top Loser / Dip & Fear/Greed Index */}
             {assets.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <TopPerformerCards 
                   assets={assets} 
                   currency={settings.currency || 'EUR'} 
                   theme={settings.theme} 
-                  onSelectAsset={handleSelectAssetForFilter} 
+                  onSelectAsset={handleSelectAssetForChart} 
                 />
                 <FearAndGreedWidget theme={settings.theme} />
               </div>
             )}
 
-            {/* 4. Visual Charts (Asset Allokation & Timeline without scrollbars) */}
+            {/* 5. Coin-Allokation & Gewichtung */}
             <PortfolioCharts assets={assets} transactions={transactions} currency={settings.currency || 'EUR'} theme={settings.theme} />
           </div>
         )}
@@ -641,6 +659,7 @@ export default function App() {
               currency={settings.currency || 'EUR'}
               theme={settings.theme}
               onSelectAssetForFilter={handleSelectAssetForFilter}
+              onSelectAssetForChart={handleSelectAssetForChart}
               onEditPrice={(symbol, currentPrice) => setPriceEditTarget({ symbol, price: currentPrice })}
             />
           </div>
@@ -654,6 +673,8 @@ export default function App() {
             theme={settings.theme}
             currency={settings.currency || 'EUR'}
             customPrices={customPrices}
+            selectedCoin={selectedAnalyticsCoin}
+            onSelectCoin={setSelectedAnalyticsCoin}
           />
         )}
 

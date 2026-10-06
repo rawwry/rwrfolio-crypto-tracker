@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.33';
+export const APP_VERSION = '0.5.34';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.34',
+    date: '06.10.2026',
+    title: 'Mobile Layout-Fixes, Timeline-Chart im Dashboard & Strukturbereinigung',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Mobile Layout-Fixes & Spaltenüberlappung behoben: Beseitigung der Kollision von "Asset" und "Gewichtung" auf mobilen Displays in der Coin-Allokation. Einführung einer dedizierten, responsiven Mobile-Kartenansicht mit Rang, Marktwert, Cost Basis und P&L sowie Absicherung der Desktop-Tabelle mit Mindestbreite und horizontalem Scrollen.',
+      },
+      {
+        type: 'ui',
+        text: 'Aufgeräumte Performance-Matrix auf Mobilgeräten: Entfernung der störend zweizeilig umbrechenden Info-Pillen ("X im Plus / Y im Minus"). Die Timeframe-Filter (24h, 7T, 30T, 90T, 1J, Gesamt) nutzen nun die volle Breite mit optimaler Touch-Ergonomie.',
+      },
+      {
+        type: 'feat',
+        text: 'Portfoliowert-Verlauf im Dashboard aktiviert: Das historische Vermögens-Verlaufsdiagramm ist nun prominent direkt unter den Hero-KPIs auf dem Dashboard platziert, um den Gesamtwertverlauf sofort im Blick zu haben.',
+      },
+      {
+        type: 'perf',
+        text: 'Strukturbereinigung & Redundanz-Abbau: Entfernung der doppelten Allokations-Tabelle aus dem Analysen-Bereich zur Straffung des Informationsflusses.',
+      },
+      {
+        type: 'feat',
+        text: 'Nahtlose 1-Klick Chart-Navigation: Klick auf Top Performer im Dashboard sowie neue [📈 Chart]-Buttons in der Coinübersicht führen direkt zum interaktiven TradingView-Chart mit vorausgewähltem Coin.',
+      },
+    ],
+  },
   {
     version: '0.5.33',
     date: '06.10.2026',
     title: 'Seitenübergreifende Bereinigung der Coin-Anzahl-Pills',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'ui',

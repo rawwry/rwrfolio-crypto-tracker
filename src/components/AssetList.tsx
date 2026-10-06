@@ -8,7 +8,8 @@ import {
   ArrowDownRight,
   ArrowUp,
   ArrowDown,
-  ArrowUpDown
+  ArrowUpDown,
+  TrendingUp
 } from 'lucide-react';
 import { getCoinDetails } from '../utils/priceService';
 
@@ -20,6 +21,7 @@ interface AssetListProps {
   currency?: PortfolioCurrency;
   theme?: 'light' | 'dark' | 'system';
   onSelectAssetForFilter?: (symbol: string) => void;
+  onSelectAssetForChart?: (symbol: string) => void;
   onEditPrice?: (symbol: string, currentPrice: number) => void;
 }
 
@@ -28,6 +30,7 @@ export const AssetList: React.FC<AssetListProps> = ({
   currency = 'EUR',
   theme = 'dark',
   onSelectAssetForFilter,
+  onSelectAssetForChart,
   onEditPrice,
 }) => {
   const isLight = theme === 'light';
@@ -226,12 +229,27 @@ export const AssetList: React.FC<AssetListProps> = ({
                           }`}
                           title={`${asset.transactionCount} Transaktion(en) anzeigen`}
                         >
-                          <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
+                          <span>{asset.transactionCount} Trades</span>
                         </button>
                       ) : (
                         <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                          {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                          {asset.transactionCount} Trades
                         </span>
+                      )}
+                      {onSelectAssetForChart && (
+                        <>
+                          <span className="text-slate-400 text-[10px]">&bull;</span>
+                          <button
+                            onClick={() => onSelectAssetForChart(asset.symbol)}
+                            className={`text-xs font-semibold cursor-pointer transition-colors inline-flex items-center gap-1 ${
+                              isLight ? 'text-indigo-600 hover:text-indigo-800' : 'text-indigo-400 hover:text-indigo-300'
+                            }`}
+                            title={`${asset.symbol} im interaktiven Chart öffnen`}
+                          >
+                            <TrendingUp className="w-3 h-3" />
+                            <span>Chart</span>
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>
@@ -349,7 +367,7 @@ export const AssetList: React.FC<AssetListProps> = ({
                           {asset.name}
                         </span>
                       </div>
-                      <div className="mt-0.5">
+                      <div className="mt-0.5 flex items-center gap-2">
                         {onSelectAssetForFilter ? (
                           <button
                             onClick={() => onSelectAssetForFilter(asset.symbol)}
@@ -360,12 +378,29 @@ export const AssetList: React.FC<AssetListProps> = ({
                             }`}
                             title={`${asset.transactionCount} Transaktion(en) für ${asset.symbol} in der Transaktionsliste anzeigen`}
                           >
-                            <span>{asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}</span>
+                            <span>{asset.transactionCount} Trades</span>
                           </button>
                         ) : (
                           <div className={`text-[11px] whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                            {asset.transactionCount} Transaktion{asset.transactionCount !== 1 ? 'en' : ''}
+                            {asset.transactionCount} Trades
                           </div>
+                        )}
+                        {onSelectAssetForChart && (
+                          <>
+                            <span className="text-slate-400 text-[10px]">&bull;</span>
+                            <button
+                              onClick={() => onSelectAssetForChart(asset.symbol)}
+                              className={`text-[11px] font-semibold whitespace-nowrap cursor-pointer transition-colors inline-flex items-center gap-1 ${
+                                isLight 
+                                  ? 'text-indigo-600 hover:text-indigo-800' 
+                                  : 'text-indigo-400 hover:text-indigo-300'
+                              }`}
+                              title={`${asset.symbol} im interaktiven Chart öffnen`}
+                            >
+                              <TrendingUp className="w-3 h-3" />
+                              <span>Chart</span>
+                            </button>
+                          </>
                         )}
                       </div>
                     </div>

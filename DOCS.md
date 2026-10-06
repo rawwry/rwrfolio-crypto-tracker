@@ -19,12 +19,12 @@
 - **🥧 Neugestaltete Coin-Allokation & Gewichtung (Dauerhaft ausgeklappt & sprungfrei):**
   - Kompakter, horizontaler **Horizon-Allokationsstreifen** mit Farbsegmentierung nach Coin-Markenfarben und interaktiver Segmentfokussierung (spart über 200px vertikalen Platz gegenüber alten Kreisdiagrammen).
   - **4-KPI-Konzentrationsleiste:** Top 1 Dominanz, Top 3 Konzentrationsgrad (*Fokussiert* vs. *Ausgewogen*), stärkster Alpha-Werttreiber vs. Kapital sowie Gesamtportfolio-Rendite.
-  - **Hochdichte, 100 % sprungfreie Allokations-Tabelle:** Extrem schlanke, einzeilige Tabelle je Coin mit Rang, Asset, klaren Allokations-Pill-Badges (ohne graue Balkenspuren), Marktwert, Cost Basis, P&L und Allokations-Drift. Rigides `table-fixed`-Raster ohne Schriftstärken-Mutationen auf Hover verhindert jegliches Breitenwackeln. Startet standardmäßig stets vollständig ausgeklappt für maximalen Überblick.
+  - **Hochdichte, 100 % sprungfreie Allokations-Tabelle & dedizierte Mobile-Kartenansicht:** Extrem schlanke, einzeilige Tabelle je Coin mit Rang, Asset, klaren Allokations-Pill-Badges (ohne graue Balkenspuren), Marktwert, Cost Basis, P&L und Allokations-Drift. Rigides `table-fixed`-Raster verhindert jegliches Breitenwackeln. Auf Mobilgeräten sorgt eine eigens gestaltete Kartenansicht für 100 % überlappungsfreie Lesbarkeit. Startet standardmäßig stets vollständig ausgeklappt für maximalen Überblick.
 - **☀️ Light-Theme Kontrast-Perfektion & Bereinigte Typografie:** Sämtliche Komponenten, Metriken, Sortierknöpfe und Badges wurden auf optimale Lesbarkeit im Hellen Modus nach WCAG-Standards angepasst. Redundante Coin-Anzahl-Pills wurden seitenübergreifend aus Überschriften und Reitern entfernt für ein klares, modernes Erscheinungsbild.
 - **⚡ Multi-Timeframe Performance-Matrix:**
   - Schneller Wechsel zwischen **24h (Tag)**, **7T (Woche)**, **30T (Monat)**, **90T (3 Monate)**, **1J (Jahr)** und **Gesamt (All-Time DCA)**.
-  - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)**.
-  - 1-Klick-Aktivierung: Klick auf eine Zeile lädt das jeweilige Asset direkt in den interaktiven Großchart.
+  - Gegenüberstellung von **relativer Kursentwicklung (%)** und **absoluter Depotwert-Veränderung (€ / $)** – mobil ohne störende Zweizeiler.
+  - 1-Klick-Aktivierung: Klick auf Top Performer im Dashboard, Klick auf Zeilen in der Matrix oder die neuen `[📈 Chart]`-Buttons in der Coinübersicht lädt das jeweilige Asset direkt in den interaktiven Großchart.
 - **📥 Smart Auto-Detect Import:**
   - Drag & Drop für CSV-Dateien, PDF-Kontoauszüge und E-Mail-Belege.
   - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements), **Kraken E-Mail Kaufbelegen** (PDF & Text), **Crypto.com** (App & Exchange CSVs) sowie **Crypto.com E-Mail Kaufbelegen** (PDF & Text).

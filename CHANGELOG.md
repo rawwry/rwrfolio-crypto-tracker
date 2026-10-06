@@ -4,6 +4,28 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.34] - 06.10.2026
+
+### 📱 Mobile Optimierungen & Layout-Fixes
+- **Beseitigung von Spaltenüberlappungen & Tabellen-Umbruch**:
+  - Vollständige Behebung des Darstellungsfehlers in der Coin-Allokation auf Mobilgeräten, bei dem Spaltenköpfe ("Asset" & "Gewichtung") ineinanderliefen und Text zweizeilig umbrach.
+  - Implementierung einer dedizierten, responsiven Mobile-Kartenansicht (`sm:hidden`) mit Rang, Coin-Farbpunkt, einzeiliger Allokationspille, aktuellem Marktwert, Cost Basis und P&L.
+  - Absicherung der Desktop-Tabelle (`hidden sm:block`) mit einer festen Mindestbreite von `620px` und weichem horizontalem Scrollen.
+- **Bereinigte Performance-Matrix auf Smartphones**:
+  - Entfernung der unschön zweizeilig umbrechenden Info-Pillen ("X im Plus / Y im Minus") neben den Timeframe-Buttons.
+  - Volle Bildschirmbreite und hervorragende Touch-Ergonomie für alle 6 Zeitfilter (24h, 7T, 30T, 90T, 1J, Gesamt) ohne Textstauchungen.
+
+### 🏛️ Architektur- & Strukturbereinigung
+- **Portfoliowert-Verlauf im Dashboard aktiviert**:
+  - Das historische Vermögens-Verlaufsdiagramm (`PortfolioValueTimelineChart`) ist nun standardmäßig direkt unter den Hero-KPIs im Dashboard eingebunden.
+  - Nutzer sehen die historische Wertentwicklung ihres Gesamtvermögens sofort beim Laden der Webapp.
+- **Redundanz-Bereinigung in den Analysen**:
+  - Die doppelte Coin-Allokations-Tabelle wurde aus der Ansicht *Analysen* entfernt, da sie originär auf das Dashboard gehört.
+- **Nahtlose 1-Klick Chart-Navigation**:
+  - Klicks auf die *Top Performer* Karten im Dashboard sowie neue `[📈 Chart]`-Aktionsbuttons in der Coin-Tabelle navigieren direkt zur interaktiven Großansicht des TradingView-Charts mit dem vorausgewählten Coin.
+
+---
+
 ## [0.5.33] - 06.10.2026
 
 ### 🎨 Design & Minimalismus

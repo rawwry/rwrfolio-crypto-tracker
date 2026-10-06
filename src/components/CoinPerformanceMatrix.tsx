@@ -143,15 +143,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
     }
   };
 
-  const profitableCount = useMemo(() => {
-    if (matrixTimeframe === 'all') {
-      return assets.filter(a => (isUSD ? (a.pnlUSD ?? a.pnl) : (a.pnlEUR ?? a.pnl)) >= 0).length;
-    }
-    return assets.filter(a => (periodChanges[a.symbol]?.priceChangePct ?? 0) >= 0).length;
-  }, [assets, matrixTimeframe, periodChanges, isUSD]);
-
-  const losingCount = assets.length - profitableCount;
-
   return (
     <div className={`p-4 sm:p-6 rounded-2xl border shadow-xl transition-all space-y-4 ${
       isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-slate-900/90 border-slate-800/80'
@@ -211,22 +202,6 @@ export const CoinPerformanceMatrix: React.FC<CoinPerformanceMatrixProps> = ({
                 </button>
               );
             })}
-          </div>
-
-          {/* Quick Summary Pill */}
-          <div className="flex items-center space-x-1.5 text-xs font-mono">
-            <span className={`px-2 py-1 rounded-lg font-semibold border ${
-              isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-            }`}>
-              {profitableCount} im Plus
-            </span>
-            {losingCount > 0 && (
-              <span className={`px-2 py-1 rounded-lg font-semibold border ${
-                isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-              }`}>
-                {losingCount} im Minus
-              </span>
-            )}
           </div>
         </div>
       </div>

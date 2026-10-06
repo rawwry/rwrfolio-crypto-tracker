@@ -309,23 +309,112 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
             </div>
           )}
 
-          {/* 4. Hochdichte Allokations-Tabelle (Platzsparend, einzeilig, 100% sprungfrei & ohne Trennlinien) */}
+          {/* 4. Hochdichte Allokations-Tabelle (Desktop) & Mobile-Kartenansicht */}
           <div className={`rounded-xl border overflow-hidden ${
             isLight ? 'bg-white border-slate-200' : 'bg-slate-950/40 border-slate-800/80'
           }`}>
-            <div className="overflow-x-auto scrollbar-none">
-              <table className="w-full text-left text-xs border-collapse font-mono table-fixed">
+            {/* 4a. Mobile Ansicht (sm:hidden) - Keine Überlappungen, saubere Kärtchen */}
+            <div className="sm:hidden divide-y divide-slate-100 dark:divide-slate-800/60 p-1">
+              {visibleItems.map((item, index) => {
+                const isSelected = activeCoinSymbol === item.symbol;
+                const isPositiveShift = item.shiftPercentage > 0.5;
+                const isNegativeShift = item.shiftPercentage < -0.5;
+                const isProfit = item.pnl >= 0;
+
+                return (
+                  <div
+                    key={item.symbol}
+                    onClick={() => setActiveCoinSymbol(isSelected ? null : item.symbol)}
+                    className={`p-3 rounded-xl transition-all cursor-pointer select-none ${
+                      isSelected
+                        ? (isLight ? 'bg-indigo-50/90 ring-1 ring-indigo-400 shadow-sm' : 'bg-indigo-950/50 ring-1 ring-indigo-500/50 shadow-sm')
+                        : (isLight ? 'hover:bg-slate-50' : 'hover:bg-slate-900/50')
+                    }`}
+                  >
+                    {/* Header Row: Rank, Asset, Allocation Pill */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <span className={`font-mono text-[11px] font-semibold shrink-0 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                          #{index + 1}
+                        </span>
+                        <span className="w-2.5 h-2.5 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.color }} />
+                        <span className={`font-bold font-mono text-xs shrink-0 ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                          {item.symbol}
+                        </span>
+                        <span className={`text-[11px] font-sans truncate ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                          {item.fullName}
+                        </span>
+                      </div>
+
+                      {/* Allocation Pill: single-line, never wrapping */}
+                      <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border shrink-0 whitespace-nowrap ${
+                        isLight 
+                          ? 'bg-slate-100 border-slate-200/80 text-slate-800' 
+                          : 'bg-slate-900 border-slate-800 text-slate-200'
+                      }`}>
+                        <span className="w-2 h-2 rounded-full shrink-0 shadow-sm" style={{ backgroundColor: item.color }} />
+                        <span>{item.displayPercentage.toFixed(1)} %</span>
+                      </span>
+                    </div>
+
+                    {/* Financial Values Grid: Marktwert, Cost Basis, Rendite */}
+                    <div className="grid grid-cols-3 gap-2 mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/60 text-xs font-mono">
+                      <div>
+                        <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Marktwert</span>
+                        <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                          {formatCurrency(item.currentValue)}
+                        </span>
+                      </div>
+                      <div>
+                        <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Investiert</span>
+                        <span className={`font-medium ${isLight ? 'text-slate-700' : 'text-slate-400'}`}>
+                          {formatCurrency(item.totalInvested)}
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Rendite</span>
+                        <span className={`font-bold ${isProfit ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')}`}>
+                          {isProfit ? '+' : ''}{item.pnlPercentage.toFixed(1)} %
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Drift Note if significant */}
+                    {(isPositiveShift || isNegativeShift) && (
+                      <div className="mt-1.5 flex items-center justify-end text-[10px] font-mono">
+                        {isPositiveShift && (
+                          <span className={`inline-flex items-center gap-0.5 font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
+                            <ArrowUpRight className="w-3 h-3" />
+                            <span>Drift: +{item.shiftPercentage.toFixed(1)}% (Übergewichtet)</span>
+                          </span>
+                        )}
+                        {isNegativeShift && (
+                          <span className={`inline-flex items-center gap-0.5 font-medium ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                            <ArrowDownRight className="w-3 h-3" />
+                            <span>Drift: {item.shiftPercentage.toFixed(1)}% (Untergewichtet)</span>
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* 4b. Desktop Ansicht (hidden sm:block) mit rigidem min-w Raster */}
+            <div className="hidden sm:block overflow-x-auto scrollbar-none">
+              <table className="w-full text-left text-xs border-collapse font-mono table-fixed min-w-[620px]">
                 <thead>
                   <tr className={`text-[10px] sm:text-[11px] font-sans font-semibold uppercase tracking-wider ${
                     isLight ? 'bg-slate-100/90 text-slate-700 border-b border-slate-200' : 'bg-slate-900/80 text-slate-400'
                   }`}>
                     <th className="py-2.5 px-2.5 text-center w-9 sm:w-11">#</th>
                     <th className="py-2.5 px-2.5 w-auto">Asset</th>
-                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-left">Gewichtung</th>
-                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right">Marktwert</th>
-                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right hidden sm:table-cell">Cost Basis</th>
+                    <th className="py-2.5 px-2.5 w-28 text-left">Gewichtung</th>
+                    <th className="py-2.5 px-2.5 w-28 text-right">Marktwert</th>
+                    <th className="py-2.5 px-2.5 w-28 text-right hidden sm:table-cell">Cost Basis</th>
                     <th className="py-2.5 px-2.5 w-32 sm:w-36 text-right">P&amp;L Rendite</th>
-                    <th className="py-2.5 px-2.5 w-24 sm:w-28 text-right hidden md:table-cell">Allokations-Drift</th>
+                    <th className="py-2.5 px-2.5 w-28 text-right hidden md:table-cell">Allokations-Drift</th>
                   </tr>
                 </thead>
                 <tbody className="text-xs">
@@ -372,9 +461,9 @@ export const PortfolioCharts: React.FC<PortfolioChartsProps> = ({
                           </div>
                         </td>
 
-                        {/* Share Badge (Modern Pill statt horizontaler grauer Leiste) */}
+                        {/* Share Badge (Modern Pill) */}
                         <td className="py-2 px-2.5">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border ${
+                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-xs font-bold font-mono border whitespace-nowrap shrink-0 ${
                             isLight 
                               ? 'bg-slate-100 border-slate-200/80 text-slate-800' 
                               : 'bg-slate-900 border-slate-800 text-slate-200'

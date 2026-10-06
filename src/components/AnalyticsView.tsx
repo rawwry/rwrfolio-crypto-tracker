@@ -1,8 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { AssetSummary, Transaction, PortfolioCurrency } from '../types';
 import { InteractiveCoinChart } from './InteractiveCoinChart';
 import { CoinPerformanceMatrix } from './CoinPerformanceMatrix';
-import { PortfolioCharts } from './PortfolioCharts';
 import { calculateAssetSummaries } from '../utils/portfolioCalculations';
 import { 
   ArrowUpRight, 
@@ -19,6 +18,8 @@ interface AnalyticsViewProps {
   theme: 'light' | 'dark' | 'system';
   currency?: PortfolioCurrency;
   customPrices?: Record<string, number>;
+  selectedCoin?: string;
+  onSelectCoin?: (coin: string) => void;
 }
 
 export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
@@ -27,6 +28,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
   theme,
   currency = 'EUR',
   customPrices = {},
+  selectedCoin,
+  onSelectCoin,
 }) => {
   const isLight = theme === 'light';
   const isUSD = currency === 'USD';
@@ -41,14 +44,16 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     return 'ALL';
   }, [assets]);
 
-  const [selectedChartCoin, setSelectedChartCoin] = useState<string>(() => defaultChartCoin);
+  const [selectedChartCoin, setSelectedChartCoin] = useState<string>(() => selectedCoin || defaultChartCoin);
 
-  // Sync when assets finish loading if still unselected
-  React.useEffect(() => {
-    if (selectedChartCoin === 'ALL' && assets.length > 0 && defaultChartCoin !== 'ALL') {
+  // Sync when assets finish loading or when selectedCoin prop changes
+  useEffect(() => {
+    if (selectedCoin) {
+      setSelectedChartCoin(selectedCoin);
+    } else if (selectedChartCoin === 'ALL' && assets.length > 0 && defaultChartCoin !== 'ALL') {
       setSelectedChartCoin(defaultChartCoin);
     }
-  }, [defaultChartCoin]);
+  }, [selectedCoin, defaultChartCoin]);
 
   const formatCurr = (val: number, decimals: number = 2) => {
     return new Intl.NumberFormat(isUSD ? 'en-US' : 'de-DE', {
@@ -84,6 +89,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
 
   const handleSelectCoinForChart = (sym: string) => {
     setSelectedChartCoin(sym);
+    onSelectCoin?.(sym);
     // Smooth scroll to top of chart
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -99,7 +105,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         currency={currency}
         theme={theme}
         selectedCoinInitial={selectedChartCoin}
-        onSelectCoin={setSelectedChartCoin}
+        onSelectCoin={(sym) => {
+          setSelectedChartCoin(sym);
+          onSelectCoin?.(sym);
+        }}
       />
 
       {/* 2. Structured Side-by-Side Coin Performance Matrix */}
@@ -284,9 +293,6 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
       </div>
-
-      {/* 4. Portfolio Allocation & Capital Cumulative Charts */}
-      <PortfolioCharts assets={assets} transactions={transactions} currency={currency} theme={theme} />
 
     </div>
   );
