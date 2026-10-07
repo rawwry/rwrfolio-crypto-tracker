@@ -4,6 +4,25 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.36] - 07.10.2026
+
+### 📧 Nativer .eml E-Mail Import (Kraken Buy/Sell & Crypto.com) & n8n Workflow Support
+- **Nativer E-Mail Import (.eml)**:
+  - Vollständige Unterstützung für das direkte Importieren von archivierten `.eml`-Dateien via Drag & Drop oder Dateidialog.
+  - Automatisches Dekodieren von Base64 und Quoted-Printable (inklusive voller UTF-8-Unterstützung für Umlaute und Sonderzeichen) sowie HTML-Normalisierung.
+- **Kraken Verkauf- & Kaufbelege**:
+  - Nahtlose Erkennung von BUY- und SELL-Mails (z. B. *"You bought ONDO"*, *"You sold LAPTOP"*).
+  - Korrekte Extraktion von verkauftem/gekauftem Krypto-Volumen, EUR-Gegenwert bzw. Netto-Proceeds, Einzelkurs, Gebühren, TxID/Order-ID und sekundengenauem RFC 2822 Zeitstempel.
+  - Verkäufe (`SELL`) mindern die Asset-Bestände und realisieren EUR-Erlöse.
+- **Intelligente Duplikatssperre zwischen PDF & EML**:
+  - Durch den Abgleich der eindeutigen Order-IDs / TxIDs (z. B. `BQZ4TQZ` für den ONDO-Kauf) werden Trades, die bereits aus PDF-Kontoauszügen importiert wurden, beim Import einer `.eml`-Datei automatisch als Duplikat erkannt und übersprungen.
+- **n8n Automations-Endpoint (`POST /api/transactions/eml`)**:
+  - Direkter HTTP-Endpunkt im Node.js Server für automatisierte n8n-Workflows zur Weiterleitung und Archivierung gesicherter E-Mails.
+- **Archivierung im Samba-Share**:
+  - Alle importierten `.eml`-Dateien werden originalgetreu mit `.eml`-Dateiendung im Archivordner `/share/rwrfolio/imported/` gesichert.
+
+---
+
 ## [0.5.35] - 06.10.2026
 
 ### 📈 24h-Portfolio Delta (€ & %) & Live-Tagesrendite

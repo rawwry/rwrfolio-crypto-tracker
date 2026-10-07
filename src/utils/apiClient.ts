@@ -96,6 +96,27 @@ export async function parsePdfApi(
   }
 }
 
+export async function parseEmlApi(
+  emlRawText: string,
+  fileName?: string,
+  autoInsert?: boolean
+): Promise<{ success: boolean; transactions: Transaction[]; detectedExchange?: ExchangeSource | 'unknown'; totalFound?: number; archivedPath?: string | null; error?: string }> {
+  try {
+    const res = await fetch(getApiUrl('api/transactions/eml'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ emlRawText, fileName, autoInsert }),
+    });
+    if (res.ok) {
+      return await res.json();
+    }
+    const errData = await res.json().catch(() => ({}));
+    return { success: false, transactions: [], error: errData.error || 'Fehler beim Lesen der E-Mail (.eml)' };
+  } catch (err: any) {
+    return { success: false, transactions: [], error: err.message || 'Verbindungsfehler zum Server' };
+  }
+}
+
 export async function fetchStorageInfo(): Promise<StorageInfo | null> {
   try {
     const res = await fetch(getApiUrl('api/storage'));

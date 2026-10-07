@@ -11,7 +11,8 @@ import {
   FileCode,
   Loader2,
   Info,
-  HelpCircle
+  HelpCircle,
+  Mail
 } from 'lucide-react';
 import { Transaction, CSVParseResult, ExchangeSource } from '../types';
 import { parseCSVFile, USER_SAMPLE_CRYPTO_COM_CSV, parseCSVLines, isCryptoComCSV } from '../utils/csvParser';
@@ -20,7 +21,8 @@ import {
   isCryptoComText, 
   parseCryptoComText 
 } from '../utils/cryptoComParser';
-import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT, USER_SAMPLE_KRAKEN_EMAIL_TEXT } from '../utils/krakenParser';
+import { parseKrakenCSV, parseKrakenText, isKrakenCSV, isKrakenText, USER_SAMPLE_KRAKEN_CSV, USER_SAMPLE_KRAKEN_PDF_TEXT, USER_SAMPLE_KRAKEN_EMAIL_TEXT, USER_SAMPLE_KRAKEN_SELL_EMAIL_TEXT } from '../utils/krakenParser';
+import { isEmlContent, parseEmlFile } from '../utils/emlParser';
 import { deduplicateTransactions } from '../utils/transactionDedup';
 import { parsePdfApi } from '../utils/apiClient';
 
@@ -45,7 +47,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
   const [csvRawText, setCsvRawText] = useState<string>('');
   const [pdfBase64, setPdfBase64] = useState<string>('');
   const [fileName, setFileName] = useState<string>('');
-  const [fileType, setFileType] = useState<'csv' | 'pdf' | 'text'>('csv');
+  const [fileType, setFileType] = useState<'csv' | 'pdf' | 'text' | 'eml'>('csv');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [parseResult, setParseResult] = useState<CSVParseResult | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -57,7 +59,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Process plain text or CSV text with smart auto-detection
+  // Process plain text, CSV text or RFC 2822 EML files with smart auto-detection
   const handleProcessText = (
     text: string, 
     name: string = 'export.csv', 
@@ -66,9 +68,28 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
     setCsvRawText(text);
     setPdfBase64('');
     setFileName(name);
-    setFileType('csv');
     setAmbiguousData(null);
-    
+
+    // 1. Direct RFC 2822 .eml check
+    if (isEmlContent(text, name)) {
+      setFileType('eml');
+      setIsEmailReceipt(true);
+      const emlResult = parseEmlFile(text, name);
+      const dedup = deduplicateTransactions(emlResult.transactions, existingTransactions);
+
+      setParseResult({
+        success: emlResult.transactions.length > 0,
+        transactions: dedup.newTransactions,
+        totalRows: emlResult.transactions.length,
+        importedCount: dedup.newTransactions.length,
+        skippedDuplicates: dedup.skippedDuplicates.length,
+        detectedExchange: emlResult.detectedExchange,
+        errors: emlResult.transactions.length === 0 ? ['Konnte keine Krypto-Transaktionen aus der E-Mail (.eml) erkennen.'] : [],
+      });
+      return;
+    }
+
+    setFileType('csv');
     let candidateTxs: Transaction[] = [];
     let detected: ExchangeSource | 'unknown' = forcedExchange || 'unknown';
 
@@ -293,7 +314,11 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
   };
 
   const handleLoadKrakenEmailSample = () => {
-    handleProcessText(USER_SAMPLE_KRAKEN_EMAIL_TEXT, 'kraken-kaufbeleg-ondo.txt', 'kraken');
+    handleProcessText(USER_SAMPLE_KRAKEN_EMAIL_TEXT, 'kraken-kaufbeleg-ondo.eml');
+  };
+
+  const handleLoadKrakenSellEmailSample = () => {
+    handleProcessText(USER_SAMPLE_KRAKEN_SELL_EMAIL_TEXT, 'kraken-verkaufsbeleg-laptop.eml');
   };
 
   const handleLoadCryptoComSample = () => {
@@ -301,7 +326,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
   };
 
   const handleLoadCryptoComEmailSample = () => {
-    handleProcessText(USER_SAMPLE_CRYPTO_COM_EMAIL_TEXT, 'crypto_com-kaufbeleg-pol.txt', 'crypto_com');
+    handleProcessText(USER_SAMPLE_CRYPTO_COM_EMAIL_TEXT, 'crypto_com-kaufbeleg-pol.eml', 'crypto_com');
   };
 
   const handleConfirmImport = () => {
@@ -333,7 +358,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelegen</strong> (PDF &amp; Text) oder <strong>Crypto.com App</strong> (CSV &amp; E-Mail Kaufbelege) hoch. Die Börse wird automatisch erkannt.
+                Lade Exporte von <strong>Kraken Pro</strong> (CSV &amp; PDF), <strong>Kraken E-Mail Belegen</strong> (.eml Kauf/Verkauf) oder <strong>Crypto.com App</strong> (CSV &amp; .eml) hoch.
               </p>
             </div>
           </div>
@@ -348,7 +373,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
         {/* Content Body */}
         <div className="flex-1 overflow-y-auto space-y-4 pr-1">
           
-          {/* Unified Drag and drop zone for CSV & PDF */}
+          {/* Unified Drag and drop zone for CSV, PDF & EML */}
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
             onDragLeave={() => setIsDragging(false)}
@@ -363,7 +388,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
             <input
               ref={fileInputRef}
               type="file"
-              accept=".csv,.pdf,text/csv,application/pdf"
+              accept=".csv,.pdf,.eml,message/rfc822,text/csv,application/pdf,text/plain"
               onChange={handleFileChange}
               className="hidden"
             />
@@ -372,7 +397,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
               <div className="py-4 space-y-3">
                 <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
                 <div className="text-sm font-semibold text-indigo-300">
-                  PDF-Dokument wird analysiert...
+                  Dokument wird analysiert...
                 </div>
                 <p className="text-xs text-slate-400">
                   Trades, Preise, Mengen und TxIDs werden automatisch aus dem Statement extrahiert
@@ -381,11 +406,14 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
             ) : (
               <>
                 <div className="flex items-center justify-center space-x-3 mx-auto mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400" title="Kraken Pro">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400" title="Kraken Pro (CSV & PDF)">
                     <FileText className="w-5 h-5" />
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-300" title="Crypto.com">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-300" title="Crypto.com App (CSV)">
                     <FileSpreadsheet className="w-5 h-5" />
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400" title="E-Mail Belege (.eml) Kraken & Crypto.com">
+                    <Mail className="w-5 h-5" />
                   </div>
                 </div>
 
@@ -398,12 +426,12 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                       </span>
                     </span>
                   ) : (
-                    'Export-Datei (CSV oder PDF) hier ablegen oder klicken'
+                    'Export-Datei (CSV, PDF oder .eml E-Mail Beleg) hier ablegen oder klicken'
                   )}
                 </div>
 
                 <p className="text-xs text-slate-400 max-w-md mx-auto">
-                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Kraken E-Mail Kaufbelege</strong> sowie <strong>Crypto.com App</strong> (CSV &amp; E-Mail Kaufbelege).
+                  Unterstützt <strong>Kraken Pro</strong> (Trades CSV &amp; PDF), <strong>Kraken E-Mail Belege</strong> (.eml Kauf &amp; Verkauf) sowie <strong>Crypto.com App</strong> (CSV &amp; .eml Kaufbelege).
                 </p>
 
                 <div className="mt-3 inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-400">
@@ -475,7 +503,15 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                   className="px-2.5 py-1.5 rounded-lg bg-indigo-700/80 hover:bg-indigo-700 text-white font-semibold transition-colors cursor-pointer"
                   title="Kraken E-Mail Kaufbeleg (ONDO Demo)"
                 >
-                  Kraken E-Mail
+                  Kraken Buy (.eml)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleLoadKrakenSellEmailSample}
+                  className="px-2.5 py-1.5 rounded-lg bg-emerald-700/80 hover:bg-emerald-700 text-white font-semibold transition-colors cursor-pointer"
+                  title="Kraken E-Mail Verkaufsbeleg (LAPTOP Demo)"
+                >
+                  Kraken Sell (.eml)
                 </button>
                 <button
                   type="button"
@@ -490,7 +526,7 @@ export const CSVImportModal: React.FC<CSVImportModalProps> = ({
                   className="px-2.5 py-1.5 rounded-lg bg-cyan-700/80 hover:bg-cyan-700 text-white font-semibold transition-colors cursor-pointer"
                   title="Crypto.com E-Mail Kaufbeleg (POL Demo)"
                 >
-                  Crypto.com E-Mail
+                  Crypto.com (.eml)
                 </button>
               </div>
             </div>

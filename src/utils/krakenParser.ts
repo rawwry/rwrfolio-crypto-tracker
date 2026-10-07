@@ -34,6 +34,22 @@ Fees: €0.79
 Check balance
 Transactions may not be cancelled once initiated. All purchases are final and non-refundable.`;
 
+export const USER_SAMPLE_KRAKEN_SELL_EMAIL_TEXT = `From: noreply@kraken.com
+To: timo.vorwald@gmail.com
+Subject: You sold LAPTOP
+Date: Wed, 07 Oct 2026 18:04:40 GMT
+
+You sold LAPTOP
+Funds from your recent sell were added to your account balance.
+A total of €113.18 was added to your account balance.
+Here are the details:
+Sold 1,398.601 LAPTOP
+Transaction ID: BQZO4CD
+Date: Oct 07, 2026
+LAPTOP price: €0.08173
+Fees: €1.13
+Check balance`;
+
 
 /**
  * Normalizes Kraken specific asset symbols (e.g. XXBT -> BTC, ZEUR -> EUR)
@@ -359,7 +375,7 @@ export function parseKrakenEmailReceipts(rawText: string): Transaction[] {
 
   for (const line of lines) {
     const l = line.trim();
-    const isNewEmail = /^(?:von|from):\s*kraken/i.test(l);
+    const isNewEmail = /^(?:von|from):.*(?:kraken|noreply)/i.test(l);
     const isNewTrade = /^(?:you bought|you sold|du hast\s+\w+\s+(?:gekauft|verkauft))\b/i.test(l);
 
     if ((isNewEmail || (isNewTrade && hasTxIdInCurrent)) && currentSection.length > 0) {
@@ -397,20 +413,20 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
   const isKrakenReceipt = /kraken/i.test(text) ||
     /transaction id|transaktions-?id/i.test(text) ||
     /account balance|kontoguthaben|check balance/i.test(text) ||
-    /you bought|you sold|du hast.*gekauft|du hast.*verkauft/i.test(text);
+    /you bought|you sold|du hast.*gekauft|du hast.*verkauft|recent sell/i.test(text);
 
   if (!isKrakenReceipt) return null;
 
   // 1. Transaction Type (BUY or SELL)
   let isBuy = true;
-  if (/you sold|du hast.*verkauft|sie haben.*verkauft|verkauf von/i.test(text)) {
+  if (/you sold|du hast.*verkauft|sie haben.*verkauft|verkauf von|recent sell|sold\s+[\d.,]+/i.test(text)) {
     isBuy = false;
   } else if (/you bought|du hast.*gekauft|sie haben.*gekauft|kauf von/i.test(text)) {
     isBuy = true;
-  } else if (/added to your account balance|wurde deinem konto gutgeschrieben/i.test(text)) {
-    isBuy = true;
   } else if (/deducted from your account balance|wurde von deinem konto abgebucht/i.test(text)) {
     isBuy = false;
+  } else if (/added to your account balance|wurde deinem konto gutgeschrieben/i.test(text)) {
+    isBuy = true;
   }
   const type: TransactionType = isBuy ? 'BUY' : 'SELL';
 
@@ -422,11 +438,23 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
     symbol = buySellMatch[1].toUpperCase();
   }
 
-  const volMatch = text.match(/(?:a total of|insgesamt)\s+([\d.,]+)\s+([A-Za-z0-9]{2,12})/i);
+  // 3. Volume
   let volume = 0;
-  if (volMatch) {
-    volume = cleanNumber(volMatch[1]);
-    if (!symbol) symbol = volMatch[2].toUpperCase();
+  // A. Check for SELL volume: "Sold 1,398.601 LAPTOP" or "1.398,601 LAPTOP verkauft"
+  const soldVolMatch = text.match(/(?:sold|verkauft|verkauf von)\s+([\d.,]+)\s+([A-Za-z0-9]{2,12})/i) ||
+                       text.match(/([\d.,]+)\s+([A-Za-z0-9]{2,12})\s+(?:sold|verkauft)/i);
+  if (soldVolMatch) {
+    volume = cleanNumber(soldVolMatch[1]);
+    if (!symbol) symbol = soldVolMatch[2].toUpperCase();
+  }
+
+  // B. Check for BUY volume: "A total of 177.467 ONDO was added to your account balance"
+  if (!volume) {
+    const volMatch = text.match(/(?:a total of|insgesamt)\s+([\d.,]+)\s+([A-Za-z0-9]{2,12})/i);
+    if (volMatch) {
+      volume = cleanNumber(volMatch[1]);
+      if (!symbol) symbol = volMatch[2].toUpperCase();
+    }
   }
 
   if (!symbol) {
@@ -439,10 +467,11 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
   symbol = normalizeKrakenAsset(symbol);
   if (!symbol || symbol === 'UNKNOWN' || symbol === 'DETAILS') return null;
 
-  // 3. Paid Amount & Quote Currency
+  // 4. Fiat Cost / Proceeds & Quote Currency
   let cost = 0;
   let quoteCurrency = 'EUR';
 
+  // A. "Paid €80 with account balance" or "Received €113.18"
   const paidMatch = text.match(/(?:paid|bezahlt|received|erhalten|spent)\s+([€$£A-Za-z0-9.,\s]+?)(?:\s+(?:with|mit|into|in)\b|\r?\n|$)/i);
   if (paidMatch) {
     const parsed = parseCurrencyAndAmount(paidMatch[1]);
@@ -450,7 +479,19 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
     quoteCurrency = parsed.currency;
   }
 
-  // 4. Unit Price
+  // B. For SELL emails: "A total of €113.18 was added to your account balance."
+  if (!cost || cost <= 0) {
+    const balanceAddedMatch = text.match(/(?:a total of|insgesamt)\s+([€$£A-Za-z0-9.,\s]+?)\s+(?:was added|wurde.*gutgeschrieben|wurde.*hinzugefügt)/i);
+    if (balanceAddedMatch) {
+      const parsed = parseCurrencyAndAmount(balanceAddedMatch[1]);
+      if (parsed.amount > 0) {
+        cost = parsed.amount;
+        if (parsed.currency) quoteCurrency = parsed.currency;
+      }
+    }
+  }
+
+  // 5. Unit Price
   let unitPrice = 0;
   const priceMatch = text.match(/(?:price|preis):\s*([€$£A-Za-z0-9.,\s]+?)(?:\r?\n|$)/i);
   if (priceMatch) {
@@ -461,7 +502,7 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
     }
   }
 
-  // 5. Fees
+  // 6. Fees
   let fee = 0;
   let feeCurrency = quoteCurrency;
   const feeMatch = text.match(/(?:fees?|gebühr(?:en)?):\s*([€$£A-Za-z0-9.,\s]+?)(?:\r?\n|$)/i);
@@ -473,51 +514,65 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
 
   // Validation & mathematical derivation
   if (volume <= 0 && unitPrice > 0 && cost > 0) {
-    const netCost = isBuy ? Math.max(0, cost - fee) : cost;
+    const netCost = isBuy ? Math.max(0, cost - fee) : (cost + fee);
     volume = Number((netCost / unitPrice).toFixed(8));
   } else if (cost <= 0 && unitPrice > 0 && volume > 0) {
     cost = Number((volume * unitPrice + (isBuy ? fee : -fee)).toFixed(2));
   } else if (unitPrice <= 0 && volume > 0 && cost > 0) {
-    const netCost = isBuy ? Math.max(0, cost - fee) : cost;
+    const netCost = isBuy ? Math.max(0, cost - fee) : (cost + fee);
     unitPrice = Number((netCost / volume).toFixed(6));
   }
 
   if (volume <= 0 || cost <= 0) return null;
 
-  // 6. Transaction ID
+  // 7. Transaction ID
   let txid = '';
   const txidMatch = text.match(/(?:Transaction ID|Transaktions-?ID):\s*([A-Za-z0-9_-]+)/i);
   if (txidMatch) {
     txid = txidMatch[1].trim();
   }
 
-  // 7. Date & Time
+  // 8. Date & Time
   let timestamp = new Date().toISOString();
-  // Header: "Datum: 4. Oktober 2026 um 23:52" or "Date: 4. October 2026 at 23:52"
-  const headerDateMatch = text.match(/(?:Datum|Date):\s*(\d{1,2})\.\s*([A-Za-zäöü]+)\s*(\d{4})(?:\s+(?:um|at)\s*(\d{1,2}):(\d{2}))?/i);
-  if (headerDateMatch) {
-    const day = parseInt(headerDateMatch[1], 10);
-    const month = parseMonthName(headerDateMatch[2]);
-    const year = parseInt(headerDateMatch[3], 10);
-    const hour = headerDateMatch[4] ? parseInt(headerDateMatch[4], 10) : 12;
-    const min = headerDateMatch[5] ? parseInt(headerDateMatch[5], 10) : 0;
-    if (month !== -1) {
-      timestamp = new Date(Date.UTC(year, month, day, hour, min, 0)).toISOString();
-    }
-  } else {
-    // Detail: "Date: Oct 04, 2026" or "Date: 04 Oct 2026"
-    const detailDateMatch = text.match(/Date:\s*([A-Za-z]+)\s*(\d{1,2}),?\s*(\d{4})/i) ||
-                             text.match(/Date:\s*(\d{1,2})\s*([A-Za-z]+),?\s*(\d{4})/i);
-    if (detailDateMatch) {
-      let month = parseMonthName(detailDateMatch[1]);
-      let day = parseInt(detailDateMatch[2], 10);
-      let year = parseInt(detailDateMatch[3], 10);
-      if (month === -1) {
-        month = parseMonthName(detailDateMatch[2]);
-        day = parseInt(detailDateMatch[1], 10);
+
+  // A. Check for RFC 2822 full date header: "Date: Wed, 07 Oct 2026 18:04:40 GMT"
+  const rfcDateMatch = text.match(/(?:Date|Datum):\s*([A-Za-z]{3},\s*\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\s+\d{2}:\d{2}:\d{2}(?:\s+[A-Z0-9+-]+)?)/i) ||
+                       text.match(/(?:Date|Datum):\s*(\d{1,2}\s+[A-Za-z]{3}\s+\d{4}\s+\d{2}:\d{2}:\d{2}(?:\s+[A-Z0-9+-]+)?)/i);
+  if (rfcDateMatch) {
+    try {
+      const parsedRfc = new Date(rfcDateMatch[1]);
+      if (!isNaN(parsedRfc.getTime())) {
+        timestamp = parsedRfc.toISOString();
       }
+    } catch {}
+  } else {
+    // B. Header: "Datum: 4. Oktober 2026 um 23:52" or "Date: 4. October 2026 at 23:52"
+    const headerDateMatch = text.match(/(?:Datum|Date):\s*(\d{1,2})\.\s*([A-Za-zäöü]+)\s*(\d{4})(?:\s+(?:um|at)\s*(\d{1,2}):(\d{2}))?/i);
+    if (headerDateMatch) {
+      const day = parseInt(headerDateMatch[1], 10);
+      const month = parseMonthName(headerDateMatch[2]);
+      const year = parseInt(headerDateMatch[3], 10);
+      const hour = headerDateMatch[4] ? parseInt(headerDateMatch[4], 10) : 12;
+      const min = headerDateMatch[5] ? parseInt(headerDateMatch[5], 10) : 0;
       if (month !== -1) {
-        timestamp = new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
+        const localD = new Date(year, month, day, hour, min, 0);
+        timestamp = !isNaN(localD.getTime()) ? localD.toISOString() : new Date(Date.UTC(year, month, day, hour, min, 0)).toISOString();
+      }
+    } else {
+      // C. Detail: "Date: Oct 04, 2026" or "Date: 04 Oct 2026"
+      const detailDateMatch = text.match(/Date:\s*([A-Za-z]+)\s*(\d{1,2}),?\s*(\d{4})/i) ||
+                               text.match(/Date:\s*(\d{1,2})\s*([A-Za-z]+),?\s*(\d{4})/i);
+      if (detailDateMatch) {
+        let month = parseMonthName(detailDateMatch[1]);
+        let day = parseInt(detailDateMatch[2], 10);
+        let year = parseInt(detailDateMatch[3], 10);
+        if (month === -1) {
+          month = parseMonthName(detailDateMatch[2]);
+          day = parseInt(detailDateMatch[1], 10);
+        }
+        if (month !== -1) {
+          timestamp = new Date(Date.UTC(year, month, day, 12, 0, 0)).toISOString();
+        }
       }
     }
   }
@@ -531,20 +586,21 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
   let pricePerUnitUSD: number | undefined = undefined;
 
   if (quoteCurrency.toUpperCase() === 'EUR') {
-    pricePerUnitEUR = unitPrice > 0 ? unitPrice : (volume > 0 ? (cost - fee) / volume : undefined);
+    pricePerUnitEUR = unitPrice > 0 ? unitPrice : (volume > 0 ? (isBuy ? (cost - fee) / volume : cost / volume) : undefined);
   } else if (quoteCurrency.toUpperCase() === 'USD') {
-    pricePerUnitUSD = unitPrice > 0 ? unitPrice : (volume > 0 ? (cost - fee) / volume : undefined);
+    pricePerUnitUSD = unitPrice > 0 ? unitPrice : (volume > 0 ? (isBuy ? (cost - fee) / volume : cost / volume) : undefined);
   }
 
   const id = `kraken_receipt_${txid || `${timestamp}_${symbol}_${volume}_${cost}`}`.replace(/[^a-zA-Z0-9_-]/g, '_');
   const pair = `${symbol}/${quoteCurrency}`;
+  const actionLabel = isBuy ? 'Kaufbeleg' : 'Verkaufsbeleg';
 
   return {
     id,
     timestamp,
     source: 'kraken',
     type,
-    description: `Kraken Kaufbeleg ${symbol}`,
+    description: `Kraken ${actionLabel} ${symbol}`,
     spentCurrency: spentCurr,
     spentAmount: spentAmt,
     receivedCurrency: recCurr,
@@ -557,7 +613,7 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
     orderId: txid || undefined,
     tradingPair: pair,
     transactionKind: 'email_receipt',
-    notes: `Kraken E-Mail Kaufbeleg | Pair: ${pair}${txid ? ` | TxID: ${txid}` : ''}`,
+    notes: `Kraken E-Mail ${actionLabel} | Pair: ${pair}${txid ? ` | TxID: ${txid}` : ''}`,
   };
 }
 

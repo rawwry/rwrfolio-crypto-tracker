@@ -1,7 +1,7 @@
 # rwrfolio – Krypto Portfolio & DCA Tracker für Home Assistant OS
 
 [![Home Assistant Add-on](https://img.shields.io/badge/Home%20Assistant-Add--on-blue.svg)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/badge/Version-0.5.35-emerald.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/Version-0.5.36-emerald.svg)](CHANGELOG.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](LICENSE)
 
 **rwrfolio** ist ein privater, lokaler Krypto-Portfolio- und DCA-Tracker für Home Assistant OS mit persistenter SQLite-Datenbank, echten Live-Marktkursen, interaktiven TradingView-Style Charts, Multi-Timeframe Performance-Matrix und offiziellem Steuerbericht (§ 23 EStG).

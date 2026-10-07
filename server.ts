@@ -22,6 +22,8 @@ import {
 import { PDFParse } from 'pdf-parse';
 import { parseKrakenText } from './src/utils/krakenParser';
 import { parseCryptoComText } from './src/utils/cryptoComParser';
+import { parseEmlFile } from './src/utils/emlParser';
+import { deduplicateTransactions } from './src/utils/transactionDedup';
 import { Transaction } from './src/types';
 import { APP_VERSION } from './src/changelog';
 import { execFile } from 'child_process';
@@ -276,7 +278,50 @@ async function startServer() {
     }
   });
 
-  // Bulk import transactions (and optionally archive the raw CSV or PDF file to /share/rwrfolio/imported)
+  // Parse and optionally import RFC 2822 .eml receipt files (for web UI and n8n webhook automation)
+  app.post('/api/transactions/eml', async (req, res) => {
+    try {
+      const { emlRawText, fileName, autoInsert } = req.body;
+      if (!emlRawText || typeof emlRawText !== 'string') {
+        return res.status(400).json({ success: false, error: 'emlRawText String erwartet' });
+      }
+
+      const parsed = parseEmlFile(emlRawText, fileName);
+
+      let insertedCount = 0;
+      let archivedPath: string | null = null;
+      let skippedDuplicates = 0;
+
+      if (autoInsert && parsed.transactions.length > 0) {
+        const existing = await getAllTransactions();
+        const dedup = deduplicateTransactions(parsed.transactions, existing);
+        skippedDuplicates = dedup.skippedDuplicates.length;
+        if (dedup.newTransactions.length > 0) {
+          insertedCount = await insertTransactionsBulk(dedup.newTransactions);
+        }
+        archivedPath = archiveImportedCsv(emlRawText, fileName || 'import.eml');
+      }
+
+      res.json({
+        success: true,
+        fileName: fileName || 'import.eml',
+        detectedExchange: parsed.detectedExchange,
+        subject: parsed.subject,
+        date: parsed.date,
+        transactions: parsed.transactions,
+        totalFound: parsed.transactions.length,
+        insertedCount,
+        skippedDuplicates,
+        archivedPath,
+        message: `${parsed.transactions.length} Transaktion(en) aus .eml extrahiert`
+      });
+    } catch (err: any) {
+      console.error('[EML Parser] Fehler beim Parsen der EML-Datei:', err);
+      res.status(500).json({ success: false, error: err.message || 'EML konnte nicht verarbeitet werden' });
+    }
+  });
+
+  // Bulk import transactions (and optionally archive the raw CSV, EML or PDF file to /share/rwrfolio/imported)
   app.post('/api/transactions/bulk', async (req, res) => {
     try {
       const { transactions, csvRawText, pdfBase64, fileName } = req.body;

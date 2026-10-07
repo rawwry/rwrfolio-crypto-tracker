@@ -372,7 +372,7 @@ export default function App() {
     setDbConnected(true);
 
     const dupNote = dedup.skippedDuplicates.length > 0 ? ` (${dedup.skippedDuplicates.length} Duplikate übersprungen)` : '';
-    const fileTypeStr = fileName?.toLowerCase().endsWith('.pdf') ? 'PDF' : 'CSV';
+    const fileTypeStr = fileName?.toLowerCase().endsWith('.pdf') ? 'PDF' : (fileName?.toLowerCase().endsWith('.eml') ? 'E-Mail (.eml)' : 'CSV');
     if (importRes.archivedPath) {
       showToast(`${dedup.newTransactions.length} Transaktionen importiert${dupNote} & ${fileTypeStr} archiviert`, 'success');
     } else {

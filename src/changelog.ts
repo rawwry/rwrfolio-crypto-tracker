@@ -9,14 +9,41 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.35';
+export const APP_VERSION = '0.5.36';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.36',
+    date: '07.10.2026',
+    title: 'Nativer .eml E-Mail Import (Kraken Buy/Sell & Crypto.com) & n8n Workflow Integration',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Nativer E-Mail Import (.eml): RFC 2822 / MIME Mail-Belege von Kraken und Crypto.com können nun direkt via Drag & Drop oder Dateiauswahl importiert werden (automatische Base64/Quoted-Printable Dekodierung und HTML-Normalisierung).',
+      },
+      {
+        type: 'feat',
+        text: 'Kraken Verkauf- & Kaufbelege: Vollständige Erkennung von BUY- und SELL-Mails (z. B. "You bought ONDO", "You sold LAPTOP") inklusive Krypto-Verkaufsvolumen, EUR-Erlös, Einzelpreis, Gebühren, Order-ID/TxID und sekundengenauem RFC-Zeitstempel.',
+      },
+      {
+        type: 'fix',
+        text: 'Präzise Duplikatssperre zwischen PDF & EML: Durch den Abgleich der eindeutigen Kraken-Order-ID / TxID (z. B. BQZ4TQZ) werden Trades, die bereits aus PDF-Kontoauszügen im Portfolio vorliegen, beim Import von .eml-Dateien automatisch als Duplikat erkannt und übersprungen.',
+      },
+      {
+        type: 'feat',
+        text: 'n8n Automations-Endpoint (/api/transactions/eml): Neuer HTTP-Endpunkt für direkte Webhook-Anbindungen aus n8n zur automatischen Verarbeitung und Archivierung gesicherter Trade-Mails.',
+      },
+      {
+        type: 'ui',
+        text: 'Erweiterte Import-UI mit EML-Support: Neues Mail-Icon in der Dropzone, explizite .eml-Unterstützung sowie Demo-Buttons für Kraken Buy & Sell E-Mail Belege.',
+      },
+    ],
+  },
   {
     version: '0.5.35',
     date: '06.10.2026',
     title: '24h-Portfolio Delta (€ & %) in Hero-KPIs & Coinübersicht',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',
