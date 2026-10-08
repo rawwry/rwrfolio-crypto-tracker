@@ -4,6 +4,21 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.41] - 08.10.2026
+
+### 🎨 Design-Bereinigung Realisierte Verkäufe & Gewinne (Analyse-Bereich)
+- **Bereinigung von Titeln & Zähler-Pills**:
+  - Einzeiliger Haupttitel: Entfernung des englischen Zusatzes `(Closed Trades)`, die Sektion heißt nun klar und prägnant **Realisierte Verkäufe & Gewinne**.
+  - Vollständiges Entfernen redundanter Zähler-Pills: Die Pille `1 Verkauf` im Header, die Tranchen-Angabe `1 Tranche` hinter den Assets und die Zähler in Filter-Buttons (`Alle Coins (1)`) wurden entfernt.
+- **Neugestaltung "Realisierte Gewinne nach Asset"**:
+  - Saubere visuelle Hierarchie: Beseitigung der zuvor horizontal kollidierenden Textblöcke auf Mobilgeräten; eleganter Untertitel *„Klick auf einen Coin filtert die Tabelle & den Chart“*.
+  - Minimalistische Asset-Karten: Entfernung des klobigen Platzhalter-Icon-Kästchens (`[LAP]`) und Tranchen-Badges – die Karte zeigt nun sauber Coin, gehandeltes Volumen, realisierten Gewinn und Rendite.
+- **KPI-Karten Bereinigung**:
+  - Entfernung von Klammerzusätzen: `Eingesetztes Kapital` (ohne *Cost Basis*) und `Verkaufsgebühren` (ohne *Werbungsk.*).
+  - Zeilenumbruch-Schutz: Renditeangaben (z. B. `+12.8 %`) sind nun mit `whitespace-nowrap` gegen das Umbrechen des Prozentzeichens auf die nächste Zeile gesichert.
+
+---
+
 ## [0.5.40] - 08.10.2026
 
 ### 🎨 Chart Live-HUD Trade-Badge Clipping behoben & Responsive Metriken

@@ -38,7 +38,7 @@
   - Dedizierte, großzügige Seitenarchitektur für Coin-Bestand zum Stichtag (Seite 3), offene Anschaffungstranchen (Anhang A, Seite 4), Methodik (Seite 5) und vollständige Querformat-Belegnachweise (Anhänge B & C ab Seite 6).
   - Cent-genaue mathematische Rundungskonsistenz (`Erlös - Anschaffungskosten - Gebühren = Gewinn/Verlust`) und automatisches Ausblenden redundanter Zwischensummen bei Verkäufen auf nur einer Börse.
   - Automatische Filterung unbedeutender Kleinsttranchen (< 0,005 €).
-  - **Realisierte Verkäufe & Gewinne im Analyse-Tab (Closed Trades):** Vollständige Sektion im Analyse-Bereich mit aggregiertem Reingewinn, Bruttoerlösen, Anschaffungskosten, Gebühren, interaktivem Coin-Filter und Einzelnachweis aller geschlossenen Positionen.
+  - **Realisierte Verkäufe & Gewinne im Analyse-Tab:** Vollständige Sektion im Analyse-Bereich mit aggregiertem Reingewinn, Bruttoerlösen, Anschaffungskosten, Gebühren, interaktivem Coin-Filter und Einzelnachweis aller geschlossenen Positionen.
   - **Coin-spezifische Realisierte Gewinne:** Interaktiver Coin-Filter in der Verkaufsübersicht des Steuer-Tabs inklusive KPI-Zusammenfassung; sofortige Anzeige des realisierten Gewinns im interaktiven Coin-Chart und in der Haltedauern-Tabelle.
   - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse und automatischer Freigrenzen-Überwachung (1.000 € ab VZ 2024, 256 € für Staking/Rewards).
 - **🖥️ Layout & Design (Fullwidth vs. Boxed):**

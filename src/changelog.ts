@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.40';
+export const APP_VERSION = '0.5.41';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.41',
+    date: '08.10.2026',
+    title: 'Design-Bereinigung Realisierte Verkäufe & Gewinne (Analyse-Bereich)',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'ui',
+        text: 'Bereinigung von Titeln & Zähler-Pills: Entfernung des Zusatzes "(Closed Trades)" für einen sauberen einzeiligen Haupttitel "Realisierte Verkäufe & Gewinne"; Entfernung der Zähler-Pills ("1 Verkauf", "Alle Coins (1)") und der Tranchen-Angabe ("1 Tranche").',
+      },
+      {
+        type: 'ui',
+        text: 'Neugestaltung "Realisierte Gewinne nach Asset": Aufteilung der zuvor kollidierenden Beschriftung in eine klare vertikale Hierarchie mit Untertitel; Entfernung des Platzhalter-Icon-Kästchens für ein minimalistisches, elegantes Asset-Kartendesign.',
+      },
+      {
+        type: 'ui',
+        text: 'KPI-Karten Bereinigung: Umbenennung in "Eingesetztes Kapital" (Zusatz "Cost Basis" entfernt) und "Verkaufsgebühren" (Zusatz "Werbungsk." entfernt); Verhinderung von Zeilenumbrüchen beim Prozentzeichen in der Renditeanzeige ("+12.8 %").',
+      },
+    ],
+  },
   {
     version: '0.5.40',
     date: '08.10.2026',
     title: 'Chart Live-HUD Trade-Badge Clipping behoben & Responsive Metriken',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

@@ -289,15 +289,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className={`text-base sm:text-lg font-extrabold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  Realisierte Verkäufe &amp; Gewinne (Closed Trades)
+                  Realisierte Verkäufe &amp; Gewinne
                 </h3>
-                <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  realizedSalesData.length > 0
-                    ? isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
-                    : isLight ? 'bg-slate-100 text-slate-600 border-slate-200' : 'bg-slate-800 text-slate-400 border-slate-700'
-                }`}>
-                  {realizedSalesData.length} {realizedSalesData.length === 1 ? 'Verkauf' : 'Verkäufe'}
-                </span>
               </div>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 Automatische FIFO-Zuordnung der Anschaffungstranchen, Haltefristen (&sect; 23 EStG) und realisierte Nettogewinne.
@@ -363,11 +356,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               <div className={`p-3.5 rounded-xl border ${
                 isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800/70'
               }`}>
-                <div className="flex items-center justify-between">
-                  <span className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <div className="flex items-center justify-between gap-1.5">
+                  <span className={`text-[10px] font-sans truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     Realisierter Gewinn (Netto)
                   </span>
-                  <span className={`text-[10px] font-bold ${
+                  <span className={`text-[10px] font-bold whitespace-nowrap shrink-0 ml-1.5 ${
                     realizedSummary.pnl >= 0
                       ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
                       : (isLight ? 'text-rose-700' : 'text-rose-400')
@@ -412,7 +405,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800/70'
               }`}>
                 <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Eingesetztes Kapital (Cost Basis)
+                  Eingesetztes Kapital
                 </span>
                 <div className={`text-base sm:text-xl font-bold mt-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {formatCurr(realizedSummary.cost)}
@@ -427,25 +420,25 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800/70'
               }`}>
                 <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Verkaufsgebühren (Werbungsk.)
+                  Verkaufsgebühren
                 </span>
                 <div className={`text-base sm:text-xl font-bold mt-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                   {formatCurr(realizedSummary.fees)}
                 </div>
                 <div className={`text-[10px] mt-0.5 font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {filteredSales.length} {filteredSales.length === 1 ? 'Tranche' : 'Tranchen'} geschlossen
+                  Realisierte Transaktionskosten
                 </div>
               </div>
             </div>
 
             {/* Per-Coin Realized P&L Summary (Übersicht nach Coin) */}
             {coinSalesBreakdown.length > 0 && (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold">
-                  <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>
-                    Realisierte Gewinne nach Asset:
-                  </span>
-                  <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className="space-y-2.5 pt-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-0.5">
+                  <h4 className={`text-xs font-bold tracking-tight uppercase ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                    Realisierte Gewinne nach Asset
+                  </h4>
+                  <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                     Klick auf einen Coin filtert die Tabelle &amp; den Chart
                   </span>
                 </div>
@@ -465,50 +458,34 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                             handleSelectCoinForChart(c.symbol);
                           }
                         }}
-                        className={`p-3 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
+                        className={`p-3.5 rounded-xl border cursor-pointer transition-all flex items-center justify-between ${
                           isSelected
                             ? isLight
-                              ? 'bg-emerald-50 border-emerald-400 shadow-sm'
-                              : 'bg-emerald-950/30 border-emerald-600/60 shadow-sm'
+                              ? 'bg-emerald-50 border-emerald-400 shadow-sm ring-1 ring-emerald-400/50'
+                              : 'bg-emerald-950/30 border-emerald-500/60 shadow-sm ring-1 ring-emerald-500/40'
                             : isLight
-                              ? 'bg-white border-slate-200 hover:bg-slate-50'
-                              : 'bg-slate-950/60 border-slate-800 hover:bg-slate-800/40'
+                              ? 'bg-white border-slate-200 hover:bg-slate-50 hover:border-slate-300'
+                              : 'bg-slate-950/60 border-slate-800 hover:bg-slate-800/40 hover:border-slate-700'
                         }`}
                       >
-                        <div className="flex items-center space-x-2.5 min-w-0">
-                          <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0 ${
-                            isSelected
-                              ? 'bg-emerald-600 text-white'
-                              : isLight ? 'bg-slate-100 text-slate-800' : 'bg-slate-800 text-slate-200'
-                          }`}>
-                            {c.symbol.slice(0, 3)}
+                        <div className="min-w-0 pr-2">
+                          <div className={`font-bold text-sm tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
+                            {c.symbol}
                           </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className={`font-bold text-xs truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                                {c.symbol}
-                              </span>
-                              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                                isLight ? 'bg-slate-100 text-slate-600' : 'bg-slate-800 text-slate-400'
-                              }`}>
-                                {c.count} Tranche{c.count !== 1 ? 'n' : ''}
-                              </span>
-                            </div>
-                            <span className={`text-[11px] block truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              {formatCoin(c.amount)} {c.symbol}
-                            </span>
+                          <div className={`text-[11px] font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                            {formatCoin(c.amount)} {c.symbol}
                           </div>
                         </div>
 
                         <div className="text-right shrink-0 font-mono">
-                          <div className={`text-xs font-bold ${
+                          <div className={`text-sm font-bold ${
                             isProfit
                               ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
                               : (isLight ? 'text-rose-700' : 'text-rose-400')
                           }`}>
                             {isProfit ? '+' : ''}{formatCurr(c.pnl)}
                           </div>
-                          <div className={`text-[10px] ${
+                          <div className={`text-[11px] font-semibold whitespace-nowrap mt-0.5 ${
                             isProfit
                               ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
                               : (isLight ? 'text-rose-700' : 'text-rose-400')
@@ -539,7 +516,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white'
                 }`}
               >
-                Alle Coins ({realizedSalesData.length})
+                Alle Coins
               </button>
               {soldCoins.map((sym) => (
                 <button
