@@ -211,11 +211,6 @@ export const PortfolioValueTimelineChart: React.FC<PortfolioValueTimelineChartPr
             <div>
               <h3 className={`text-base font-bold flex items-center space-x-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <span>Portfolio-Gesamtbewertung über Zeit</span>
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                  isLight ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/20'
-                }`}>
-                  Transaktions-Historie
-                </span>
               </h3>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                 Entwicklung deines Gesamtportfolios vom ersten Kauf bis zum aktuellen Live-Marktkurs

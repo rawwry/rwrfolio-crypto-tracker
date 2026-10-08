@@ -43,6 +43,7 @@ import { Transaction, PortfolioCurrency, AssetSummary } from '../types';
 import { generateCoinChartSeries, ChartTimeframe, CoinChartPoint, ChartTradeItem } from '../utils/coinChartData';
 import { getCoinDetails, getLiveEurUsdRate } from '../utils/priceService';
 import { fetchHistoricalMarketPrices } from '../utils/historicalPriceService';
+import { calculateFIFOTaxReport } from '../utils/taxCalculator';
 
 interface InteractiveCoinChartProps {
   assets: AssetSummary[];
@@ -230,6 +231,18 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
   const buyCount = allTradesInPeriod.filter(t => t.trade.type === 'BUY').length;
   const sellCount = allTradesInPeriod.filter(t => t.trade.type === 'SELL').length;
+
+  const coinRealizedPnl = useMemo(() => {
+    if (isPortfolio) return 0;
+    const report = calculateFIFOTaxReport(transactions, customPrices);
+    const coinSales = report.realizedSales.filter(s => s.symbol.toUpperCase() === selectedCoin.toUpperCase());
+    return coinSales.reduce((acc, s) => {
+      const rowCost = Math.round(s.costBasisEUR * 100) / 100;
+      const rowProceeds = Math.round(s.proceedsEUR * 100) / 100;
+      const rowFee = Math.round(s.feeEUR * 100) / 100;
+      return acc + (rowProceeds - rowCost - rowFee);
+    }, 0);
+  }, [isPortfolio, transactions, customPrices, selectedCoin]);
 
   const formatCurr = (val: number, decimals: number = 2) => {
     return new Intl.NumberFormat(isUSD ? 'en-US' : 'de-DE', {
@@ -612,6 +625,12 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
                       <span className="w-2 h-2 rounded-full bg-rose-400 inline-block" />
                       <span>{sellCount} Verkäufe</span>
                     </span>
+                    <span>&bull;</span>
+                    <span className={`font-mono font-bold text-[11px] px-1.5 py-0.2 rounded ${
+                      coinRealizedPnl >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'
+                    }`}>
+                      Realisiert: {coinRealizedPnl >= 0 ? '+' : ''}{coinRealizedPnl.toFixed(2)} €
+                    </span>
                   </>
                 )}
               </p>
@@ -821,9 +840,18 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
 
         {/* Metric 3: Profit / Loss */}
         <div>
-          <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-            Gewinn / Verlust (P&amp;L)
-          </span>
+          <div className="flex items-center justify-between">
+            <span className={`text-[10px] font-sans block ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              Gewinn / Verlust (P&amp;L)
+            </span>
+            {!isPortfolio && coinRealizedPnl !== 0 && (
+              <span className={`text-[10px] font-mono font-bold ${
+                coinRealizedPnl >= 0 ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')
+              }`} title="Bereits realisierter Gewinn aus Verkäufen">
+                Real.: {coinRealizedPnl >= 0 ? '+' : ''}{coinRealizedPnl.toFixed(2)} €
+              </span>
+            )}
+          </div>
           <span className={`text-sm sm:text-base font-bold ${
             currentPnl >= 0 
               ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 

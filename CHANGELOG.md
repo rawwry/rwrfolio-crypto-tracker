@@ -4,6 +4,27 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.37] - 08.10.2026
+
+### 📑 Kraken PDF-Statement Parser, Steuer-PDF Layout-Optimierung & Coin-spezifische Realisierte Gewinne
+- **Kraken Pro PDF-Statement Parser**:
+  - Vollständige Erkennung und fehlerfreie Extraktion von offiziellen Kraken Pro Spot Trades Statement-PDFs im Spalten-Block-Format (`Unique ID`, `Time (UTC)`, `Pair`, `Type`, `Subtype`, `Price`, `Cost`, `Volume`, `Fee`).
+  - Automatische Zuordnung von Zeitstempeln (`2026-09-26T08:25:35Z`), Handelskursen, Krypto- und Fiat-Volumina sowie eindeutigen Trade-IDs.
+- **Steuer-PDF Export Layout & Formatierungs-Überarbeitung (§ 23 EStG)**:
+  - **Anhang B (Kraken Ledger)**: Bereinigte `Order/Art`-Spalte (`email_receipt` wird lesbar als `E-Mail` dargestellt), vergrößerte `Menge (Vol)`-Spalte mit `white-space: nowrap` verhindert das Umbrechen des Coin-Tickers auf eine zweite Zeile.
+  - **Anhang C (Crypto.com)**: Übersetzung interner technischer Enum-Strings in klare deutsche Beschriftungen (`Limit-Kauf`, `VIBAN-Kauf`), konsistente 2-Dezimalstellen-Währungsformatierung für `Gegenwert USD` (`$ 1.028,90`) und verbreiterte Hash-Spalte ohne Zeilenumbruch einzelner Endziffern.
+  - **Seitenarchitektur**: Dedizierte Seite 3 für den Coin-Bestand zum Stichtag mit rigiden Spaltenbreiten (verhindert unschöne Umbrüche langer Coin-Namen wie *Polygon Ecosystem Token*). Anhang A (Offene Anschaffungstranchen) erhält eine eigene Seite 4, gefolgt von Methodik (Seite 5) und den Belegnachweisen (ab Seite 6).
+  - **Bereinigung von Kleinsttranchen**: Vollständiges Ausfiltern nichtiger Rundungs-Resttranchen (< 0,005 € und < 0,001 Coin) in Anhang A.
+  - **Rundungskonsistenz & Subtotale**: Wegfall redundanter Einzelbörsen-Zwischensummen bei nur einer handelnden Börse und cent-genaue mathematische Rundungskonsistenz zwischen Erlös, Anschaffungskosten, Gebühren und Nettogewinn (`Erlös - Anschaffungskosten - Gebühren = Gewinn/Verlust`).
+- **Übersichtsseite Bereinigt**:
+  - Entfernung der überflüssigen Pille *Transaktions-Historie* aus der Überschrift des Portfolio-Gesamtbewertungsdiagramms.
+- **Transparente Anzeige Realisierter Gewinne (Gesamt & je Coin)**:
+  - Neuer interaktiver Coin-Filter in der Karte *Realisierte Verkäufe {Jahr} (FIFO)* im Steuer-Tab inklusive hervorgehobenem KPI-Banner für den realisierten Gewinn, Erlöse und Kosten des gewählten Coins.
+  - Anzeige des realisierten Gewinns im interaktiven Coin-Chart (Header-Pill & P&L-Statuskarte) bei Assets mit Verkaufshistorie.
+  - Ausweisung des realisierten Gewinns direkt in der Zeile jedes Coins in *Coin Haltedauern & FIFO Bestände*.
+
+---
+
 ## [0.5.36] - 07.10.2026
 
 ### 📧 Nativer .eml E-Mail Import (Kraken Buy/Sell & Crypto.com) & n8n Workflow Support

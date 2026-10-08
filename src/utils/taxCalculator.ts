@@ -470,6 +470,7 @@ export function calculateFIFOTaxReport(
     for (const [symbol, queue] of Object.entries(symbolMap)) {
       for (const lot of queue) {
         if (lot.amount <= 0.00000001) continue;
+        if (lot.amount < 0.001 && (lot.amount * lot.costPerUnitEUR) < 0.005) continue;
         if (!tranchesBySource[src]) tranchesBySource[src] = [];
         tranchesBySource[src].push(lot);
       }

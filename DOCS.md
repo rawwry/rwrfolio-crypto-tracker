@@ -28,14 +28,16 @@
   - 1-Klick-Aktivierung: Klick auf Top Performer im Dashboard, Klick auf Zeilen in der Matrix oder die neuen `[📈 Chart]`-Buttons in der Coinübersicht lädt das jeweilige Asset direkt in den interaktiven Großchart.
 - **📥 Smart Auto-Detect Import & Nativer .eml Support:**
   - Drag & Drop für CSV-Dateien, PDF-Kontoauszüge und archivierte `.eml` E-Mail-Belege (z. B. aus n8n-Workflows).
-  - Automatische Erkennung von **Kraken Pro** (CSV & PDF-Statements), **Kraken E-Mail Belegen (.eml / PDF / Text)** für Käufe und Verkäufe (*"You bought ONDO"*, *"You sold LAPTOP"*), **Crypto.com** (App & Exchange CSVs) sowie **Crypto.com E-Mail Belegen**.
+  - Automatische Erkennung von **Kraken Pro** (CSV sowie offizielle mehrspaltige Spot-Trades PDF-Statements), **Kraken E-Mail Belegen (.eml / PDF / Text)** für Käufe und Verkäufe (*"You bought ONDO"*, *"You sold LAPTOP"*), **Crypto.com** (App & Exchange CSVs) sowie **Crypto.com E-Mail Belegen**.
   - Intelligente Multi-Source Duplikatserkennung gleicht Order-IDs und TxIDs zwischen PDF-, CSV- und E-Mail-Importen automatisch ab und verhindert Doppelerfassungen zuverlässig.
   - Automations-Schnittstelle `POST /api/transactions/eml` zur direkten Anbindung von Webhooks aus n8n.
-- **📑 BMF-konformer Steuerbericht (§ 23 EStG):**
-  - Druckfertiger 4-seitiger PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater.
-  - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse.
-  - Automatische Berücksichtigung der Freigrenzen (1.000 € für private Veräußerungsgeschäfte ab VZ 2024, 256 € für Staking/Rewards nach § 22 Nr. 3 EStG).
-  - Vollständige Buchungsprotokolle als Querformat-Anhang B (Kraken) und Anhang C (Crypto.com) mit ungekürzten Transaktions-IDs.
+- **📑 BMF-konformer Steuerbericht (§ 23 EStG) & Realisierte Gewinne:**
+  - Druckfertiger, audit-sicherer PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater.
+  - Dedizierte, großzügige Seitenarchitektur für Coin-Bestand zum Stichtag (Seite 3), offene Anschaffungstranchen (Anhang A, Seite 4), Methodik (Seite 5) und vollständige Querformat-Belegnachweise (Anhänge B & C ab Seite 6).
+  - Cent-genaue mathematische Rundungskonsistenz (`Erlös - Anschaffungskosten - Gebühren = Gewinn/Verlust`) und automatisches Ausblenden redundanter Zwischensummen bei Verkäufen auf nur einer Börse.
+  - Automatische Filterung unbedeutender Kleinsttranchen (< 0,005 €).
+  - **Coin-spezifische Realisierte Gewinne:** Interaktiver Coin-Filter in der Verkaufsübersicht des Steuer-Tabs inklusive KPI-Zusammenfassung; sofortige Anzeige des realisierten Gewinns im interaktiven Coin-Chart und in der Haltedauern-Tabelle.
+  - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse und automatischer Freigrenzen-Überwachung (1.000 € ab VZ 2024, 256 € für Staking/Rewards).
 - **🖥️ Layout & Design (Fullwidth vs. Boxed):**
   - **Fullwidth-Widescreen-Layout:** Flüssige 1920px Widescreen-Darstellung als Standard für optimale Übersicht. Umschaltbar auf Kompakt (Boxed Layout, max. 1280px) in den Einstellungen.
   - 5 Farbthemen: *Midnight Slate*, *OLED Pure Black*, *Cyber Emerald*, *Nordic Cyan* und *Amber Gold*.

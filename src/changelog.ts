@@ -9,14 +9,45 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.36';
+export const APP_VERSION = '0.5.37';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.37',
+    date: '08.10.2026',
+    title: 'Kraken PDF-Statement Parser, Steuer-PDF Layout-Optimierung & Coin-spezifische Realisierte Gewinne',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'feat',
+        text: 'Kraken Pro PDF-Statement Parser: Vollständige Erkennung und Extraktion offizieller Kraken Pro Spot-Trades Statements im Spalten-Block-Format (Unique ID, Time, Pair, Type, Subtype, Price, Cost, Volume, Fee).',
+      },
+      {
+        type: 'ui',
+        text: 'Steuer-PDF Export Layout-Überarbeitung (§ 23 EStG): Saubere Formatierung der Anhänge B & C (E-Mail statt email_receipt, deutsche Bezeichnungen für Transaktionsarten, feste 2 Dezimalstellen für USD, verbreiterte ID- und Mengenspalten ohne unerwünschte Zeilenumbrüche).',
+      },
+      {
+        type: 'ui',
+        text: 'Optimierte Seitenstruktur im Steuerbericht: Eigene Seiten für Coin-Bestand (Seite 3) und Anhang A (Seite 4) mit fixierten Spaltenbreiten; automatische Filterung irrelevanter Kleinsttranchen (< 0,005 €).',
+      },
+      {
+        type: 'fix',
+        text: 'Mathematische Konsistenz & Subtotale: Wegfall redundanter Zwischensummen bei Verkäufen auf nur einer Börse und 100 % cent-genaue Übereinstimmung der Rundungen zwischen Erlös, Anschaffungskosten, Gebühren und Gewinn/Verlust.',
+      },
+      {
+        type: 'feat',
+        text: 'Coin-spezifische Realisierte Gewinne: Neuer Filter nach Coin in der Karte "Realisierte Verkäufe (FIFO)" mit P&L- und Erlös-Zusammenfassung; Anzeige des realisierten Gewinns im Chart und in der Haltedauern-Tabelle.',
+      },
+      {
+        type: 'ui',
+        text: 'Dashboard bereinigt: Entfernung der überflüssigen "Transaktions-Historie"-Pille aus dem Header des Portfolio-Verlaufsdiagramms.',
+      },
+    ],
+  },
   {
     version: '0.5.36',
     date: '07.10.2026',
     title: 'Nativer .eml E-Mail Import (Kraken Buy/Sell & Crypto.com) & n8n Workflow Integration',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',

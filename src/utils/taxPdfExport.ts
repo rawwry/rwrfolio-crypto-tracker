@@ -26,11 +26,38 @@ export function exportTaxReportToPDF(
   };
 
   const formatCoin = (val: number, maxDecimals: number = 8) => {
-    if (val === 0) return '0';
+    if (val === 0) return '0,00';
     return new Intl.NumberFormat('de-DE', {
       minimumFractionDigits: 0,
       maximumFractionDigits: maxDecimals,
     }).format(val);
+  };
+
+  const formatUSD = (val: number) => {
+    return new Intl.NumberFormat('de-DE', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(val);
+  };
+
+  const formatTransactionKind = (kind?: string): string => {
+    if (!kind) return '–';
+    const k = kind.toLowerCase();
+    if (k === 'email_receipt') return 'E-Mail';
+    if (k === 'spot') return 'Spot';
+    if (k === 'limit' || k.includes('limit_order')) return 'Limit';
+    if (k === 'market') return 'Market';
+    if (k.includes('purchase_commit') || k === 'viban_purchase' || k === 'crypto_purchase') return 'Kauf';
+    if (k.includes('sell_commit') || k === 'crypto_viban_exchange') return 'Verkauf';
+    if (k.includes('cashback')) return 'Cashback';
+    if (k.includes('dust')) return 'Dust';
+    if (k.includes('reward') || k.includes('referral')) return 'Reward';
+    if (k.includes('staking')) return 'Staking';
+    if (k.includes('earn')) return 'Earn';
+    if (k.includes('transfer') || k.includes('deposit') || k.includes('withdrawal')) return 'Transfer';
+    return kind.replace(/[._]/g, ' ');
   };
 
   const formatDate = (isoStr: string) => {
@@ -113,15 +140,20 @@ export function exportTaxReportToPDF(
       </tr>
     `;
   } else {
+    const hasMultipleSalesSources = Object.keys(salesBySource).length > 1;
+
+    let totalCalculatedCost = 0;
+    let totalCalculatedProceeds = 0;
+    let totalCalculatedFees = 0;
+    let totalCalculatedPnl = 0;
+
     for (const [source, list] of Object.entries(salesBySource)) {
       const exchangeName = list[0]?.exchangeDisplayName || source;
       
-      // Subtotals for this exchange (taxable only)
-      const taxableList = list.filter(l => !l.isTaxFree);
-      const subCost = taxableList.reduce((acc, s) => acc + s.costBasisEUR, 0);
-      const subProceeds = taxableList.reduce((acc, s) => acc + s.proceedsEUR, 0);
-      const subFees = taxableList.reduce((acc, s) => acc + s.feeEUR, 0);
-      const subPnl = taxableList.reduce((acc, s) => acc + s.realizedPnlEUR, 0);
+      let subCost = 0;
+      let subProceeds = 0;
+      let subFees = 0;
+      let subPnl = 0;
 
       salesTableHtml += `
         <tr class="group-header">
@@ -130,7 +162,23 @@ export function exportTaxReportToPDF(
       `;
 
       for (const s of list) {
-        const isGain = s.realizedPnlEUR >= 0;
+        const rowCost = Math.round(s.costBasisEUR * 100) / 100;
+        const rowProceeds = Math.round(s.proceedsEUR * 100) / 100;
+        const rowFee = Math.round(s.feeEUR * 100) / 100;
+        const rowPnl = Math.round((rowProceeds - rowCost - rowFee) * 100) / 100;
+        const isGain = rowPnl >= 0;
+
+        if (!s.isTaxFree) {
+          subCost += rowCost;
+          subProceeds += rowProceeds;
+          subFees += rowFee;
+          subPnl += rowPnl;
+          totalCalculatedCost += rowCost;
+          totalCalculatedProceeds += rowProceeds;
+          totalCalculatedFees += rowFee;
+          totalCalculatedPnl += rowPnl;
+        }
+
         salesTableHtml += `
           <tr>
             <td class="font-mono text-muted">${s.displayNr}</td>
@@ -139,11 +187,11 @@ export function exportTaxReportToPDF(
             <td class="text-right font-mono">${s.daysHeld}</td>
             <td class="font-bold">${s.symbol}</td>
             <td class="text-right font-mono">${formatCoin(s.amount)}</td>
-            <td class="text-right font-mono">${formatEuro(s.costBasisEUR)}</td>
-            <td class="text-right font-mono">${formatEuro(s.proceedsEUR)}</td>
-            <td class="text-right font-mono text-muted">${s.feeEUR > 0 ? formatEuro(s.feeEUR) : '–'}</td>
+            <td class="text-right font-mono">${formatEuro(rowCost)}</td>
+            <td class="text-right font-mono">${formatEuro(rowProceeds)}</td>
+            <td class="text-right font-mono text-muted">${rowFee > 0 ? formatEuro(rowFee) : '–'}</td>
             <td class="text-right font-mono font-bold ${isGain ? 'text-success' : 'text-danger'}">
-              ${isGain ? '+' : ''}${formatEuro(s.realizedPnlEUR)}
+              ${isGain ? '+' : ''}${formatEuro(rowPnl)}
             </td>
             <td class="text-center">
               <span class="badge ${s.isTaxFree ? 'badge-frei' : 'badge-stpfl'}">
@@ -154,29 +202,31 @@ export function exportTaxReportToPDF(
         `;
       }
 
-      salesTableHtml += `
-        <tr class="subtotal-row">
-          <td colspan="6" class="text-muted italic">Zwischensumme ${exchangeName} – nur steuerpflichtige Vorgänge</td>
-          <td class="text-right font-mono font-bold">${formatEuro(subCost)}</td>
-          <td class="text-right font-mono font-bold">${formatEuro(subProceeds)}</td>
-          <td class="text-right font-mono font-bold text-muted">${formatEuro(subFees)}</td>
-          <td class="text-right font-mono font-bold ${subPnl >= 0 ? 'text-success' : 'text-danger'}">
-            ${subPnl >= 0 ? '+' : ''}${formatEuro(subPnl)}
-          </td>
-          <td></td>
-        </tr>
-      `;
+      if (hasMultipleSalesSources) {
+        salesTableHtml += `
+          <tr class="subtotal-row">
+            <td colspan="6" class="text-muted italic">Zwischensumme ${exchangeName} – nur steuerpflichtige Vorgänge</td>
+            <td class="text-right font-mono font-bold">${formatEuro(subCost)}</td>
+            <td class="text-right font-mono font-bold">${formatEuro(subProceeds)}</td>
+            <td class="text-right font-mono font-bold text-muted">${formatEuro(subFees)}</td>
+            <td class="text-right font-mono font-bold ${subPnl >= 0 ? 'text-success' : 'text-danger'}">
+              ${subPnl >= 0 ? '+' : ''}${formatEuro(subPnl)}
+            </td>
+            <td></td>
+          </tr>
+        `;
+      }
     }
 
     // Grand sum of taxable events
     salesTableHtml += `
       <tr class="grandtotal-row">
         <td colspan="6"><strong>Summe steuerpflichtige Vorgänge (&rarr; Anlage SO)</strong></td>
-        <td class="text-right font-mono font-bold">${formatEuro(report.taxableCostBasisEUR)}</td>
-        <td class="text-right font-mono font-bold">${formatEuro(report.taxableProceedsEUR)}</td>
-        <td class="text-right font-mono font-bold text-muted">${formatEuro(report.taxableFeesEUR)}</td>
-        <td class="text-right font-mono font-bold ${report.realizedTaxableNetEUR >= 0 ? 'text-success' : 'text-danger'}">
-          ${report.realizedTaxableNetEUR >= 0 ? '+' : ''}${formatEuro(report.realizedTaxableNetEUR)}
+        <td class="text-right font-mono font-bold">${formatEuro(totalCalculatedCost)}</td>
+        <td class="text-right font-mono font-bold">${formatEuro(totalCalculatedProceeds)}</td>
+        <td class="text-right font-mono font-bold text-muted">${formatEuro(totalCalculatedFees)}</td>
+        <td class="text-right font-mono font-bold ${totalCalculatedPnl >= 0 ? 'text-success' : 'text-danger'}">
+          ${totalCalculatedPnl >= 0 ? '+' : ''}${formatEuro(totalCalculatedPnl)}
         </td>
         <td></td>
       </tr>
@@ -222,15 +272,16 @@ export function exportTaxReportToPDF(
   const assetHoldingRows = report.assets.map((a) => {
     const krakenBal = a.balanceBySource['kraken'];
     const cdcBal = a.balanceBySource['crypto_com'];
+    const taxFreeStr = a.taxFreeBalance > 0 ? formatCoin(a.taxFreeBalance) : '–';
 
     return `
       <tr>
         <td class="font-bold">${a.symbol}</td>
-        <td>${a.name}</td>
+        <td style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${a.name}">${a.name}</td>
         <td class="text-right font-mono">${formatCoin(a.totalBalance)}</td>
         ${showKrakenCol ? `<td class="text-right font-mono text-muted">${krakenBal ? formatCoin(krakenBal) : '–'}</td>` : ''}
         ${showCdcCol ? `<td class="text-right font-mono text-muted">${cdcBal ? formatCoin(cdcBal) : '–'}</td>` : ''}
-        <td class="text-right font-mono text-success">${formatCoin(a.taxFreeBalance)}</td>
+        <td class="text-right font-mono text-success">${taxFreeStr}</td>
         <td class="text-center font-mono ${a.earliestTaxFreeDate === 'steuerfrei' ? 'text-success font-semibold' : ''}">
           ${a.earliestTaxFreeDate || '–'}
         </td>
@@ -312,7 +363,7 @@ export function exportTaxReportToPDF(
   const krakenPages = paginateRows(krakenTxs, 22);
   const cdcPages = paginateRows(cryptoComTxs, 22);
 
-  const totalPages = 4 + krakenPages.length + cdcPages.length;
+  const totalPages = 5 + krakenPages.length + cdcPages.length;
 
   const buildKrakenRows = (txs: Transaction[], startIndex = 0) => {
     return txs.map((tx, idx) => {
@@ -349,8 +400,8 @@ export function exportTaxReportToPDF(
           : `${tx.spentCurrency}/${tx.receivedCurrency}`;
       }
 
-      // Order / Subtype
-      const orderTypeStr = (tx.transactionKind || 'Spot').toLowerCase();
+      // Order / Subtype formatted cleanly (e.g. email_receipt -> E-Mail)
+      const orderTypeStr = formatTransactionKind(tx.transactionKind || 'Spot');
 
       // Volume (Menge)
       const volStr = tx.type === 'BUY'
@@ -386,7 +437,7 @@ export function exportTaxReportToPDF(
           <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
           <td class="font-mono text-muted" style="font-size: 6.5pt;">${orderTypeStr}</td>
           <td class="font-bold">${pairStr}</td>
-          <td class="text-right font-mono font-bold">${volStr}</td>
+          <td class="text-right font-mono font-bold" style="white-space: nowrap;">${volStr}</td>
           <td class="text-right font-mono">${costStr}</td>
           <td class="text-right font-mono">${tx.pricePerUnitEUR ? formatEuro(tx.pricePerUnitEUR) : '–'}</td>
           <td class="text-right font-mono text-muted">${tx.fee ? formatEuro(tx.fee) : '–'}</td>
@@ -421,7 +472,7 @@ export function exportTaxReportToPDF(
         typeLabel = 'Transfer';
       }
 
-      const kindStr = tx.transactionKind || '–';
+      const kindStr = formatTransactionKind(tx.transactionKind);
       const descStr = tx.description || '–';
 
       const recStr = tx.receivedAmount && tx.receivedAmount > 0 
@@ -432,7 +483,7 @@ export function exportTaxReportToPDF(
         : '–';
 
       const nativeValStr = tx.nativeAmountUSD
-        ? `$ ${formatCoin(tx.nativeAmountUSD, 2)}`
+        ? formatUSD(tx.nativeAmountUSD)
         : (tx.nativeAmount && tx.nativeCurrency ? `${formatCoin(tx.nativeAmount, 2)} ${tx.nativeCurrency}` : '–');
 
       const hashOrId = tx.transactionHash || tx.id.replace(/^cdc_/, '');
@@ -444,18 +495,18 @@ export function exportTaxReportToPDF(
           <td><span class="badge ${badgeClass}">${typeLabel}</span></td>
           <td class="font-mono text-muted" style="font-size: 6.5pt;">${kindStr}</td>
           <td style="font-size: 7pt;">${descStr}</td>
-          <td class="text-right font-mono font-bold">${recStr}</td>
+          <td class="text-right font-mono font-bold" style="white-space: nowrap;">${recStr}</td>
           <td class="text-right font-mono">${spentStr}</td>
           <td class="text-right font-mono">${tx.pricePerUnitEUR ? formatEuro(tx.pricePerUnitEUR) : '–'}</td>
           <td class="text-right font-mono text-muted">${nativeValStr}</td>
           <td class="text-right font-mono text-muted">${tx.fee ? formatEuro(tx.fee) : '–'}</td>
-          <td class="id-code" title="${hashOrId}">${hashOrId || '–'}</td>
+          <td class="id-code" style="word-break: break-all; font-size: 5.5pt;" title="${hashOrId}">${hashOrId || '–'}</td>
         </tr>
       `;
     }).join('');
   };
 
-  let runningPageCounter = 4;
+  let runningPageCounter = 5;
   let krakenPagesHtml = '';
   if (krakenPages.length > 0) {
     krakenPagesHtml = krakenPages.map((pageTxs, pageIdx) => {
@@ -480,18 +531,18 @@ export function exportTaxReportToPDF(
       <table class="appendix-table">
         <thead>
           <tr>
-            <th style="width: 22px;" class="text-center">Nr.</th>
-            <th style="width: 80px;">Datum &amp; Zeit</th>
+            <th style="width: 24px;" class="text-center">Nr.</th>
+            <th style="width: 86px;">Datum &amp; Zeit</th>
             <th style="width: 48px;">Typ</th>
             <th style="width: 52px;">Order/Art</th>
-            <th style="width: 65px;">Handelspaar</th>
-            <th style="width: 88px;" class="text-right">Menge (Vol)</th>
-            <th style="width: 76px;" class="text-right">Gegenwert</th>
-            <th style="width: 70px;" class="text-right">Kurs €</th>
-            <th style="width: 50px;" class="text-right">Gebühr</th>
-            <th style="width: 140px;">Trade-ID (txid)</th>
-            <th style="width: 140px;">Order- / PostTx-ID</th>
-            <th style="width: 80px;">Ledgers / Ref</th>
+            <th style="width: 68px;">Handelspaar</th>
+            <th style="width: 115px;" class="text-right">Menge (Vol)</th>
+            <th style="width: 82px;" class="text-right">Gegenwert</th>
+            <th style="width: 72px;" class="text-right">Kurs €</th>
+            <th style="width: 52px;" class="text-right">Gebühr</th>
+            <th style="width: 155px;">Trade-ID (txid)</th>
+            <th style="width: 155px;">Order- / PostTx-ID</th>
+            <th style="width: 85px;">Ledgers / Ref</th>
           </tr>
         </thead>
         <tbody>
@@ -534,17 +585,17 @@ export function exportTaxReportToPDF(
       <table class="appendix-table">
         <thead>
           <tr>
-            <th style="width: 22px;" class="text-center">Nr.</th>
-            <th style="width: 80px;">Datum &amp; Zeit</th>
+            <th style="width: 24px;" class="text-center">Nr.</th>
+            <th style="width: 86px;">Datum &amp; Zeit</th>
             <th style="width: 48px;">Typ</th>
-            <th style="width: 95px;">Transaktionsart</th>
-            <th style="width: 95px;">Beschreibung</th>
-            <th style="width: 90px;" class="text-right">Erhalten</th>
-            <th style="width: 78px;" class="text-right">Ausgegeben</th>
-            <th style="width: 70px;" class="text-right">Kurs €</th>
-            <th style="width: 72px;" class="text-right">Gegenwert USD</th>
-            <th style="width: 48px;" class="text-right">Gebühr</th>
-            <th style="width: 175px;">Transaktions-Hash / Ref-ID</th>
+            <th style="width: 78px;">Transaktionsart</th>
+            <th style="width: 110px;">Beschreibung</th>
+            <th style="width: 110px;" class="text-right">Erhalten</th>
+            <th style="width: 85px;" class="text-right">Ausgegeben</th>
+            <th style="width: 72px;" class="text-right">Kurs €</th>
+            <th style="width: 82px;" class="text-right">Gegenwert USD</th>
+            <th style="width: 50px;" class="text-right">Gebühr</th>
+            <th style="width: 215px;">Transaktions-Hash / Ref-ID</th>
           </tr>
         </thead>
         <tbody>
@@ -1280,17 +1331,17 @@ export function exportTaxReportToPDF(
         Nachrichtlich, nicht erklärungspflichtig. Relevant für künftige Haltedauern. Kurswerte zum Stichtag.
       </div>
 
-      <table>
+      <table style="table-layout: fixed;">
         <thead>
           <tr>
-            <th>Asset</th>
-            <th>Bezeichnung</th>
-            <th class="text-right">Bestand</th>
-            ${showKrakenCol ? '<th class="text-right">Davon Kraken</th>' : ''}
-            ${showCdcCol ? '<th class="text-right">Davon Crypto.com</th>' : ''}
-            <th class="text-right">Steuerfrei</th>
-            <th class="text-center">Steuerfrei ab</th>
-            <th class="text-right">Wert €</th>
+            <th style="width: 50px;">Asset</th>
+            <th style="width: 175px;">Bezeichnung</th>
+            <th style="width: 105px;" class="text-right">Bestand</th>
+            ${showKrakenCol ? '<th style="width: 95px;" class="text-right">Davon Kraken</th>' : ''}
+            ${showCdcCol ? '<th style="width: 95px;" class="text-right">Davon Crypto.com</th>' : ''}
+            <th style="width: 95px;" class="text-right">Steuerfrei</th>
+            <th style="width: 90px;" class="text-center">Steuerfrei ab</th>
+            <th style="width: 95px;" class="text-right">Wert €</th>
           </tr>
         </thead>
         <tbody>
@@ -1304,34 +1355,6 @@ export function exportTaxReportToPDF(
           </tr>
         </tbody>
       </table>
-
-      <div class="section-divider"></div>
-
-      <!-- SECTION 5: Anhang A · Offene Anschaffungstranchen -->
-      <div class="section-badge-header" style="margin-top: 0; margin-bottom: 12px;">
-        <span class="section-num">5</span>
-        <h2>Anhang A &bull; Offene Anschaffungstranchen</h2>
-      </div>
-      <div class="section-subtitle">
-        Grundlage der FIFO-Zuordnung. Mengen je Asset ergeben den Bestand aus Abschnitt 4.
-      </div>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Tranche</th>
-            <th>Asset</th>
-            <th>Anschaffung</th>
-            <th class="text-right">Menge</th>
-            <th class="text-right">Anschaffungskosten €</th>
-            <th class="text-right">Tage gehalten</th>
-            <th class="text-center">Steuerfrei ab</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${tranchesTableHtml}
-        </tbody>
-      </table>
     </div>
 
     <!-- Page Footer -->
@@ -1343,6 +1366,44 @@ export function exportTaxReportToPDF(
 
 
   <!-- ==================== SEITE 4 ==================== -->
+  <div class="page page-break">
+    <div>
+      <!-- SECTION 5: Anhang A · Offene Anschaffungstranchen -->
+      <div class="section-badge-header">
+        <span class="section-num">5</span>
+        <h2>Anhang A &bull; Offene Anschaffungstranchen</h2>
+      </div>
+      <div class="section-subtitle">
+        Grundlage der FIFO-Zuordnung. Mengen je Asset ergeben den Bestand aus Abschnitt 4.
+      </div>
+
+      <table style="table-layout: fixed;">
+        <thead>
+          <tr>
+            <th style="width: 65px;">Tranche</th>
+            <th style="width: 60px;">Asset</th>
+            <th style="width: 95px;">Anschaffung</th>
+            <th style="width: 130px;" class="text-right">Menge</th>
+            <th style="width: 130px;" class="text-right">Anschaffungskosten €</th>
+            <th style="width: 95px;" class="text-right">Tage gehalten</th>
+            <th style="width: 105px;" class="text-center">Steuerfrei ab</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${tranchesTableHtml}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Page Footer -->
+    <div class="page-footer">
+      <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
+      <span>Seite 4 von ${totalPages}</span>
+    </div>
+  </div>
+
+
+  <!-- ==================== SEITE 5 ==================== -->
   <div class="page page-break">
     <div>
       <!-- SECTION 6: Angaben, Belege und Methodik -->
@@ -1422,7 +1483,7 @@ export function exportTaxReportToPDF(
     <!-- Page Footer -->
     <div class="page-footer">
       <span>rwrfolio &bull; Krypto-Steuerbericht VZ ${report.taxYear} &bull; ${statusText} &bull; ${report.exchangesList}</span>
-      <span>Seite 4 von ${totalPages}</span>
+      <span>Seite 5 von ${totalPages}</span>
     </div>
   </div>
 

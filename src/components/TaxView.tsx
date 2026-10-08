@@ -37,6 +37,7 @@ export const TaxView: React.FC<TaxViewProps> = ({
   const isLight = theme === 'light';
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
+  const [selectedSaleCoin, setSelectedSaleCoin] = useState<string>('ALL');
   const [expandedAsset, setExpandedAsset] = useState<string | null>(null);
   const [isExportDropdownOpen, setIsExportDropdownOpen] = useState(false);
   const [unlockPage, setUnlockPage] = useState<number>(0);
@@ -55,6 +56,35 @@ export const TaxView: React.FC<TaxViewProps> = ({
   const taxReport = useMemo<PortfolioTaxReport>(() => {
     return calculateFIFOTaxReport(transactions, customPrices, selectedYear);
   }, [transactions, customPrices, selectedYear]);
+
+  const uniqueSaleCoins = useMemo(() => {
+    const set = new Set<string>();
+    taxReport.realizedSales.forEach(s => set.add(s.symbol));
+    return Array.from(set).sort();
+  }, [taxReport.realizedSales]);
+
+  const filteredSales = useMemo(() => {
+    if (selectedSaleCoin === 'ALL') return taxReport.realizedSales;
+    return taxReport.realizedSales.filter(s => s.symbol === selectedSaleCoin);
+  }, [taxReport.realizedSales, selectedSaleCoin]);
+
+  const filteredSalesSummary = useMemo(() => {
+    let cost = 0;
+    let proceeds = 0;
+    let fee = 0;
+    let pnl = 0;
+    for (const s of filteredSales) {
+      const rowCost = Math.round(s.costBasisEUR * 100) / 100;
+      const rowProceeds = Math.round(s.proceedsEUR * 100) / 100;
+      const rowFee = Math.round(s.feeEUR * 100) / 100;
+      const rowPnl = Math.round((rowProceeds - rowCost - rowFee) * 100) / 100;
+      cost += rowCost;
+      proceeds += rowProceeds;
+      fee += rowFee;
+      pnl += rowPnl;
+    }
+    return { cost, proceeds, fee, pnl };
+  }, [filteredSales]);
 
   const handleExportTaxCSV = () => {
     const csv = exportTaxReportToCSV(taxReport, userProfile);
@@ -299,8 +329,25 @@ export const TaxView: React.FC<TaxViewProps> = ({
                         <span className={`font-bold text-sm ${isLight ? 'text-slate-900' : 'text-white'}`}>{asset.symbol}</span>
                         <span className={`text-xs truncate ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{asset.name}</span>
                       </div>
-                      <div className="text-xs font-mono text-slate-500 truncate mt-0.5">
-                        Gesamt: {asset.totalBalance.toFixed(4)} {asset.symbol} &bull; Wert: {asset.totalCurrentValueEUR.toFixed(2)} €
+                      <div className="text-xs font-mono text-slate-500 truncate mt-0.5 flex items-center flex-wrap gap-1.5">
+                        <span>Gesamt: {asset.totalBalance.toFixed(4)} {asset.symbol} &bull; Wert: {asset.totalCurrentValueEUR.toFixed(2)} €</span>
+                        {(() => {
+                          const cSales = taxReport.realizedSales.filter(s => s.symbol === asset.symbol);
+                          if (cSales.length === 0) return null;
+                          const cPnl = cSales.reduce((acc, s) => {
+                            const cCost = Math.round(s.costBasisEUR * 100) / 100;
+                            const cProc = Math.round(s.proceedsEUR * 100) / 100;
+                            const cFee = Math.round(s.feeEUR * 100) / 100;
+                            return acc + (cProc - cCost - cFee);
+                          }, 0);
+                          return (
+                            <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                              cPnl >= 0 ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                            }`}>
+                              Realisiert {selectedYear}: {cPnl >= 0 ? '+' : ''}{cPnl.toFixed(2)} €
+                            </span>
+                          );
+                        })()}
                       </div>
                     </div>
 
@@ -530,24 +577,76 @@ export const TaxView: React.FC<TaxViewProps> = ({
         <div className={`p-5 rounded-2xl border transition-colors space-y-3 ${
           isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
         }`}>
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <h3 className={`text-sm font-bold flex items-center space-x-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <FileText className="w-4 h-4 text-indigo-500" />
               <span>Realisierte Verkäufe {selectedYear} (FIFO)</span>
             </h3>
-            <span className="text-xs text-slate-500 font-mono">
-              {taxReport.realizedSales.length} Transaktionen
-            </span>
+            
+            {/* Coin Filter Selector */}
+            {uniqueSaleCoins.length > 0 && (
+              <div className="flex items-center space-x-1.5 self-start sm:self-auto">
+                <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Coin:</span>
+                <select
+                  value={selectedSaleCoin}
+                  onChange={(e) => setSelectedSaleCoin(e.target.value)}
+                  className={`text-xs font-semibold px-2 py-1 rounded-lg border transition-colors cursor-pointer ${
+                    isLight 
+                      ? 'bg-slate-100 hover:bg-slate-200/80 border-slate-300 text-slate-800' 
+                      : 'bg-slate-800 hover:bg-slate-700 border-slate-700 text-white'
+                  }`}
+                  aria-label="Verkäufe nach Coin filtern"
+                >
+                  <option value="ALL">Alle Coins ({taxReport.realizedSales.length})</option>
+                  {uniqueSaleCoins.map(coin => (
+                    <option key={coin} value={coin}>{coin}</option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
-          {taxReport.realizedSales.length === 0 ? (
+          {/* Coin PnL & Proceeds Summary Banner */}
+          {taxReport.realizedSales.length > 0 && (
+            <div className={`p-2.5 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 ${
+              isLight ? 'bg-slate-50 border-slate-200' : 'bg-slate-950/60 border-slate-800'
+            }`}>
+              <div>
+                <span className="text-slate-500">
+                  {selectedSaleCoin === 'ALL' ? 'Gesamter realisierter Gewinn:' : `Realisierter Gewinn ${selectedSaleCoin}:`}
+                </span>{' '}
+                <strong className={`font-mono text-xs ${filteredSalesSummary.pnl >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {filteredSalesSummary.pnl >= 0 ? '+' : ''}{filteredSalesSummary.pnl.toFixed(2)} €
+                </strong>
+              </div>
+              <div className="text-slate-400 font-mono text-[11px] flex items-center gap-2">
+                <span>Erlös: {filteredSalesSummary.proceeds.toFixed(2)} €</span>
+                <span>&bull;</span>
+                <span>Kosten: {filteredSalesSummary.cost.toFixed(2)} €</span>
+                {filteredSalesSummary.fee > 0 && (
+                  <>
+                    <span>&bull;</span>
+                    <span>Gebühr: {filteredSalesSummary.fee.toFixed(2)} €</span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
+          {filteredSales.length === 0 ? (
             <div className="p-6 text-center text-xs text-slate-500 bg-slate-500/5 rounded-xl border border-slate-500/10">
-              Im Steuerjahr {selectedYear} wurden keine Verkäufe getätigt.
+              {taxReport.realizedSales.length === 0 
+                ? `Im Steuerjahr ${selectedYear} wurden keine Verkäufe getätigt.`
+                : `Für ${selectedSaleCoin} liegen im Steuerjahr ${selectedYear} keine Verkäufe vor.`}
             </div>
           ) : (
             <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
-              {taxReport.realizedSales.map((sale, i) => {
-                const isGain = sale.realizedPnlEUR >= 0;
+              {filteredSales.map((sale, i) => {
+                const rowCost = Math.round(sale.costBasisEUR * 100) / 100;
+                const rowProceeds = Math.round(sale.proceedsEUR * 100) / 100;
+                const rowFee = Math.round(sale.feeEUR * 100) / 100;
+                const rowPnl = Math.round((rowProceeds - rowCost - rowFee) * 100) / 100;
+                const isGain = rowPnl >= 0;
                 return (
                   <div 
                     key={i}
@@ -563,14 +662,14 @@ export const TaxView: React.FC<TaxViewProps> = ({
                         </span>
                       </div>
                       <div className="text-[10px] text-slate-500">
-                        Verkauf: {sale.sellDate.substring(0, 10)} &bull; {sale.daysHeld} Tage gehalten
+                        Verkauf: {sale.sellDate.substring(0, 10)} &bull; {sale.daysHeld} Tage gehalten &bull; {sale.amount.toLocaleString('de-DE', { maximumFractionDigits: 6 })} {sale.symbol}
                       </div>
                     </div>
                     <div className="text-right">
                       <div className={`font-bold ${isGain ? 'text-emerald-500' : 'text-rose-500'}`}>
-                        {isGain ? '+' : ''}{sale.realizedPnlEUR.toFixed(2)} €
+                        {isGain ? '+' : ''}{rowPnl.toFixed(2)} €
                       </div>
-                      <div className="text-[10px] text-slate-500">Erlös: {sale.proceedsEUR.toFixed(2)} €</div>
+                      <div className="text-[10px] text-slate-500">Erlös: {rowProceeds.toFixed(2)} €</div>
                     </div>
                   </div>
                 );

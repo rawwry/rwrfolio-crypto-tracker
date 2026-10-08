@@ -213,9 +213,10 @@ export function isKrakenText(text: string): boolean {
   const lower = text.toLowerCase();
   if (lower.includes('kraken')) return true;
   if (lower.includes('spot trades') || lower.includes('trades statement')) return true;
+  if (lower.includes('unique id') && lower.includes('time (utc)') && lower.includes('cost')) return true;
   if (lower.includes('txid') && lower.includes('pair') && lower.includes('price')) return true;
   if (lower.includes('you bought') || lower.includes('you sold') || lower.includes('du hast') || lower.includes('account balance')) return true;
-  if (lower.includes('payward') && lower.includes('transaction id')) return true;
+  if (lower.includes('payward')) return true;
   return false;
 }
 
@@ -618,10 +619,174 @@ export function parseSingleKrakenEmailReceipt(text: string): Transaction | null 
 }
 
 /**
+ * Parses Kraken statement text where table columns are rendered in vertical column blocks
+ * (e.g. Kraken Pro Spot Trades Statement PDFs extracted via pdf-parse/pdfjs).
+ */
+export function parseKrakenColumnBlocks(rawText: string): Transaction[] {
+  if (!rawText || !rawText.trim()) return [];
+
+  const lines = rawText.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  const knownHeaders = ["unique id", "time (utc)", "pair", "type", "subtype", "price", "cost", "volume", "fee", "margin"];
+
+  const headerPositions: { header: string; lineIndex: number }[] = [];
+  for (let i = 0; i < lines.length; i++) {
+    const lLower = lines[i].toLowerCase();
+    if (knownHeaders.includes(lLower)) {
+      headerPositions.push({ header: lLower, lineIndex: i });
+    }
+  }
+
+  const required = ["unique id", "time (utc)", "pair", "type", "cost", "volume"];
+  const hasAll = required.every(req => headerPositions.some(h => h.header === req));
+  if (!hasAll) return [];
+
+  // Group into pages / tables based on "unique id"
+  const tables: { header: string; lineIndex: number }[][] = [];
+  let currentTable: { header: string; lineIndex: number }[] = [];
+  for (const hp of headerPositions) {
+    if (hp.header === "unique id" && currentTable.length > 0) {
+      tables.push(currentTable);
+      currentTable = [];
+    }
+    currentTable.push(hp);
+  }
+  if (currentTable.length > 0) tables.push(currentTable);
+
+  const transactions: Transaction[] = [];
+
+  for (const table of tables) {
+    const map = new Map<string, string[]>();
+    for (let i = 0; i < table.length; i++) {
+      const cur = table[i];
+      const start = cur.lineIndex + 1;
+      let end = lines.length;
+      if (i + 1 < table.length) {
+        end = table[i + 1].lineIndex;
+      } else {
+        // Last header: end at next page marker or next header or end
+        for (let j = start; j < lines.length; j++) {
+          const lLower = lines[j].toLowerCase();
+          if (lLower.includes("page ") || lLower.startsWith("--") || lLower.includes("statement period") || lLower === "unique id") {
+            end = j;
+            break;
+          }
+        }
+      }
+
+      const colLines = lines.slice(start, end).filter(l => {
+        const lLower = l.toLowerCase();
+        return !lLower.startsWith("--") && !lLower.includes("page ") && !lLower.includes("payward");
+      });
+      map.set(cur.header, colLines);
+    }
+
+    const ids = map.get("unique id") || [];
+    const timeLines = map.get("time (utc)") || [];
+    const pairs = map.get("pair") || [];
+    const types = map.get("type") || [];
+    const subtypes = map.get("subtype") || [];
+    const prices = map.get("price") || [];
+    const costs = map.get("cost") || [];
+    const volumes = map.get("volume") || [];
+    const fees = map.get("fee") || [];
+
+    // Parse timestamps: time lines can be interleaved: time then date (e.g. 08:25:35 then 2026-09-26)
+    // or date then time, or combined ISO
+    const timestamps: string[] = [];
+    let tIdx = 0;
+    while (tIdx < timeLines.length) {
+      const line1 = timeLines[tIdx];
+      const line2 = timeLines[tIdx + 1];
+      if (/^\d{2}:\d{2}:\d{2}$/.test(line1) && line2 && /^\d{4}-\d{2}-\d{2}$/.test(line2)) {
+        timestamps.push(`${line2}T${line1}Z`);
+        tIdx += 2;
+      } else if (/^\d{4}-\d{2}-\d{2}$/.test(line1) && line2 && /^\d{2}:\d{2}:\d{2}$/.test(line2)) {
+        timestamps.push(`${line1}T${line2}Z`);
+        tIdx += 2;
+      } else if (/^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}/.test(line1)) {
+        try {
+          timestamps.push(new Date(line1).toISOString());
+        } catch {
+          timestamps.push(line1);
+        }
+        tIdx += 1;
+      } else {
+        tIdx += 1;
+      }
+    }
+
+    const n = Math.min(ids.length, pairs.length, types.length, costs.length, volumes.length);
+
+    for (let k = 0; k < n; k++) {
+      const txid = ids[k];
+      const rawPair = pairs[k] || "";
+      const typeStr = (types[k] || "Buy").toLowerCase();
+      const isBuy = typeStr.includes("buy") || typeStr.includes("kauf");
+      const type: TransactionType = isBuy ? 'BUY' : 'SELL';
+      const subtype = subtypes[k] || "Limit";
+      const price = cleanNumber(prices[k] || "0");
+      const cost = cleanNumber(costs[k] || "0");
+      const volume = cleanNumber(volumes[k] || "0");
+      const fee = cleanNumber(fees[k] || "0");
+      const timestamp = timestamps[k] || new Date().toISOString();
+
+      const { base, quote } = parseKrakenPair(rawPair);
+      const FIAT_SET = new Set(['EUR', 'USD', 'ZEUR', 'ZUSD', 'GBP', 'CAD', 'CHF', 'JPY', 'AUD']);
+      if (!base || base === 'UNKNOWN' || FIAT_SET.has(base.toUpperCase())) continue;
+
+      const spentCurr = isBuy ? quote : base;
+      const spentAmt = isBuy ? cost : volume;
+      const recCurr = isBuy ? base : quote;
+      const recAmt = isBuy ? volume : cost;
+
+      let pricePerUnitEUR: number | undefined = undefined;
+      let pricePerUnitUSD: number | undefined = undefined;
+
+      if (quote.toUpperCase() === 'EUR') {
+        pricePerUnitEUR = price > 0 ? price : (volume > 0 ? cost / volume : undefined);
+      } else if (quote.toUpperCase() === 'USD' || quote.toUpperCase() === 'USDT' || quote.toUpperCase() === 'USDC') {
+        pricePerUnitUSD = price > 0 ? price : (volume > 0 ? cost / volume : undefined);
+      }
+
+      const id = `kraken_pdf_${txid || `${timestamp}_${base}_${volume}_${cost}`}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+      transactions.push({
+        id,
+        timestamp,
+        source: 'kraken',
+        type,
+        description: `Kraken ${isBuy ? 'Kauf' : 'Verkauf'} ${base}`,
+        spentCurrency: spentCurr,
+        spentAmount: spentAmt,
+        receivedCurrency: recCurr,
+        receivedAmount: recAmt,
+        pricePerUnitEUR,
+        pricePerUnitUSD,
+        fee: fee > 0 ? fee : undefined,
+        feeCurrency: quote,
+        transactionHash: txid,
+        orderId: txid,
+        tradingPair: rawPair,
+        transactionKind: 'spot',
+        notes: `Kraken Pro PDF Import | Pair: ${rawPair}${txid ? ` | TxID: ${txid}` : ''}`,
+      });
+    }
+  }
+
+  return transactions;
+}
+
+/**
  * Parse Kraken statement text (extracted from PDF or copied from statement)
  */
 export function parseKrakenText(rawText: string): Transaction[] {
   if (!rawText || !rawText.trim()) return [];
+
+  // Check for Kraken column-block statements (e.g. Kraken Pro Spot Trades Statement PDF)
+  const columnBlockTxs = parseKrakenColumnBlocks(rawText);
+  if (columnBlockTxs.length > 0) {
+    return columnBlockTxs;
+  }
 
   // Check for Kraken email confirmation receipts
   const emailTransactions = parseKrakenEmailReceipts(rawText);
