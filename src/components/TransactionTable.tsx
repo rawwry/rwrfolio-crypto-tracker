@@ -52,20 +52,27 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
     }
   }, [selectedAssetFilter]);
 
-  // Extract unique coins for dropdown
+  // Extract unique coins for dropdown (excluding fiat EUR/USD)
   const uniqueCoins = useMemo(() => {
     const coins = new Set<string>();
     for (const t of transactions) {
-      if (t.receivedCurrency) coins.add(t.receivedCurrency.toUpperCase());
-      if (t.spentCurrency && t.spentCurrency !== 'EUR' && t.spentCurrency !== 'USD') {
-        coins.add(t.spentCurrency.toUpperCase());
-      }
+      const rec = (t.receivedCurrency || '').toUpperCase();
+      const spent = (t.spentCurrency || '').toUpperCase();
+      if (rec && rec !== 'EUR' && rec !== 'USD') coins.add(rec);
+      if (spent && spent !== 'EUR' && spent !== 'USD') coins.add(spent);
     }
     return Array.from(coins).sort();
   }, [transactions]);
 
   // Filtered and sorted transactions
   const filtered = useMemo(() => {
+    const getTxFiatValue = (t: Transaction) => {
+      if (t.type === 'SELL') {
+        return t.receivedCurrency === 'EUR' ? t.receivedAmount : (t.nativeAmount || (t.receivedAmount / 1.08));
+      }
+      return t.spentCurrency === 'EUR' ? t.spentAmount : (t.nativeAmount || (t.spentAmount / 1.08));
+    };
+
     return transactions.filter(t => {
       // Search
       if (searchQuery.trim()) {
@@ -107,10 +114,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
         return new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime();
       }
       if (sortOrder === 'highest_spent') {
-        return b.spentAmount - a.spentAmount;
+        return getTxFiatValue(b) - getTxFiatValue(a);
       }
       if (sortOrder === 'lowest_spent') {
-        return a.spentAmount - b.spentAmount;
+        return getTxFiatValue(a) - getTxFiatValue(b);
       }
       return 0;
     });
@@ -146,6 +153,144 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     }).format(val);
+  };
+
+  // Robust transaction display extractor handling BUY, SELL, REWARD, and TRANSFER correctly
+  const getTransactionDisplay = (tx: Transaction) => {
+    const eurRate = 1.08;
+    const isSell = tx.type === 'SELL';
+    const isBuy = tx.type === 'BUY';
+    const isReward = tx.type === 'REWARD' || tx.type === 'STAKE';
+
+    const spentIsFiat = tx.spentCurrency === 'EUR' || tx.spentCurrency === 'USD';
+    const recIsFiat = tx.receivedCurrency === 'EUR' || tx.receivedCurrency === 'USD';
+
+    let cryptoSymbol = '';
+    let cryptoAmount = 0;
+    let isCryptoOutflow = false;
+
+    let fiatEUR = 0;
+    let fiatUSD = 0;
+    let hasFiat = false;
+
+    let unitPriceEUR = tx.pricePerUnitEUR || 0;
+    let unitPriceUSD = tx.pricePerUnitUSD || 0;
+
+    if (isSell) {
+      // In a SELL:
+      // Spent = Crypto sold (e.g. 1,398.601 LAPTOP)
+      // Received = Fiat proceeds (e.g. 113.18 EUR)
+      cryptoSymbol = tx.spentCurrency || 'COIN';
+      cryptoAmount = tx.spentAmount || 0;
+      isCryptoOutflow = true;
+
+      if (recIsFiat) {
+        hasFiat = true;
+        if (tx.receivedCurrency === 'EUR') {
+          fiatEUR = tx.receivedAmount;
+          fiatUSD = tx.nativeAmountUSD || (fiatEUR * eurRate);
+        } else {
+          fiatUSD = tx.receivedAmount;
+          fiatEUR = fiatUSD / eurRate;
+        }
+      } else if (tx.nativeAmount && tx.nativeCurrency === 'EUR') {
+        hasFiat = true;
+        fiatEUR = tx.nativeAmount;
+        fiatUSD = tx.nativeAmountUSD || (fiatEUR * eurRate);
+      } else if (tx.nativeAmountUSD) {
+        hasFiat = true;
+        fiatUSD = tx.nativeAmountUSD;
+        fiatEUR = fiatUSD / eurRate;
+      }
+
+      if (!unitPriceEUR && cryptoAmount > 0 && fiatEUR > 0) {
+        unitPriceEUR = fiatEUR / cryptoAmount;
+      }
+      if (!unitPriceUSD && unitPriceEUR > 0) {
+        unitPriceUSD = unitPriceEUR * eurRate;
+      }
+    } else if (isBuy) {
+      // In a BUY:
+      // Received = Crypto bought (e.g. 1,774.66085 LAPTOP)
+      // Spent = Fiat cost (e.g. 138.50 EUR)
+      cryptoSymbol = tx.receivedCurrency || 'COIN';
+      cryptoAmount = tx.receivedAmount || 0;
+      isCryptoOutflow = false;
+
+      if (spentIsFiat) {
+        hasFiat = true;
+        if (tx.spentCurrency === 'EUR') {
+          fiatEUR = tx.spentAmount;
+          fiatUSD = tx.nativeAmountUSD || (fiatEUR * eurRate);
+        } else {
+          fiatUSD = tx.spentAmount;
+          fiatEUR = fiatUSD / eurRate;
+        }
+      } else if (tx.nativeAmount && tx.nativeCurrency === 'EUR') {
+        hasFiat = true;
+        fiatEUR = tx.nativeAmount;
+        fiatUSD = tx.nativeAmountUSD || (fiatEUR * eurRate);
+      } else if (tx.nativeAmountUSD) {
+        hasFiat = true;
+        fiatUSD = tx.nativeAmountUSD;
+        fiatEUR = fiatUSD / eurRate;
+      }
+
+      if (!unitPriceEUR && cryptoAmount > 0 && fiatEUR > 0) {
+        unitPriceEUR = fiatEUR / cryptoAmount;
+      }
+      if (!unitPriceUSD && unitPriceEUR > 0) {
+        unitPriceUSD = unitPriceEUR * eurRate;
+      }
+    } else if (isReward) {
+      cryptoSymbol = tx.receivedCurrency || tx.spentCurrency || 'REWARD';
+      cryptoAmount = tx.receivedAmount || tx.spentAmount || 0;
+      isCryptoOutflow = false;
+
+      if (tx.nativeAmount && tx.nativeCurrency === 'EUR') {
+        hasFiat = true;
+        fiatEUR = tx.nativeAmount;
+        fiatUSD = tx.nativeAmountUSD || (fiatEUR * eurRate);
+      } else if (tx.nativeAmountUSD) {
+        hasFiat = true;
+        fiatUSD = tx.nativeAmountUSD;
+        fiatEUR = fiatUSD / eurRate;
+      } else if (unitPriceEUR > 0 && cryptoAmount > 0) {
+        hasFiat = true;
+        fiatEUR = unitPriceEUR * cryptoAmount;
+        fiatUSD = fiatEUR * eurRate;
+      }
+    } else {
+      // Transfer / other
+      cryptoSymbol = tx.receivedCurrency || tx.spentCurrency || 'TRANSFER';
+      cryptoAmount = tx.receivedAmount || tx.spentAmount || 0;
+      isCryptoOutflow = tx.type === 'TRANSFER' && tx.spentAmount > 0 && !tx.receivedAmount;
+    }
+
+    const fiatActive = isUSD ? fiatUSD : fiatEUR;
+    const fiatAlt = isUSD ? fiatEUR : fiatUSD;
+
+    const unitPriceActive = isUSD ? unitPriceUSD : unitPriceEUR;
+    const unitPriceAlt = isUSD ? unitPriceEUR : unitPriceUSD;
+
+    const unitPriceDecimals = unitPriceActive < 0.01 ? 6 : (unitPriceActive < 1 ? 4 : (unitPriceActive < 10 ? 3 : 2));
+    const altUnitPriceDecimals = unitPriceAlt < 0.01 ? 6 : (unitPriceAlt < 1 ? 4 : (unitPriceAlt < 10 ? 3 : 2));
+
+    return {
+      cryptoSymbol,
+      cryptoAmount,
+      isCryptoOutflow,
+      hasFiat,
+      fiatActive,
+      fiatAlt,
+      unitPriceActive,
+      unitPriceAlt,
+      unitPriceDecimals,
+      altUnitPriceDecimals,
+      isSell,
+      isBuy,
+      isReward,
+    };
   };
 
   const formatDatePart = (isoStr: string) => {
@@ -476,23 +621,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
           </div>
         ) : (
           paginatedTransactions.map((tx) => {
-            const eurRate = 1.08;
-            let spentActive = 0;
-            let spentAlt = 0;
-
-            if (tx.spentAmount > 0) {
-              if (isUSD) {
-                spentActive = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
-                spentAlt = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate);
-              } else {
-                spentActive = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmount && tx.nativeCurrency === 'EUR' ? tx.nativeAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate));
-                spentAlt = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
-              }
-            }
-
-            const unitPriceActive = tx.receivedAmount > 0 && spentActive > 0 ? (spentActive / tx.receivedAmount) : 0;
-            const unitPriceAlt = tx.receivedAmount > 0 && spentAlt > 0 ? (spentAlt / tx.receivedAmount) : 0;
-            const unitPriceDecimals = unitPriceActive < 1 ? 4 : (unitPriceActive < 10 ? 3 : 2);
+            const display = getTransactionDisplay(tx);
 
             return (
               <div 
@@ -531,26 +660,34 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                   </div>
                 </div>
 
-                {/* Amounts: Received & Spent */}
+                {/* Amounts: Crypto Asset & Fiat Value */}
                 <div className="flex items-center justify-between gap-2">
                   <div>
                     <div className={`text-[10px] uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Erhalten
+                      {display.isSell ? 'Verkauft' : 'Asset & Menge'}
                     </div>
-                    <div className={`text-base font-extrabold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                      {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
+                    <div className={`text-base font-extrabold font-mono ${
+                      display.isSell
+                        ? (isLight ? 'text-rose-700' : 'text-rose-400')
+                        : (isLight ? 'text-slate-900' : 'text-white')
+                    }`}>
+                      {display.isSell ? '−' : ''}{display.cryptoAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {display.cryptoSymbol}
                     </div>
                   </div>
                   <div className="text-right">
                     <div className={`text-[10px] uppercase tracking-wider font-semibold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Kauf / Verkauf
+                      {display.isSell ? 'Verkaufserlös' : 'Kaufbetrag'}
                     </div>
-                    <div className={`text-base font-extrabold font-mono ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
-                      {spentActive > 0 ? formatActive(spentActive) : '-'}
+                    <div className={`text-base font-extrabold font-mono ${
+                      display.isSell 
+                        ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                        : (isLight ? 'text-slate-900' : 'text-slate-100')
+                    }`}>
+                      {display.hasFiat ? `${display.isSell ? '+' : ''}${formatActive(display.fiatActive)}` : '-'}
                     </div>
-                    {tx.spentCurrency !== 'EUR' && tx.spentCurrency !== 'USD' && tx.spentAmount > 0 && (
+                    {display.hasFiat && display.fiatAlt > 0 && (
                       <span className={`text-[11px] block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                        ({tx.spentAmount} {tx.spentCurrency})
+                        ≈ {display.isSell ? '+' : ''}{formatAlt(display.fiatAlt)}
                       </span>
                     )}
                   </div>
@@ -562,10 +699,10 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                 }`}>
                   <div className="text-xs font-mono">
                     <span className={`text-[11px] font-sans mr-1.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Einzelkurs:
+                      {display.isSell ? 'Verkaufskurs:' : 'Einzelkurs:'}
                     </span>
                     <span className={`font-semibold ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
-                      {unitPriceActive > 0 ? formatActive(unitPriceActive, unitPriceDecimals) : '-'}
+                      {display.unitPriceActive > 0 ? formatActive(display.unitPriceActive, display.unitPriceDecimals) : '-'}
                     </span>
                   </div>
 
@@ -637,8 +774,8 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               <th className="py-3 px-3">Datum</th>
               <th className="py-3 px-3">Typ</th>
               <th className="py-3 px-3">Börse</th>
-              <th className="py-3 px-3">Erhalten</th>
-              <th className="py-3 px-3 text-right">Kauf / Verkauf</th>
+              <th className="py-3 px-3">Asset &amp; Menge</th>
+              <th className="py-3 px-3 text-right">Kauf- / Verkaufswert</th>
               <th className="py-3 px-3 text-right">Einzelkurs</th>
               <th className="py-3 px-3 text-center">Details</th>
               <th className="py-3 px-3 text-right">Aktionen</th>
@@ -653,25 +790,7 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
               </tr>
             ) : (
               paginatedTransactions.map((tx) => {
-                // Calculated unit prices
-                const eurRate = 1.08;
-                let spentActive = 0;
-                let spentAlt = 0;
-
-                if (tx.spentAmount > 0) {
-                  if (isUSD) {
-                    spentActive = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
-                    spentAlt = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate);
-                  } else {
-                    spentActive = tx.spentCurrency === 'EUR' ? tx.spentAmount : (tx.nativeAmount && tx.nativeCurrency === 'EUR' ? tx.nativeAmount : (tx.nativeAmountUSD ? tx.nativeAmountUSD / eurRate : tx.spentAmount / eurRate));
-                    spentAlt = tx.nativeAmountUSD || (tx.spentCurrency === 'USD' ? tx.spentAmount : tx.spentAmount * eurRate);
-                  }
-                }
-
-                const unitPriceActive = tx.receivedAmount > 0 && spentActive > 0 ? (spentActive / tx.receivedAmount) : 0;
-                const unitPriceAlt = tx.receivedAmount > 0 && spentAlt > 0 ? (spentAlt / tx.receivedAmount) : 0;
-                const unitPriceDecimals = unitPriceActive < 1 ? 4 : (unitPriceActive < 10 ? 3 : 2);
-                const altUnitPriceDecimals = unitPriceAlt < 1 ? 4 : (unitPriceAlt < 10 ? 3 : 2);
+                const display = getTransactionDisplay(tx);
 
                 return (
                   <tr 
@@ -712,44 +831,52 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
                       {getSourceBadge(tx.source)}
                     </td>
 
-                    {/* Received Asset & Amount */}
+                    {/* Crypto Asset & Amount */}
                     <td className="py-2.5 px-3">
-                      <div className={`font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                        {tx.receivedAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {tx.receivedCurrency}
+                      <div className={`font-bold font-mono ${
+                        display.isSell
+                          ? (isLight ? 'text-rose-700' : 'text-rose-400')
+                          : (isLight ? 'text-slate-900' : 'text-white')
+                      }`}>
+                        {display.isSell ? '−' : ''}{display.cryptoAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {display.cryptoSymbol}
                       </div>
                     </td>
 
-                    {/* Spent / Invested */}
+                    {/* Fiat Value / Gegenwert */}
                     <td className={`py-2.5 px-3 text-right font-mono font-medium ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-                      {spentActive > 0 ? (
+                      {display.hasFiat ? (
                         <div>
-                          <div>{formatActive(spentActive)}</div>
-                          {spentAlt > 0 && (
+                          <div className={`font-bold ${
+                            display.isSell 
+                              ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
+                              : (isLight ? 'text-slate-900' : 'text-slate-100')
+                          }`}>
+                            {display.isSell ? '+' : ''}{formatActive(display.fiatActive)}
+                          </div>
+                          {display.fiatAlt > 0 && (
                             <div className="text-[10px] text-slate-500 font-sans">
-                              ≈ {formatAlt(spentAlt)}
+                              ≈ {display.isSell ? '+' : ''}{formatAlt(display.fiatAlt)}
                             </div>
                           )}
-                          {tx.spentCurrency !== 'EUR' && tx.spentCurrency !== 'USD' && (
-                            <span className={`text-xs block font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                              ({tx.spentAmount} {tx.spentCurrency})
-                            </span>
-                          )}
+                          <span className={`text-[10px] block font-sans ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                            {display.isSell ? 'Erlös' : 'Kaufbetrag'}
+                          </span>
                         </div>
                       ) : (
                         <span className="text-slate-400">-</span>
                       )}
                     </td>
 
-                    {/* Calculated Unit Price */}
+                    {/* Unit Price */}
                     <td className={`py-3.5 px-4 text-right font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-                      {unitPriceActive > 0 ? (
+                      {display.unitPriceActive > 0 ? (
                         <div>
                           <div className={`font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
-                            {formatActive(unitPriceActive, unitPriceDecimals)}
+                            {formatActive(display.unitPriceActive, display.unitPriceDecimals)}
                           </div>
-                          {unitPriceAlt > 0 && (
+                          {display.unitPriceAlt > 0 && (
                             <div className="text-[10px] text-slate-500 font-sans">
-                              ≈ {formatAlt(unitPriceAlt, altUnitPriceDecimals)}
+                              ≈ {formatAlt(display.unitPriceAlt, display.altUnitPriceDecimals)}
                             </div>
                           )}
                         </div>
@@ -851,93 +978,158 @@ export const TransactionTable: React.FC<TransactionTableProps> = ({
       )}
 
       {/* Detail Modal */}
-      {detailTx && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className={`border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 ${
-            isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
-          }`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${
-              isLight ? 'border-slate-100' : 'border-slate-800'
+      {detailTx && (() => {
+        const modalDisplay = getTransactionDisplay(detailTx);
+        return (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
+            <div className={`border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4 ${
+              isLight ? 'bg-white border-slate-200' : 'bg-slate-900 border-slate-800'
             }`}>
-              <h4 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Transaktionsdetails</h4>
-              <button 
-                onClick={() => setDetailTx(null)}
-                className={`text-lg font-bold cursor-pointer ${
-                  isLight ? 'text-slate-400 hover:text-slate-800' : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                &times;
-              </button>
-            </div>
+              <div className={`flex items-center justify-between border-b pb-3 ${
+                isLight ? 'border-slate-100' : 'border-slate-800'
+              }`}>
+                <div className="flex items-center space-x-2">
+                  {getTypeBadge(detailTx.type)}
+                  <h4 className={`font-bold text-base ${isLight ? 'text-slate-900' : 'text-white'}`}>Transaktionsdetails</h4>
+                </div>
+                <button 
+                  onClick={() => setDetailTx(null)}
+                  className={`text-lg font-bold cursor-pointer ${
+                    isLight ? 'text-slate-400 hover:text-slate-800' : 'text-slate-400 hover:text-white'
+                  }`}
+                >
+                  &times;
+                </button>
+              </div>
 
-            <div className={`space-y-2.5 text-xs ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Timestamp:</span>
-                <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.timestamp}</span>
-              </div>
-              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Beschreibung:</span>
-                <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{detailTx.description}</span>
-              </div>
-              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Börsen-Quelle:</span>
-                <span>{getSourceBadge(detailTx.source)}</span>
-              </div>
-              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Erhaltene Menge:</span>
-                <span className={`font-mono font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>{detailTx.receivedAmount} {detailTx.receivedCurrency}</span>
-              </div>
-              <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Kauf- / Verkaufswert:</span>
-                <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.spentAmount} {detailTx.spentCurrency}</span>
-              </div>
-              {detailTx.nativeAmountUSD && (
+              <div className={`space-y-2.5 text-xs ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
                 <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Crypto.com USD Gegenwert:</span>
-                  <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>${detailTx.nativeAmountUSD.toFixed(2)} USD</span>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Datum & Uhrzeit:</span>
+                  <span className={`font-mono ${isLight ? 'text-slate-900 font-semibold' : 'text-white'}`}>{detailTx.timestamp}</span>
                 </div>
-              )}
-              {detailTx.transactionKind && (
                 <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Transaction Kind:</span>
-                  <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>{detailTx.transactionKind}</span>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Beschreibung:</span>
+                  <span className={`font-medium ${isLight ? 'text-slate-900' : 'text-white'}`}>{detailTx.description}</span>
                 </div>
-              )}
-              {detailTx.transactionHash && (
                 <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Tx Hash:</span>
-                  <span className="font-mono text-indigo-500 truncate max-w-[200px]" title={detailTx.transactionHash}>
-                    {detailTx.transactionHash}
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Börsen-Quelle:</span>
+                  <span>{getSourceBadge(detailTx.source)}</span>
+                </div>
+
+                {/* Crypto Asset & Amount */}
+                <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>
+                    {modalDisplay.isSell ? 'Verkauftes Asset:' : 'Asset & Menge:'}
+                  </span>
+                  <span className={`font-mono font-bold ${
+                    modalDisplay.isSell 
+                      ? (isLight ? 'text-rose-700' : 'text-rose-400') 
+                      : (isLight ? 'text-emerald-700' : 'text-emerald-400')
+                  }`}>
+                    {modalDisplay.isSell ? '−' : '+'}{modalDisplay.cryptoAmount.toLocaleString('de-DE', { maximumFractionDigits: 8 })} {modalDisplay.cryptoSymbol}
                   </span>
                 </div>
-              )}
-              {detailTx.notes && (
-                <div className="pt-2">
-                  <span className={`block mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Notizen:</span>
-                  <p className={`p-2.5 rounded-lg border text-xs ${
-                    isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
-                  }`}>
-                    {detailTx.notes}
-                  </p>
-                </div>
-              )}
-            </div>
 
-            <div className="pt-2 flex justify-end">
-              <button
-                onClick={() => setDetailTx(null)}
-                className={`px-4 py-2 rounded-xl font-medium text-xs transition-colors cursor-pointer border ${
-                  isLight 
-                    ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200' 
-                    : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
-                }`}
-              >
-                Schließen
-              </button>
+                {/* Fiat Value */}
+                {modalDisplay.hasFiat && (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>
+                      {modalDisplay.isSell ? 'Verkaufserlös:' : 'Kaufwert / Betrag:'}
+                    </span>
+                    <div className="text-right font-mono">
+                      <span className={`font-bold ${
+                        modalDisplay.isSell
+                          ? (isLight ? 'text-emerald-700' : 'text-emerald-400')
+                          : (isLight ? 'text-slate-900' : 'text-white')
+                      }`}>
+                        {modalDisplay.isSell ? '+' : ''}{formatActive(modalDisplay.fiatActive)}
+                      </span>
+                      {modalDisplay.fiatAlt > 0 && (
+                        <span className="text-[10px] text-slate-500 block font-sans">
+                          ≈ {modalDisplay.isSell ? '+' : ''}{formatAlt(modalDisplay.fiatAlt)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Unit Price */}
+                {modalDisplay.unitPriceActive > 0 && (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>
+                      {modalDisplay.isSell ? 'Verkaufskurs:' : 'Kaufkurs (Einzelpreis):'}
+                    </span>
+                    <div className="text-right font-mono">
+                      <span className={`font-semibold ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>
+                        {formatActive(modalDisplay.unitPriceActive, modalDisplay.unitPriceDecimals)}
+                      </span>
+                      {modalDisplay.unitPriceAlt > 0 && (
+                        <span className="text-[10px] text-slate-500 block font-sans">
+                          ≈ {formatAlt(modalDisplay.unitPriceAlt, modalDisplay.altUnitPriceDecimals)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Fee if present */}
+                {detailTx.fee && detailTx.fee > 0 ? (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Gebühr:</span>
+                    <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                      {detailTx.fee.toLocaleString('de-DE', { maximumFractionDigits: 6 })} {detailTx.feeCurrency || 'EUR'}
+                    </span>
+                  </div>
+                ) : null}
+
+                {detailTx.nativeAmountUSD && !modalDisplay.hasFiat && (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Crypto.com USD Gegenwert:</span>
+                    <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>${detailTx.nativeAmountUSD.toFixed(2)} USD</span>
+                  </div>
+                )}
+                {detailTx.transactionKind && (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Transaction Kind:</span>
+                    <span className={`font-mono ${isLight ? 'text-slate-800' : 'text-slate-300'}`}>{detailTx.transactionKind}</span>
+                  </div>
+                )}
+                {detailTx.transactionHash && (
+                  <div className={`flex justify-between py-1 border-b ${isLight ? 'border-slate-100' : 'border-slate-800/60'}`}>
+                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Tx Hash:</span>
+                    <span className="font-mono text-indigo-500 truncate max-w-[200px]" title={detailTx.transactionHash}>
+                      {detailTx.transactionHash}
+                    </span>
+                  </div>
+                )}
+                {detailTx.notes && (
+                  <div className="pt-2">
+                    <span className={`block mb-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Notizen:</span>
+                    <p className={`p-2.5 rounded-lg border text-xs ${
+                      isLight ? 'bg-slate-50 border-slate-200 text-slate-800' : 'bg-slate-950 border-slate-800 text-slate-200'
+                    }`}>
+                      {detailTx.notes}
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  onClick={() => setDetailTx(null)}
+                  className={`px-4 py-2 rounded-xl font-medium text-xs transition-colors cursor-pointer border ${
+                    isLight 
+                      ? 'bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-200' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-white border-slate-700'
+                  }`}
+                >
+                  Schließen
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
     </div>
   );

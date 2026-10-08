@@ -31,6 +31,7 @@
   - Automatische Erkennung von **Kraken Pro** (CSV sowie offizielle mehrspaltige Spot-Trades PDF-Statements), **Kraken E-Mail Belegen (.eml / PDF / Text)** für Käufe und Verkäufe (*"You bought ONDO"*, *"You sold LAPTOP"*), **Crypto.com** (App & Exchange CSVs) sowie **Crypto.com E-Mail Belegen**.
   - Intelligente Multi-Source Duplikatserkennung gleicht Order-IDs und TxIDs zwischen PDF-, CSV- und E-Mail-Importen automatisch ab und verhindert Doppelerfassungen zuverlässig.
   - Automations-Schnittstelle `POST /api/transactions/eml` zur direkten Anbindung von Webhooks aus n8n.
+  - **Transaktions-Historie & Manuelle Erfassung**: Vollständige Übersicht aller Trades mit differenzierter Darstellung von Käufen (`BUY`) und Verkäufen (`SELL`). Bei Verkäufen klare Signalisierung von veräußertem Krypto-Volumen (`−`), erzieltem Netto-Verkaufserlös (`+`) und exaktem Ausführungskurs je Einheit.
 - **📑 BMF-konformer Steuerbericht (§ 23 EStG) & Realisierte Gewinne:**
   - Druckfertiger, audit-sicherer PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater mit rigider `table-layout: fixed`-Architektur (verhindert jegliches seitliches Überlaufen auf Seiten 2 & 3).
   - Vollständige Anzeige aller Spalten inklusive *Wert €* ohne Rand-Beschneidung.

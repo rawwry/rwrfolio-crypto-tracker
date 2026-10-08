@@ -4,6 +4,25 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.39] - 08.10.2026
+
+### 🔄 Korrektur der Verkaufsanzeige (SELL) in Transaktionshistorie & Bearbeiten-Modal
+- **Transaktions-Historie (Tabelle & Mobile Cards)**:
+  - **Beseitigung fehlerhafter Gegenwert- & Einzelkurs-Berechnung**: Bisher wurden bei Verkäufen (`SELL`) die veräußerten Krypto-Token-Mengen irrtümlich als Euro-Guthaben interpretiert und in USD umgerechnet (z. B. 1.398,601 LAPTOP × 1,08 = 1.510,49 $), was zu absurden Gegenwerten und verzerrten Stückpreisen (13,35 $) führte.
+  - **Saubere Trennung von Asset & Erlös**:
+    - **Asset & Menge**: Zeigt bei Verkäufen die veräußerte Krypto-Menge mit Minuszeichen in Signalrot (z. B. `−1.398,601 LAPTOP`).
+    - **Kauf- / Verkaufswert**: Zeigt den tatsächlichen Netto-Verkaufserlös mit Pluszeichen in Smaragdgrün (z. B. `+$122.23 ≈ +113,18 €`) mit Kennzeichnung als *Erlös*.
+    - **Einzelkurs**: Weist den korrekten Ausführungskurs je Coin aus (z. B. `$0.0883 ≈ 0,0817 €`).
+- **Transaktionsdetails-Modal**:
+  - Übersichtliche Aufschlüsselung mit Typ-Badge (`Verkauf`), veräußertem Krypto-Asset, Netto-Verkaufserlös in EUR/USD, Ausführungskurs und Gebühren.
+- **Transaktions-Erfassungs- & Bearbeiten-Modal**:
+  - Dynamische Anpassung aller Formularfelder je nach Transaktionstyp: Bei Verkäufen werden Krypto-Token und Auszahlungswährung/Erlös eindeutig unterschieden.
+  - Automatisches Laden und Speichern ohne Währungsvertauschung (`spentCurrency = Coin`, `receivedCurrency = Fiat`).
+- **Sortierung & Filterung**:
+  - Sortierung nach höchstem/niedrigstem Betrag (`highest_spent` / `lowest_spent`) basiert nun korrekt auf dem tatsächlichen Fiat-Wert der Transaktion.
+
+---
+
 ## [0.5.38] - 08.10.2026
 
 ### 📑 Steuer-PDF Seitenrand-Korrektur, Chart-HUD Badges & Realisierte Verkäufe im Analyse-Bereich

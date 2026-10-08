@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.38';
+export const APP_VERSION = '0.5.39';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.39',
+    date: '08.10.2026',
+    title: 'Korrektur der Verkaufsanzeige (SELL) in Transaktionshistorie & Bearbeiten-Modal',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Transaktions-Historie (Tabelle & Mobile Cards): Vollständige Korrektur von Verkaufs-Trades (SELL). Beseitigung der fehlerhaften Gegenwert-Berechnung (Krypto-Mengen wurden zuvor fälschlicherweise als EUR interpretiert und mit 1,08 multipliziert). Verkäufe zeigen nun das verkaufte Asset mit Minuszeichen (z. B. −1.398,601 LAPTOP in Rot), den erzielten Netto-Erlös mit Pluszeichen (z. B. +113,18 € / +$122.23 in Grün) und den tatsächlichen Ausführungskurs (z. B. 0,0817 € / $0.0883).',
+      },
+      {
+        type: 'ui',
+        text: 'Transaktionsdetails & Bearbeiten-Modal: Dynamische Anpassung aller Beschriftungen und Eingabefelder je nach Transaktionstyp (Kauf vs. Verkauf). Bei Verkäufen eindeutige Zuordnung von "Verkauftes Asset & Menge", "Verkaufserlös (Netto)" und "Verkaufskurs" ohne Währungsverwechslung.',
+      },
+      {
+        type: 'fix',
+        text: 'Sortierung & Filterung nach Betrag: Sortierung nach höchstem/niedrigstem Betrag berücksichtigt nun den tatsächlichen Fiat-Gegenwert sowohl bei Käufen als auch bei Verkäufen.',
+      },
+    ],
+  },
   {
     version: '0.5.38',
     date: '08.10.2026',
     title: 'Steuer-PDF Seitenrand-Korrektur, Chart-HUD Badges & Realisierte Verkäufe im Analyse-Bereich',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

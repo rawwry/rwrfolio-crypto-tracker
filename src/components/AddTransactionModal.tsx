@@ -31,9 +31,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
   const [source, setSource] = useState<string>('crypto_com');
   const [timestamp, setTimestamp] = useState<string>(new Date().toISOString().substring(0, 16));
   const [coin, setCoin] = useState<string>('BTC');
-  const [receivedAmount, setReceivedAmount] = useState<string>('');
-  const [spentCurrency, setSpentCurrency] = useState<string>('EUR');
-  const [spentAmount, setSpentAmount] = useState<string>('');
+  const [coinAmount, setCoinAmount] = useState<string>('');
+  const [fiatCurrency, setFiatCurrency] = useState<string>('EUR');
+  const [fiatAmount, setFiatAmount] = useState<string>('');
   const [description, setDescription] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
   const [transactionKind, setTransactionKind] = useState<string>('manual_entry');
@@ -48,10 +48,25 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
           ? new Date(initialTransaction.timestamp).toISOString().substring(0, 16)
           : new Date().toISOString().substring(0, 16)
       );
-      setCoin(initialTransaction.receivedCurrency || 'BTC');
-      setReceivedAmount(initialTransaction.receivedAmount?.toString() || '');
-      setSpentCurrency(initialTransaction.spentCurrency || 'EUR');
-      setSpentAmount(initialTransaction.spentAmount?.toString() || '');
+
+      const isSell = initialTransaction.type === 'SELL';
+      const isSpentFiat = ['EUR', 'USD', 'USDT', 'USDC'].includes(initialTransaction.spentCurrency?.toUpperCase() || '');
+      const isRecFiat = ['EUR', 'USD', 'USDT', 'USDC'].includes(initialTransaction.receivedCurrency?.toUpperCase() || '');
+
+      if (isSell && !isSpentFiat && isRecFiat) {
+        // Normal SELL structure: spent = crypto, received = fiat
+        setCoin(initialTransaction.spentCurrency || 'BTC');
+        setCoinAmount(initialTransaction.spentAmount?.toString() || '');
+        setFiatCurrency(initialTransaction.receivedCurrency || 'EUR');
+        setFiatAmount(initialTransaction.receivedAmount?.toString() || '');
+      } else {
+        // Normal BUY / REWARD / TRANSFER structure: received = crypto, spent = fiat
+        setCoin(initialTransaction.receivedCurrency || 'BTC');
+        setCoinAmount(initialTransaction.receivedAmount?.toString() || '');
+        setFiatCurrency(initialTransaction.spentCurrency || 'EUR');
+        setFiatAmount(initialTransaction.spentAmount?.toString() || '');
+      }
+
       setDescription(initialTransaction.description || '');
       setNotes(initialTransaction.notes || '');
       setTransactionKind(initialTransaction.transactionKind || 'manual_entry');
@@ -61,9 +76,9 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       setSource('crypto_com');
       setTimestamp(new Date().toISOString().substring(0, 16));
       setCoin('BTC');
-      setReceivedAmount('');
-      setSpentCurrency('EUR');
-      setSpentAmount('');
+      setCoinAmount('');
+      setFiatCurrency('EUR');
+      setFiatAmount('');
       setDescription('');
       setNotes('');
       setTransactionKind('manual_entry');
@@ -73,15 +88,15 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
   if (!isOpen) return null;
 
-  const recAmtNum = parseFloat(receivedAmount) || 0;
-  const spentAmtNum = parseFloat(spentAmount) || 0;
-  const calculatedUnitPrice = recAmtNum > 0 && spentAmtNum > 0 && spentCurrency === 'EUR'
-    ? spentAmtNum / recAmtNum
+  const cAmtNum = parseFloat(coinAmount) || 0;
+  const fAmtNum = parseFloat(fiatAmount) || 0;
+  const calculatedUnitPrice = cAmtNum > 0 && fAmtNum > 0
+    ? fAmtNum / cAmtNum
     : 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!coin.trim() || recAmtNum <= 0) {
+    if (!coin.trim() || cAmtNum <= 0) {
       alert('Bitte gib ein gültiges Coin-Symbol und eine Menge größer 0 ein.');
       return;
     }
@@ -91,17 +106,19 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
       ? description 
       : `${type === 'BUY' ? 'Gekauft' : type === 'SELL' ? 'Verkauft' : type} ${coin.toUpperCase()}`;
 
+    const isSell = type === 'SELL';
+
     const tx: Transaction = {
       id: initialTransaction ? initialTransaction.id : `tx_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       timestamp: isoDate,
       source: source as ExchangeSource,
       type,
       description: finalDesc,
-      spentCurrency: spentCurrency.toUpperCase(),
-      spentAmount: spentAmtNum,
-      receivedCurrency: coin.toUpperCase(),
-      receivedAmount: recAmtNum,
-      pricePerUnitEUR: calculatedUnitPrice > 0 ? calculatedUnitPrice : undefined,
+      spentCurrency: isSell ? coin.toUpperCase() : fiatCurrency.toUpperCase(),
+      spentAmount: isSell ? cAmtNum : fAmtNum,
+      receivedCurrency: isSell ? fiatCurrency.toUpperCase() : coin.toUpperCase(),
+      receivedAmount: isSell ? fAmtNum : cAmtNum,
+      pricePerUnitEUR: (fiatCurrency === 'EUR' && calculatedUnitPrice > 0) ? calculatedUnitPrice : initialTransaction?.pricePerUnitEUR,
       notes: notes.trim() || undefined,
       transactionKind: transactionKind.trim() || undefined,
       transactionHash: transactionHash.trim() || undefined,
@@ -122,7 +139,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               <Plus className="w-4 h-4" />
             </div>
             <h3 className="text-base sm:text-lg font-bold text-white">
-              {initialTransaction ? 'Transaktion bearbeiten' : 'Kauf / Transaktion manuell erfassen'}
+              {initialTransaction ? 'Transaktion bearbeiten' : 'Transaktion manuell erfassen'}
             </h3>
           </div>
           <button
@@ -144,7 +161,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               <button
                 type="button"
                 onClick={() => setType('BUY')}
-                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                   type === 'BUY'
                     ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
                     : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
@@ -156,7 +173,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               <button
                 type="button"
                 onClick={() => setType('SELL')}
-                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                   type === 'SELL'
                     ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
                     : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
@@ -168,7 +185,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
               <button
                 type="button"
                 onClick={() => setType('REWARD')}
-                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all ${
+                className={`py-2 px-3 rounded-xl font-semibold text-xs flex items-center justify-center space-x-1.5 transition-all cursor-pointer ${
                   type === 'REWARD'
                     ? 'bg-amber-600 text-white shadow-md shadow-amber-600/25'
                     : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-slate-200'
@@ -213,11 +230,11 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             </div>
           </div>
 
-          {/* Coin & Amount Received */}
+          {/* Crypto Coin & Coin Amount */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">
-                Coin / Token Symbol
+                {type === 'SELL' ? 'Verkaufter Coin / Token' : type === 'BUY' ? 'Gekaufter Coin / Token' : 'Coin / Token Symbol'}
               </label>
               <div className="relative">
                 <input
@@ -236,7 +253,7 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
                     key={sym}
                     type="button"
                     onClick={() => setCoin(sym)}
-                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono ${
+                    className={`text-[10px] px-1.5 py-0.5 rounded font-mono cursor-pointer ${
                       coin === sym ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-400 hover:text-slate-200'
                     }`}
                   >
@@ -248,45 +265,55 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
 
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">
-                Erhaltene Menge ({coin || 'Coin'})
+                {type === 'SELL' 
+                  ? `Verkaufte Menge (${coin || 'Coin'})` 
+                  : type === 'BUY' 
+                    ? `Erhaltene Menge (${coin || 'Coin'})` 
+                    : `Belohnungsmenge (${coin || 'Coin'})`
+                }
               </label>
               <input
                 type="number"
                 step="any"
                 min="0"
                 placeholder="z.B. 4416.65"
-                value={receivedAmount}
-                onChange={(e) => setReceivedAmount(e.target.value)}
+                value={coinAmount}
+                onChange={(e) => setCoinAmount(e.target.value)}
                 required
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono font-bold focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
 
-          {/* Spent Amount (e.g. EUR) */}
+          {/* Fiat / Counter Amount & Currency */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">
-                Gezahlter Betrag ({spentCurrency})
+                {type === 'SELL' 
+                  ? `Erhaltener Erlös (${fiatCurrency})` 
+                  : type === 'BUY' 
+                    ? `Gezahlter Betrag (${fiatCurrency})` 
+                    : `Gegenwert (${fiatCurrency})`
+                }
               </label>
               <input
                 type="number"
                 step="any"
                 min="0"
-                placeholder="z.B. 300.00"
-                value={spentAmount}
-                onChange={(e) => setSpentAmount(e.target.value)}
+                placeholder={type === 'SELL' ? 'z.B. 113.18' : 'z.B. 300.00'}
+                value={fiatAmount}
+                onChange={(e) => setFiatAmount(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 font-mono focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1">
-                Zahlungswährung
+                {type === 'SELL' ? 'Auszahlungswährung / Erlös' : 'Zahlungswährung'}
               </label>
               <select
-                value={spentCurrency}
-                onChange={(e) => setSpentCurrency(e.target.value)}
+                value={fiatCurrency}
+                onChange={(e) => setFiatCurrency(e.target.value)}
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500"
               >
                 <option value="EUR">EUR (€)</option>
@@ -302,10 +329,12 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <div className="p-3 bg-indigo-950/30 border border-indigo-500/20 rounded-xl flex items-center justify-between text-xs">
               <div className="flex items-center space-x-2 text-indigo-300">
                 <Calculator className="w-4 h-4 text-indigo-400" />
-                <span>Effektiver Kaufkurs pro Einheit:</span>
+                <span>
+                  {type === 'SELL' ? 'Effektiver Verkaufskurs pro Einheit:' : 'Effektiver Kaufkurs pro Einheit:'}
+                </span>
               </div>
               <div className="font-mono font-bold text-white text-sm">
-                {calculatedUnitPrice < 1 ? calculatedUnitPrice.toFixed(5) : calculatedUnitPrice.toFixed(2)} {spentCurrency} / {coin}
+                {calculatedUnitPrice < 1 ? calculatedUnitPrice.toFixed(5) : calculatedUnitPrice.toFixed(2)} {fiatCurrency} / {coin}
               </div>
             </div>
           )}
@@ -329,13 +358,13 @@ export const AddTransactionModal: React.FC<AddTransactionModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 transition-colors cursor-pointer"
             >
               Abbrechen
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-md shadow-indigo-600/25 transition-all"
+              className="px-5 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 shadow-md shadow-indigo-600/25 transition-all cursor-pointer"
             >
               {initialTransaction ? 'Änderungen speichern' : 'Transaktion speichern'}
             </button>
