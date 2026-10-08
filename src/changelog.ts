@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.39';
+export const APP_VERSION = '0.5.40';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.40',
+    date: '08.10.2026',
+    title: 'Chart Live-HUD Trade-Badge Clipping behoben & Responsive Metriken',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Interaktiver Coin-Chart Live-HUD: Vollständige Beseitigung abgeschnittener Trade-Badges bei mehreren Trades am selben Tag (z. B. Kauf & Verkauf von LAPTOP). Aufteilung in zwei ultra-kompakte, vollwertige Chips ("▼ VERK. $0.0915" & "▲ KAUF $0.0768") ohne Textüberlauf oder horizontalen Kantenbeschnitt.',
+      },
+      {
+        type: 'ui',
+        text: 'HUD-Metriken & Breitenoptimierung: Entfernung starrer Spaltenbreiten (Kurs, Wert, P&L, Ø) und automatische Breitenanpassung für untere Bildschirmbreiten verhindern horizontales Überlaufen der gesamten HUD-Leiste.',
+      },
+      {
+        type: 'ui',
+        text: 'Statuskarte Reingewinn (P&L): Verhinderung von Zeilenumbrüchen bei realisierten Gewinnen ("Real.: +12.84 €") durch whitespace-nowrap.',
+      },
+    ],
+  },
   {
     version: '0.5.39',
     date: '08.10.2026',
     title: 'Korrektur der Verkaufsanzeige (SELL) in Transaktionshistorie & Bearbeiten-Modal',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'fix',

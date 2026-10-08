@@ -4,6 +4,21 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.40] - 08.10.2026
+
+### 🎨 Chart Live-HUD Trade-Badge Clipping behoben & Responsive Metriken
+- **Interaktiver Coin-Chart Live-HUD**:
+  - **Kein Clipping bei Mehrfach-Trades am selben Tag**: Wurden an einem Tag sowohl Käufe als auch Verkäufe getätigt (z. B. Kauf & Verkauf von LAPTOP), wurden die über 300px breiten Trade-Banner zuvor im flexiblen Slot abgeschnitten (sodass vom zweiten Trade nur ein grünes Bruchstück `[` sichtbar war).
+  - **Adaptive Badges**:
+    - **2 Trades am Tag**: Anzeige als zwei schlanke, vollwertige Badges nebeneinander (`▼ VERK. $0.0915` & `▲ KAUF $0.0768`) ohne Währungsdopplung und ohne horizontalen Kantenbeschnitt.
+    - **1 Trade**: Prägnante Anzeige von Menge und Kurs (`▼ VERK. 1.398,6 @ $0.0915`).
+    - **Interaktivität & Tooltip**: Jeder Badge bleibt einzeln anklickbar und öffnet den Steuer- und Tranchen-Inspektor für den jeweiligen Trade; Hover zeigt den vollständigen Tooltip mit Stückzahl, Börse und Ausführungskurs.
+- **HUD-Breiten & Metriken**:
+  - Wegfall starrer Spaltenbreiten (`w-32`, `w-48`) für Kurs, Wert, P&L und DCA-Abstand – die Metriken passen sich flexibel an die tatsächliche Inhaltsbreite an, sodass das HUD auch auf Bildschirmen unter 1.400px nicht mehr horizontal überläuft.
+  - Reingewinn-Statuskarte im Chart-Header (`Real.: +12.84 €`) mit `whitespace-nowrap` gegen vertikale Umbrüche geschützt.
+
+---
+
 ## [0.5.39] - 08.10.2026
 
 ### 🔄 Korrektur der Verkaufsanzeige (SELL) in Transaktionshistorie & Bearbeiten-Modal

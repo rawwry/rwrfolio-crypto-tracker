@@ -845,7 +845,7 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               Gewinn / Verlust (P&amp;L)
             </span>
             {!isPortfolio && coinRealizedPnl !== 0 && (
-              <span className={`text-[10px] font-mono font-bold ${
+              <span className={`text-[10px] font-mono font-bold whitespace-nowrap shrink-0 ml-1.5 ${
                 coinRealizedPnl >= 0 ? (isLight ? 'text-emerald-700' : 'text-emerald-400') : (isLight ? 'text-rose-700' : 'text-rose-400')
               }`} title="Bereits realisierter Gewinn aus Verkäufen">
                 Real.: {coinRealizedPnl >= 0 ? '+' : ''}{coinRealizedPnl.toFixed(2)} €
@@ -1025,21 +1025,21 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
           : null;
 
         return (
-          <div className={`h-11 min-h-[44px] max-h-[44px] px-3.5 rounded-xl border flex items-center justify-between text-xs font-mono shadow-sm select-none overflow-x-auto scrollbar-none gap-3 transition-colors duration-150 ${
+          <div className={`h-11 min-h-[44px] max-h-[44px] px-3 sm:px-3.5 rounded-xl border flex items-center justify-between text-xs font-mono shadow-sm select-none gap-2 sm:gap-3 transition-colors duration-150 ${
             isLight 
               ? 'bg-slate-100/90 border-slate-200 text-slate-800' 
               : (hoveredPoint ? 'bg-indigo-950/40 border-indigo-700/60 text-slate-100' : 'bg-slate-950/70 border-slate-800/80 text-slate-200')
           }`}>
-            {/* Left Slot: Date, Live/Inspektion Badge & Flexible Trade Slot */}
-            <div className="flex items-center gap-2.5 flex-1 min-w-0 h-full mr-2">
+            {/* Left Slot: Date, Live/Inspektion Badge & Adaptive Trade Slot */}
+            <div className="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0 h-full">
               {/* Date */}
-              <div className={`w-24 shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
+              <div className={`shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
                 <Calendar className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`} />
                 <span className="truncate">{displayPoint ? displayPoint.formattedDate : 'Live'}</span>
               </div>
 
               {/* Status Badge with fixed sizing */}
-              <div className="w-20 shrink-0 flex items-center">
+              <div className="shrink-0 flex items-center">
                 {displayPoint?.isToday || isLive ? (
                   <span className={`px-1.5 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${
                     isLight 
@@ -1063,28 +1063,70 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               {/* Fixed Separator */}
               <div className={`w-px h-4 shrink-0 ${isLight ? 'bg-slate-300' : 'bg-slate-700/40'}`} />
 
-              {/* Flexible Trade Slot (No arbitrary width clipping, displays all trades cleanly) */}
-              <div className="flex-1 min-w-0 h-7 flex items-center overflow-x-auto scrollbar-none gap-1.5">
+              {/* Adaptive Trade Slot: Never clipped, fits cleanly on all viewports */}
+              <div className="flex-1 min-w-0 h-7 flex items-center gap-1.5 overflow-hidden">
                 {displayPoint?.trades && displayPoint.trades.length > 0 ? (
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {displayPoint.trades.map((tr) => (
-                      <span 
-                        key={tr.id}
-                        onClick={() => setInspectedTrade(tr)}
-                        title="Klick für Tranchen-Details (§ 23 EStG)"
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 shrink-0 whitespace-nowrap ${
-                          tr.type === 'BUY'
-                            ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40')
-                            : (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-500/20 text-rose-300 border-rose-500/40')
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    {displayPoint.trades.length === 1 ? (
+                      // Single Trade: Clean amount & price
+                      (() => {
+                        const tr = displayPoint.trades[0];
+                        const formattedAmount = tr.amount < 10 
+                          ? tr.amount.toLocaleString('de-DE', { maximumFractionDigits: 4 })
+                          : tr.amount.toLocaleString('de-DE', { maximumFractionDigits: 1 });
+                        return (
+                          <button
+                            type="button"
+                            key={tr.id}
+                            onClick={() => setInspectedTrade(tr)}
+                            title={`Klick für Tranchen-Details (§ 23 EStG): ${tr.type === 'BUY' ? 'Kauf' : 'Verkauf'} von ${tr.amount.toLocaleString('de-DE')} ${tr.symbol} @ ${formatPrice(tr.price)} (${tr.source.replace('_', '.')})`}
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-all flex items-center gap-1 shrink-0 whitespace-nowrap shadow-sm ${
+                              tr.type === 'BUY'
+                                ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40')
+                                : (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-500/20 text-rose-300 border-rose-500/40')
+                            }`}
+                          >
+                            <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
+                            <span>
+                              {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {formattedAmount} @ {formatPrice(tr.price)}
+                            </span>
+                          </button>
+                        );
+                      })()
+                    ) : displayPoint.trades.length === 2 ? (
+                      // Two Trades (e.g. Buy & Sell on same day): Two ultra-compact chips that NEVER clip
+                      displayPoint.trades.map((tr) => (
+                        <button
+                          key={tr.id}
+                          type="button"
+                          onClick={() => setInspectedTrade(tr)}
+                          title={`Klick für Tranchen-Details (§ 23 EStG): ${tr.type === 'BUY' ? 'Kauf' : 'Verkauf'} von ${tr.amount.toLocaleString('de-DE')} ${tr.symbol} @ ${formatPrice(tr.price)} (${tr.source.replace('_', '.')})`}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-all flex items-center gap-1 shrink-0 whitespace-nowrap shadow-sm ${
+                            tr.type === 'BUY'
+                              ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40')
+                              : (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-500/20 text-rose-300 border-rose-500/40')
+                          }`}
+                        >
+                          <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
+                          <span>
+                            {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {formatPrice(tr.price)}
+                          </span>
+                        </button>
+                      ))
+                    ) : (
+                      // 3+ Trades: Clean summary badge
+                      <button
+                        type="button"
+                        onClick={() => setInspectedTrade(displayPoint.trades[0])}
+                        title="Klick für Tranchen-Details aller Trades an diesem Tag"
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-all flex items-center gap-1 shrink-0 whitespace-nowrap shadow-sm ${
+                          isLight ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                         }`}
                       >
                         <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
-                        <span className="whitespace-nowrap">
-                          {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}
-                        </span>
-                        <span className="opacity-75 uppercase text-[9px] font-normal shrink-0">({tr.source.replace('_', '.')})</span>
-                      </span>
-                    ))}
+                        <span>▲▼ {displayPoint.trades.length} Trades am Tag</span>
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className={`flex items-center text-[11px] font-sans truncate ${isLight ? 'text-slate-500' : 'text-slate-500/80'}`}>
@@ -1098,47 +1140,47 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               </div>
             </div>
 
-            {/* Right Slot: Key metrics with fixed column widths & tabular-nums */}
+            {/* Right Slot: Key metrics with tabular-nums & proportional auto widths */}
             {displayPoint && (
-              <div className="flex items-center gap-2 sm:gap-4 shrink-0 text-xs font-mono tabular-nums ml-auto h-full">
+              <div className="flex items-center gap-2 sm:gap-3.5 shrink-0 text-xs font-mono tabular-nums ml-auto h-full">
                 {/* Metric 1: Kurs */}
                 {!isPortfolio && (
-                  <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                  <div className="text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
                     <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Kurs:</span>
-                    <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                    <span className={`font-bold tabular-nums ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                       {formatPrice(displayPoint.price)}
                     </span>
                   </div>
                 )}
 
                 {/* Metric 2: Wert / Portfolio */}
-                <div className="w-28 sm:w-32 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                <div className="text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
                   <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
                     {isPortfolio ? 'Portf.:' : 'Wert:'}
                   </span>
-                  <span className={`font-bold tabular-nums truncate ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                  <span className={`font-bold tabular-nums ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
                     {formatCurr(displayPoint.holdingValue)}
                   </span>
                 </div>
 
-                {/* Metric 3: P&L */}
-                <div className="w-40 sm:w-48 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                {/* Metric 3: P&L (on sm screens and up) */}
+                <div className="hidden sm:flex text-right shrink-0 items-center justify-end gap-1 font-mono tabular-nums">
                   <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>P&amp;L:</span>
-                  <span className={`font-bold tabular-nums truncate ${
+                  <span className={`font-bold tabular-nums ${
                     displayPoint.pnl >= 0 
                       ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
                       : (isLight ? 'text-rose-700' : 'text-rose-400')
                   }`}>
-                    {displayPoint.pnl >= 0 ? '+' : ''}{formatCurr(displayPoint.pnl)} ({displayPoint.pnl >= 0 ? '+' : ''}{displayPoint.pnlPercentage.toFixed(2)} %)
+                    {displayPoint.pnl >= 0 ? '+' : ''}{formatCurr(displayPoint.pnl)} ({displayPoint.pnl >= 0 ? '+' : ''}{displayPoint.pnlPercentage.toFixed(1)} %)
                   </span>
                 </div>
 
-                {/* Metric 4: Ø Einstieg */}
+                {/* Metric 4: Ø Einstieg (on md screens and up) */}
                 {!isPortfolio && (
-                  <div className="w-24 sm:w-28 text-right shrink-0 flex items-center justify-end gap-1 font-mono tabular-nums">
+                  <div className="hidden md:flex text-right shrink-0 items-center justify-end gap-1 font-mono tabular-nums">
                     <span className={`text-[11px] font-sans ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Ø:</span>
                     {distBuy !== null ? (
-                      <span className={`font-semibold tabular-nums truncate ${
+                      <span className={`font-semibold tabular-nums ${
                         distBuy >= 0 
                           ? (isLight ? 'text-emerald-700' : 'text-emerald-400') 
                           : (isLight ? 'text-rose-700' : 'text-rose-400')

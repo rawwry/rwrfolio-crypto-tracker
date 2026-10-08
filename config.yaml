@@ -1,6 +1,6 @@
 name: "rwrfolio"
 description: "Privater Krypto Portfolio & DCA Tracker mit Live-Marktkursen, TradingView-Charts, Multi-Börsen-Import (Kraken Pro, Crypto.com CSV & E-Mail Belege), Multi-Timeframe-Matrix & § 23 EStG Steuerbericht."
-version: "0.5.39"
+version: "0.5.40"
 slug: "rwrfolio"
 init: false
 arch:
