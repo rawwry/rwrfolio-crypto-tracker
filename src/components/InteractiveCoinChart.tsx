@@ -1030,8 +1030,8 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               ? 'bg-slate-100/90 border-slate-200 text-slate-800' 
               : (hoveredPoint ? 'bg-indigo-950/40 border-indigo-700/60 text-slate-100' : 'bg-slate-950/70 border-slate-800/80 text-slate-200')
           }`}>
-            {/* Left Slot: Date, Live/Inspektion Badge & Fixed Trade Slot */}
-            <div className="flex items-center gap-2.5 shrink-0 h-full">
+            {/* Left Slot: Date, Live/Inspektion Badge & Flexible Trade Slot */}
+            <div className="flex items-center gap-2.5 flex-1 min-w-0 h-full mr-2">
               {/* Date */}
               <div className={`w-24 shrink-0 flex items-center gap-1.5 font-sans font-bold text-xs ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`}>
                 <Calendar className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-indigo-700' : 'text-indigo-400'}`} />
@@ -1063,23 +1063,23 @@ export const InteractiveCoinChart: React.FC<InteractiveCoinChartProps> = ({
               {/* Fixed Separator */}
               <div className={`w-px h-4 shrink-0 ${isLight ? 'bg-slate-300' : 'bg-slate-700/40'}`} />
 
-              {/* Reserved Trade Slot (Fixed width to completely prevent jitter) */}
-              <div className="w-64 sm:w-80 shrink-0 h-7 flex items-center overflow-hidden">
+              {/* Flexible Trade Slot (No arbitrary width clipping, displays all trades cleanly) */}
+              <div className="flex-1 min-w-0 h-7 flex items-center overflow-x-auto scrollbar-none gap-1.5">
                 {displayPoint?.trades && displayPoint.trades.length > 0 ? (
-                  <div className="flex items-center gap-1.5 truncate">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     {displayPoint.trades.map((tr) => (
                       <span 
                         key={tr.id}
                         onClick={() => setInspectedTrade(tr)}
                         title="Klick für Tranchen-Details (§ 23 EStG)"
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 shrink-0 ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold border cursor-pointer hover:scale-105 transition-transform flex items-center gap-1 shrink-0 whitespace-nowrap ${
                           tr.type === 'BUY'
                             ? (isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40')
                             : (isLight ? 'bg-rose-100 text-rose-800 border-rose-300' : 'bg-rose-500/20 text-rose-300 border-rose-500/40')
                         }`}
                       >
                         <ShoppingBag className="w-2.5 h-2.5 shrink-0" />
-                        <span className="truncate">
+                        <span className="whitespace-nowrap">
                           {tr.type === 'BUY' ? '▲ KAUF' : '▼ VERK.'} {tr.amount.toLocaleString('de-DE')} {tr.symbol} @ {formatPrice(tr.price)}
                         </span>
                         <span className="opacity-75 uppercase text-[9px] font-normal shrink-0">({tr.source.replace('_', '.')})</span>

@@ -652,6 +652,8 @@ export function exportTaxReportToPDF(
       justify-content: space-between;
       min-height: 270mm;
       padding-bottom: 8mm;
+      box-sizing: border-box;
+      overflow: hidden;
     }
     .page-landscape {
       page: landscape-appendix;
@@ -864,28 +866,35 @@ export function exportTaxReportToPDF(
     /* Tables */
     table {
       width: 100%;
+      max-width: 100%;
       border-collapse: collapse;
-      font-size: 8pt;
+      table-layout: fixed;
+      font-size: 7.5pt;
       margin-bottom: 10px;
+      box-sizing: border-box;
     }
     th {
       background: #f8fafc;
       border-bottom: 1px solid #cbd5e1;
-      padding: 4.5px 5px;
-      font-size: 7pt;
+      padding: 4px 4px;
+      font-size: 6.5pt;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      letter-spacing: 0.2px;
       color: #475569;
       text-align: left;
-      white-space: nowrap;
       vertical-align: middle;
       line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-sizing: border-box;
     }
     td {
-      padding: 3.5px 5px;
+      padding: 3px 4px;
       border-bottom: 1px solid #f1f5f9;
       vertical-align: middle;
+      box-sizing: border-box;
+      overflow-wrap: break-word;
     }
     .group-header td {
       background: #f1f5f9;
@@ -1069,9 +1078,11 @@ export function exportTaxReportToPDF(
         width: 210mm;
         min-height: 297mm;
         margin: 0 auto 20px auto;
-        padding: 16mm 14mm 14mm 14mm;
+        padding: 14mm 14mm 12mm 14mm;
         background: #ffffff;
         box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        box-sizing: border-box;
+        overflow: hidden;
       }
     }
     @media print {
@@ -1086,6 +1097,8 @@ export function exportTaxReportToPDF(
         min-height: 265mm;
         padding: 0;
         margin: 0;
+        box-sizing: border-box;
+        overflow: hidden;
       }
     }
 
@@ -1212,16 +1225,16 @@ export function exportTaxReportToPDF(
 
       <!-- Subtable: Aufteilung nach Börse -->
       <div style="font-weight: 700; font-size: 8.5pt; margin-bottom: 5px;">Aufteilung nach Börse</div>
-      <table>
+      <table style="table-layout: fixed; width: 100%;">
         <thead>
           <tr>
-            <th>Börse</th>
-            <th class="text-right">Verkäufe</th>
-            <th class="text-right">Ergebnis stpfl.</th>
-            <th class="text-right">Ergebnis steuerfrei</th>
-            <th class="text-right">Rewards § 22</th>
-            <th class="text-right">Offene Tranchen</th>
-            <th class="text-right">Bestandswert €</th>
+            <th style="width: 20%;">Börse</th>
+            <th style="width: 10%;" class="text-right">Verkäufe</th>
+            <th style="width: 15%;" class="text-right">Ergebnis stpfl.</th>
+            <th style="width: 15%;" class="text-right">Ergebnis steuerfrei</th>
+            <th style="width: 13%;" class="text-right">Rewards § 22</th>
+            <th style="width: 12%;" class="text-right">Offene Tranchen</th>
+            <th style="width: 15%;" class="text-right">Bestandswert €</th>
           </tr>
         </thead>
         <tbody>
@@ -1263,20 +1276,20 @@ export function exportTaxReportToPDF(
         Alle Verkäufe gegen EUR. Verkäufe, die mehrere Anschaffungstranchen verbrauchen, sind in Teilzeilen (a, b &hellip;) aufgeteilt; Erlös und Gebühr werden mengenanteilig zugeordnet. Beträge in €.
       </div>
 
-      <table>
+      <table style="table-layout: fixed; width: 100%;">
         <thead>
           <tr>
-            <th>Nr.</th>
-            <th>Verkauf</th>
-            <th>Anschaffung</th>
-            <th class="text-right">Tage</th>
-            <th>Asset</th>
-            <th class="text-right">Menge</th>
-            <th class="text-right">Anschaffungskosten</th>
-            <th class="text-right">Erlös</th>
-            <th class="text-right">Gebühr</th>
-            <th class="text-right">Gewinn/Verlust</th>
-            <th class="text-center">§ 23</th>
+            <th style="width: 3%;" class="text-center">Nr.</th>
+            <th style="width: 9%;">Verkauf</th>
+            <th style="width: 9%;">Anschaffung</th>
+            <th style="width: 5%;" class="text-right">Tage</th>
+            <th style="width: 8%;">Asset</th>
+            <th style="width: 13%;" class="text-right">Menge</th>
+            <th style="width: 13%; line-height: 1.1;" class="text-right">Anschaffungs-<br>kosten</th>
+            <th style="width: 11%;" class="text-right">Erlös</th>
+            <th style="width: 8%;" class="text-right">Gebühr</th>
+            <th style="width: 13%; line-height: 1.1;" class="text-right">Gewinn /<br>Verlust</th>
+            <th style="width: 8%;" class="text-center">§ 23</th>
           </tr>
         </thead>
         <tbody>
@@ -1294,15 +1307,15 @@ export function exportTaxReportToPDF(
         <span class="section-num">3</span>
         <h2>Sonstige Einkünfte &bull; Staking &amp; Rewards</h2>
       </div>
-      <table>
+      <table style="table-layout: fixed; width: 100%;">
         <thead>
           <tr>
-            <th>Zufluss</th>
-            <th>Börse</th>
-            <th>Asset</th>
-            <th>Art</th>
-            <th class="text-right">Menge</th>
-            <th class="text-right">Wert bei Zufluss €</th>
+            <th style="width: 15%;">Zufluss</th>
+            <th style="width: 15%;">Börse</th>
+            <th style="width: 12%;">Asset</th>
+            <th style="width: 18%;">Art</th>
+            <th style="width: 20%;" class="text-right">Menge</th>
+            <th style="width: 20%;" class="text-right">Wert bei Zufluss €</th>
           </tr>
         </thead>
         <tbody>
@@ -1331,17 +1344,17 @@ export function exportTaxReportToPDF(
         Nachrichtlich, nicht erklärungspflichtig. Relevant für künftige Haltedauern. Kurswerte zum Stichtag.
       </div>
 
-      <table style="table-layout: fixed;">
+      <table style="table-layout: fixed; width: 100%;">
         <thead>
           <tr>
-            <th style="width: 50px;">Asset</th>
-            <th style="width: 175px;">Bezeichnung</th>
-            <th style="width: 105px;" class="text-right">Bestand</th>
-            ${showKrakenCol ? '<th style="width: 95px;" class="text-right">Davon Kraken</th>' : ''}
-            ${showCdcCol ? '<th style="width: 95px;" class="text-right">Davon Crypto.com</th>' : ''}
-            <th style="width: 95px;" class="text-right">Steuerfrei</th>
-            <th style="width: 90px;" class="text-center">Steuerfrei ab</th>
-            <th style="width: 95px;" class="text-right">Wert €</th>
+            <th style="width: 8%;">Asset</th>
+            <th style="width: 21%;">Bezeichnung</th>
+            <th style="width: 14%;" class="text-right">Bestand</th>
+            ${showKrakenCol ? '<th style="width: 13%;" class="text-right">Davon Kraken</th>' : ''}
+            ${showCdcCol ? '<th style="width: 13%;" class="text-right">Davon Crypto.com</th>' : ''}
+            <th style="width: 11%;" class="text-right">Steuerfrei</th>
+            <th style="width: 10%;" class="text-center">Steuerfrei ab</th>
+            <th style="width: 10%;" class="text-right">Wert €</th>
           </tr>
         </thead>
         <tbody>
@@ -1377,16 +1390,16 @@ export function exportTaxReportToPDF(
         Grundlage der FIFO-Zuordnung. Mengen je Asset ergeben den Bestand aus Abschnitt 4.
       </div>
 
-      <table style="table-layout: fixed;">
+      <table style="table-layout: fixed; width: 100%;">
         <thead>
           <tr>
-            <th style="width: 65px;">Tranche</th>
-            <th style="width: 60px;">Asset</th>
-            <th style="width: 95px;">Anschaffung</th>
-            <th style="width: 130px;" class="text-right">Menge</th>
-            <th style="width: 130px;" class="text-right">Anschaffungskosten €</th>
-            <th style="width: 95px;" class="text-right">Tage gehalten</th>
-            <th style="width: 105px;" class="text-center">Steuerfrei ab</th>
+            <th style="width: 10%;">Tranche</th>
+            <th style="width: 9%;">Asset</th>
+            <th style="width: 13%;">Anschaffung</th>
+            <th style="width: 20%;" class="text-right">Menge</th>
+            <th style="width: 20%;" class="text-right">Anschaffungskosten €</th>
+            <th style="width: 14%;" class="text-right">Tage gehalten</th>
+            <th style="width: 14%;" class="text-center">Steuerfrei ab</th>
           </tr>
         </thead>
         <tbody>

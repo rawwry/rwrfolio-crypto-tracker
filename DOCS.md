@@ -32,10 +32,12 @@
   - Intelligente Multi-Source Duplikatserkennung gleicht Order-IDs und TxIDs zwischen PDF-, CSV- und E-Mail-Importen automatisch ab und verhindert Doppelerfassungen zuverlässig.
   - Automations-Schnittstelle `POST /api/transactions/eml` zur direkten Anbindung von Webhooks aus n8n.
 - **📑 BMF-konformer Steuerbericht (§ 23 EStG) & Realisierte Gewinne:**
-  - Druckfertiger, audit-sicherer PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater.
+  - Druckfertiger, audit-sicherer PDF-Steuerbericht und strukturierter CSV-Export für Finanzamt und Steuerberater mit rigider `table-layout: fixed`-Architektur (verhindert jegliches seitliches Überlaufen auf Seiten 2 & 3).
+  - Vollständige Anzeige aller Spalten inklusive *Wert €* ohne Rand-Beschneidung.
   - Dedizierte, großzügige Seitenarchitektur für Coin-Bestand zum Stichtag (Seite 3), offene Anschaffungstranchen (Anhang A, Seite 4), Methodik (Seite 5) und vollständige Querformat-Belegnachweise (Anhänge B & C ab Seite 6).
   - Cent-genaue mathematische Rundungskonsistenz (`Erlös - Anschaffungskosten - Gebühren = Gewinn/Verlust`) und automatisches Ausblenden redundanter Zwischensummen bei Verkäufen auf nur einer Börse.
   - Automatische Filterung unbedeutender Kleinsttranchen (< 0,005 €).
+  - **Realisierte Verkäufe & Gewinne im Analyse-Tab (Closed Trades):** Vollständige Sektion im Analyse-Bereich mit aggregiertem Reingewinn, Bruttoerlösen, Anschaffungskosten, Gebühren, interaktivem Coin-Filter und Einzelnachweis aller geschlossenen Positionen.
   - **Coin-spezifische Realisierte Gewinne:** Interaktiver Coin-Filter in der Verkaufsübersicht des Steuer-Tabs inklusive KPI-Zusammenfassung; sofortige Anzeige des realisierten Gewinns im interaktiven Coin-Chart und in der Haltedauern-Tabelle.
   - Strikte FIFO-Berechnung (First In, First Out) mit getrennten Depots je Börse und automatischer Freigrenzen-Überwachung (1.000 € ab VZ 2024, 256 € für Staking/Rewards).
 - **🖥️ Layout & Design (Fullwidth vs. Boxed):**

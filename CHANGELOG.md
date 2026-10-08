@@ -4,6 +4,23 @@ Alle wichtigen Änderungen und Versionssprünge von **rwrfolio** werden in diese
 
 ---
 
+## [0.5.38] - 08.10.2026
+
+### 📑 Steuer-PDF Seitenrand-Korrektur, Chart-HUD Badges & Realisierte Verkäufe im Analyse-Bereich
+- **Steuer-PDF Export Layout & Seitenränder (§ 23 EStG)**:
+  - **Kein horizontales Überlaufen mehr**: Alle Tabellen auf Seite 2 (Einzelnachweis Veräußerungen, Staking & Rewards), Seite 3 (Coin-Bestand zum Stichtag) und Seite 4 (Anhang A) nutzen nun ein rigides `table-layout: fixed; width: 100%;` mit prozentual abgestimmten Spaltenbreiten.
+  - **Spalte "Wert €" vollständig sichtbar**: Beseitigung der 800px-Überbreite auf Seite 3 – die Spalte *Wert €* wird nun sauber innerhalb des druckbaren A4-Seitenbereichs gerendert und nicht mehr am rechten Rand abgeschnitten.
+  - **A4-Druckbegrenzung**: `.page` mit `overflow: hidden; box-sizing: border-box` und optimierten 14mm-Rändern garantiert perfekte Druckergebnisse ohne seitliche Ausreißer.
+- **Interaktiver Coin-Chart Live-HUD**:
+  - **Kein Abschneiden von Trade-Badges**: Die Trade-Inspektionsleiste über dem Chart (`[▲ KAUF]` und `[▼ VERK.]`) verfügt nun über einen flexiblen Container (`flex-1 min-w-0 overflow-x-auto`) anstelle einer starren Breitenbeschränkung.
+  - Werden an einem Tag sowohl Käufe als auch Verkäufe getätigt, werden beide Trade-Pins vollständig nebeneinander angezeigt, ohne benachbarte Live-Metriken (Kurs, Wert, P&L) zu verdecken oder zu quetschen.
+- **Realisierte Verkäufe & Gewinne im Analyse-Bereich**:
+  - Neue dedizierte Sektion **Realisierte Verkäufe & Gewinne (Closed Trades)** direkt im Analyse-Tab.
+  - Sofortiger Überblick über den gesamten realisierten Nettogewinn (§ 23 stpfl. vs. steuerfrei), Verkaufserlöse, Anschaffungskosten (Cost Basis) und Verkaufsgebühren.
+  - Interaktiver Coin-Filter und Übersicht nach Asset: Klick auf einen Coin filtert die Closed-Trades-Tabelle und aktualisiert den interaktiven Kurschart.
+
+---
+
 ## [0.5.37] - 08.10.2026
 
 ### 📑 Kraken PDF-Statement Parser, Steuer-PDF Layout-Optimierung & Coin-spezifische Realisierte Gewinne

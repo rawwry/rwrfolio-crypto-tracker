@@ -9,14 +9,33 @@ export interface ChangelogRelease {
   }[];
 }
 
-export const APP_VERSION = '0.5.37';
+export const APP_VERSION = '0.5.38';
 
 export const CHANGELOG_DATA: ChangelogRelease[] = [
+  {
+    version: '0.5.38',
+    date: '08.10.2026',
+    title: 'Steuer-PDF Seitenrand-Korrektur, Chart-HUD Badges & Realisierte Verkäufe im Analyse-Bereich',
+    badge: 'Aktuell',
+    changes: [
+      {
+        type: 'fix',
+        text: 'Steuer-PDF Export Seitenränder & Breiten (Seiten 2 & 3): Alle Tabellen (Einzelnachweis Veräußerungen, Staking & Rewards, Coin-Bestand, Anhang A) auf rigides table-layout: fixed mit prozentualer Spaltenverteilung und A4-Druckbegrenzung umgestellt – kein seitliches Herausragen über den Seitenrand oder Abschneiden von Werten (z. B. "Wert €") mehr.',
+      },
+      {
+        type: 'ui',
+        text: 'Interaktiver Coin-Chart HUD: Flexible, sprungfreie Trade-Inspektionsleiste ohne restriktive Breitenbegrenzung verhindert das Abschneiden und Quetschen von KAUF- und VERKAUF-Badges am selben Tag.',
+      },
+      {
+        type: 'feat',
+        text: 'Realisierte Verkäufe & Gewinne im Analyse-Bereich: Vollständige Closed-Trades-Sektion mit Anzeige des gesamten realisierten Nettogewinns (§ 23 stpfl. vs. steuerfrei), Verkaufserlösen, Anschaffungskosten (Cost Basis), Gebühren, interaktivem Coin-Filter und Einzelnachweis geschlossener Positionen.',
+      },
+    ],
+  },
   {
     version: '0.5.37',
     date: '08.10.2026',
     title: 'Kraken PDF-Statement Parser, Steuer-PDF Layout-Optimierung & Coin-spezifische Realisierte Gewinne',
-    badge: 'Aktuell',
     changes: [
       {
         type: 'feat',
